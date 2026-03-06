@@ -34,7 +34,7 @@ flowchart TD
 
     subgraph "🎲 LOTTERY PHASE · Month End"
         TIMER([⏰ Month-end<br/>scheduler fires]) --> CLOSE[Close application<br/>window]
-        CLOSE --> BALANCE[Query Open Collective<br/>for fund balance]
+        CLOSE --> BALANCE[Volunteer enters<br/>fund balance]
         BALANCE --> CALC["Calculate slots:<br/>floor((balance − reserve) ÷ £40)"]
         CALC --> DRAW[🎲 Draw lottery<br/>with auditable RNG seed]
 
@@ -63,9 +63,7 @@ flowchart TD
         CASH_RECORD --> REIMBURSE["Volunteer submits<br/>OC expense reference"]
         REIMBURSE --> REIMBURSED[✅ Volunteer<br/>reimbursed]
 
-        CLEARED --> RECHECK[Re-check fund<br/>balance]
-        RECHECK -->|Sufficient ✅| PAY["💸 Pay £40<br/>(bank transfer)"]
-        RECHECK -->|Insufficient ❌| PAUSE[⚠️ Paused<br/>Alert volunteers]
+        CLEARED --> PAY["💸 Pay £40<br/>(bank transfer)"]
 
         PAY --> BANK_RECORD[✅ Grant recorded<br/>3-month cooldown starts]
     end
@@ -94,7 +92,6 @@ flowchart TD
     style BANK_RECORD fill:#4CAF50,color:#fff
     style REIMBURSED fill:#4CAF50,color:#fff
     style PAY fill:#FF9800,color:#fff
-    style PAUSE fill:#f44336,color:#fff
 ```
 
 ---
@@ -107,7 +104,7 @@ flowchart TD
 | **Cooldown** | 3 months from selection month (selected Jan → reapply Apr) |
 | **Application window** | Limited window each month (dates TBD — not open all month) |
 | **Phone number** | Mandatory — helps with eligibility checking and contacting winners |
-| **Slots available** | `floor((balance − reserve) ÷ £40)`, reserve set by admin |
+| **Slots available** | Volunteer enters fund balance; `floor((balance − reserve) ÷ £40)`, reserve set by admin |
 | **Unresponsive winners** | Reminder + phone call attempt at 7 days, slot held until month end then released to waitlist |
 | **POA verification** | Max 3 attempts, then offered cash as alternative before releasing slot |
 | **Payment options** | Bank transfer or cash (in-person meeting) |
@@ -236,11 +233,12 @@ flowchart TD
 
 | System | Purpose |
 |--------|---------|
-| Open Collective | Query fund balance (GraphQL API) |
 | Email service | Notifications + form links |
 | SMS gateway | Inbound SMS parsing + outbound notifications |
 | Web form | Application intake |
 | Document storage | Proof of address uploads |
+
+> **Note:** Open Collective balance queries are not automated — volunteers manually provide the fund balance and enter OC expense references when recording reimbursements.
 
 ---
 

@@ -34,7 +34,7 @@ flowchart TD
 
     subgraph "🎲 LOTTERY PHASE · Month End"
         TIMER([⏰ Month-end<br/>scheduler fires]) --> CLOSE[Close application<br/>window]
-        CLOSE --> BALANCE[Query Open Collective<br/>for fund balance]
+        CLOSE --> BALANCE[Volunteer enters<br/>fund balance]
         BALANCE --> CALC["Calculate slots:<br/>floor((balance − reserve) ÷ £40)"]
         CALC --> DRAW[🎲 Draw lottery<br/>with auditable RNG seed]
 
@@ -61,9 +61,7 @@ flowchart TD
         CASH_MEET --> CASH_DONE([Cash handed<br/>over in person])
         CASH_DONE --> RECORD
 
-        CLEARED --> RECHECK[Re-check fund<br/>balance]
-        RECHECK -->|Sufficient ✅| PAY["💸 Pay £40<br/>(transfer or cash)"]
-        RECHECK -->|Insufficient ❌| PAUSE[⚠️ Paused<br/>Alert volunteers]
+        CLEARED --> PAY["💸 Pay £40<br/>(transfer or cash)"]
 
         PAY --> RECORD[✅ Grant recorded<br/>3-month cooldown starts]
     end
@@ -90,7 +88,6 @@ flowchart TD
     style DRAW fill:#9C27B0,color:#fff
     style RECORD fill:#4CAF50,color:#fff
     style PAY fill:#FF9800,color:#fff
-    style PAUSE fill:#f44336,color:#fff
 ```
 
 ---
@@ -103,7 +100,7 @@ flowchart TD
 | **Cooldown** | 3 months from selection month (selected Jan → reapply Apr) |
 | **Application window** | Limited window each month (dates TBD — not open all month) |
 | **Phone number** | Mandatory — helps with eligibility checking and contacting winners |
-| **How many winners?** | Based on available funds: (balance − reserve) ÷ £40, reserve set by admin |
+| **How many winners?** | Volunteer enters fund balance; slots = floor((balance − reserve) ÷ £40), reserve set by admin |
 | **Unresponsive winners** | Reminder + phone call attempt at 7 days, slot held until month end then released to waitlist |
 | **Proof of address** | Required for bank transfer, max 3 attempts — then offered cash as alternative |
 | **Payment options** | Bank transfer or cash (in-person handover) |
