@@ -168,9 +168,12 @@ stateDiagram-v2
 - Eligibility checks (cooldown, duplicates)
 - Recipient profile creation on first application
 
+### Automated (implemented)
+- Lottery draw (seeded RNG, deterministic, auditable)
+- Selection fan-out (process manager dispatches to application streams)
+
 ### Automated (not yet implemented)
 - Auto-reply to SMS/email with form link
-- Lottery draw (auditable random seed)
 - Winner/non-winner notifications
 - Bank details + POA form delivery
 - Reminders for unresponsive winners
@@ -178,6 +181,7 @@ stateDiagram-v2
 
 ### Volunteer Actions (implemented)
 - Resolve identity mismatches (review flagged applications)
+- Trigger lottery draw (manual, after checking OC balance)
 
 ### Volunteer Actions (not yet implemented)
 - Verify proof of address uploads
@@ -214,14 +218,14 @@ stateDiagram-v2
 | `VolunteerUpdated` | Volunteer updates their profile | Update profile fields |
 | `VolunteerDeleted` | Admin removes volunteer | Soft-delete from read model |
 
-### Lottery Aggregate (designed, not yet implemented)
+### Lottery Aggregate (implemented)
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
 | `ApplicationWindowClosed` | Scheduler (month end) | Stop accepting new applications for this month |
 | `LotteryDrawn` | Volunteer triggers draw | Seeded RNG selects winners; process manager fans out selection commands |
 
-### Application Selection (designed, not yet implemented)
+### Application Selection (implemented)
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
