@@ -92,6 +92,43 @@ describe("submitApplication", () => {
 		expect(created!.data.applicationId).toBe("app-1");
 	});
 
+	test("known phone → does not create duplicate recipient", async () => {
+		await submitApplication(
+			{
+				applicationId: "app-first",
+				phone: "07700900001",
+				name: "Alice",
+				paymentPreference: "bank",
+				meetingPlace: "Mill Road",
+				monthCycle: "2026-03",
+				eligibility: { status: "eligible" },
+			},
+			eventStore,
+			recipientRepo,
+		);
+
+		await submitApplication(
+			{
+				applicationId: "app-second",
+				phone: "07700900001",
+				name: "Alice",
+				paymentPreference: "cash",
+				meetingPlace: "Market Square",
+				monthCycle: "2026-04",
+				eligibility: { status: "eligible" },
+			},
+			eventStore,
+			recipientRepo,
+		);
+
+		const recipient = await recipientRepo.getByPhone("07700900001");
+		const { events } = await eventStore.readStream<RecipientEvent>(
+			`recipient-${recipient!.id}`,
+		);
+		const createdEvents = events.filter((e) => e.type === "RecipientCreated");
+		expect(createdEvents).toHaveLength(1);
+	});
+
 	test("known phone + same name → Submitted + Accepted with existing applicantId", async () => {
 		await submitApplication(
 			{
