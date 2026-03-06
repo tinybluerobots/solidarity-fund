@@ -12,6 +12,7 @@ import {
 	assignVolunteer,
 	declineCashAlternative,
 	recordPayment,
+	recordReimbursement,
 	rejectProofOfAddress,
 	releaseSlot,
 	submitBankDetails,
@@ -231,6 +232,59 @@ describe("grant payment end-to-end", () => {
 		);
 		const released = events.find((e) => e.type === "SlotReleased");
 		expect(released).toBeDefined();
+	});
+
+	test("cash path: payment -> reimbursement", async () => {
+		const appId = "app-cash-reimburse";
+		await selectWinner(appId, "07700900030", "Frank", "cash");
+
+		await recordPayment(
+			appId,
+			{ amount: 40, method: "cash", paidBy: "vol-1" },
+			eventStore,
+		);
+		await recordReimbursement(
+			appId,
+			{
+				volunteerId: "vol-1",
+				expenseReference: "https://opencollective.com/csf/expenses/456",
+			},
+			eventStore,
+		);
+
+		const { events } = await eventStore.readStream<GrantEvent>(
+			`grant-${appId}`,
+		);
+		const reimbursed = events.find((e) => e.type === "VolunteerReimbursed");
+		expect(reimbursed).toBeDefined();
+		expect(reimbursed!.data.expenseReference).toBe(
+			"https://opencollective.com/csf/expenses/456",
+		);
+	});
+
+	test("bank path: no reimbursement step", async () => {
+		const appId = "app-bank-no-reimburse";
+		await selectWinner(appId, "07700900031", "Grace", "bank");
+
+		await submitBankDetails(appId, {
+			sortCode: "12-34-56",
+			accountNumber: "12345678",
+			proofOfAddressRef: "poa-ref-1",
+		}, eventStore);
+		await approveProofOfAddress(appId, "vol-1", eventStore);
+		await recordPayment(
+			appId,
+			{ amount: 40, method: "bank", paidBy: "vol-1" },
+			eventStore,
+		);
+
+		await expect(
+			recordReimbursement(
+				appId,
+				{ volunteerId: "vol-1", expenseReference: "ref-1" },
+				eventStore,
+			),
+		).rejects.toThrow(/cannot record reimbursement/i);
 	});
 
 	test("volunteer releases unresponsive winner", async () => {
