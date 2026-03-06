@@ -1,0 +1,17 @@
+{
+  "name": "csf",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@event-driven-io/emmett": "^0.42.0",
+    "@event-driven-io/emmett-sqlite": "^0.42.0"
+  }
+}
