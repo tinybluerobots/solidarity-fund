@@ -248,7 +248,8 @@ stateDiagram-v2
 | `RejectProofOfAddress` | Volunteer | bank_details_submitted | Rejects POA; back to awaiting (or offers cash after 3rd attempt) |
 | `AcceptCashAlternative` | Recipient | offered_cash_alternative | Accepts cash; routes to cash handover |
 | `DeclineCashAlternative` | Recipient | offered_cash_alternative | Declines cash; slot released |
-| `RecordPayment` | Volunteer | poa_approved (bank only), awaiting_cash_handover (cash only) | Records payment; grant complete |
+| `RecordPayment` | Volunteer | poa_approved (bank only), awaiting_cash_handover (cash only) | Records payment; bank grants complete, cash grants await reimbursement |
+| `RecordReimbursement` | Volunteer | awaiting_reimbursement | Records OC expense reference; cash grant fully complete |
 | `ReleaseSlot` | Volunteer | any non-terminal | Manually releases slot (unresponsive, no-show, etc.) |
 
 #### Events
@@ -263,7 +264,8 @@ stateDiagram-v2
 | `CashAlternativeOffered` | 3rd POA rejection | Offer recipient cash instead of bank transfer |
 | `CashAlternativeAccepted` | Recipient accepts cash | Route to cash handover flow |
 | `CashAlternativeDeclined` | Recipient declines cash | Slot released |
-| `GrantPaid` | Transfer sent or cash handed over | Record grant, start 3-month cooldown |
+| `GrantPaid` | Transfer sent or cash handed over | Bank grants complete; cash grants move to awaiting_reimbursement |
+| `VolunteerReimbursed` | Volunteer records OC expense | Cash grant fully complete |
 | `SlotReleased` | Volunteer releases / cash declined | Release slot to waitlist |
 
 ### Not Yet Implemented
@@ -271,7 +273,6 @@ stateDiagram-v2
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
 | `FormLinkRequested` | SMS/email received | Auto-reply with unique pre-filled form URL |
-| `WinnerUnresponsive` | 14 days no response | Slot held until month end, then released to waitlist |
 | `ApplicantDataExpired` | 6 months since last activity | Auto-delete applicant info (retain inbox records) |
 
 ---
