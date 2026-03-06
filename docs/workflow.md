@@ -113,6 +113,8 @@ stateDiagram-v2
     state "🎲 Lottery" as lottery {
         Accepted --> Selected: Lottery win
         Accepted --> NotSelected: Lottery loss
+        Confirmed --> Selected: Lottery win
+        Confirmed --> NotSelected: Lottery loss
     }
 
     state "💳 Payment" as payment {
@@ -212,21 +214,28 @@ stateDiagram-v2
 | `VolunteerUpdated` | Volunteer updates their profile | Update profile fields |
 | `VolunteerDeleted` | Admin removes volunteer | Soft-delete from read model |
 
-### Grant Lifecycle (projection only — no aggregate yet)
+### Lottery Aggregate (designed, not yet implemented)
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
-| `GrantVolunteerAssigned` | Volunteer assigned to grant | Track which volunteer handles the grant |
-| `GrantPaid` | Transfer sent or cash handed over | Record grant, start 3-month cooldown |
-| `GrantPaymentFailed` | Payment attempt fails | Record failure reason |
+| `ApplicationWindowClosed` | Scheduler (month end) | Stop accepting new applications for this month |
+| `LotteryDrawn` | Volunteer triggers draw | Seeded RNG selects winners; process manager fans out selection commands |
+
+### Application Selection (designed, not yet implemented)
+
+| Event | Trigger | What Happens |
+|-------|---------|--------------|
+| `ApplicationSelected` | Process manager (post-draw) | Applicant won the lottery; ranked for waitlist |
+| `ApplicationNotSelected` | Process manager (post-draw) | Applicant not selected this month |
 
 ### Not Yet Implemented
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
 | `FormLinkRequested` | SMS/email received | Auto-reply with unique pre-filled form URL |
-| `ApplicationWindowClosed` | Scheduler (month end) | Query OC balance → Calculate slots → Draw lottery |
-| `LotteryDrawn` | RNG draw complete | Notify winners (bank: send POA form, cash: notify volunteer) + notify non-winners |
+| `GrantVolunteerAssigned` | Volunteer assigned to grant | Track which volunteer handles the grant |
+| `GrantPaid` | Transfer sent or cash handed over | Record grant, start 3-month cooldown |
+| `GrantPaymentFailed` | Payment attempt fails | Record failure reason |
 | `BankDetailsSubmitted` | Recipient submits POA + bank details | Add to volunteer verification queue |
 | `ProofOfAddressVerified` | Volunteer approves | Initiate payment |
 | `ProofOfAddressRejected` | Volunteer rejects | Notify recipient, allow retry (max 3) |
