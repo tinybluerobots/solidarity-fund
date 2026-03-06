@@ -52,6 +52,17 @@ export async function SQLiteVolunteerRepository(
 			});
 		},
 
+		async getByName(name: string): Promise<Volunteer | null> {
+			return await pool.withConnection(async (conn) => {
+				const rows = await conn.query<VolunteerRow>(
+					"SELECT * FROM volunteers WHERE name = ? COLLATE NOCASE",
+					[name],
+				);
+				const row = rows[0];
+				return row ? rowToVolunteer(row) : null;
+			});
+		},
+
 		async list(): Promise<Volunteer[]> {
 			return await pool.withConnection(async (conn) => {
 				const rows = await conn.query<VolunteerRow>(

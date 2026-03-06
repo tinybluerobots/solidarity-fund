@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@event-driven-io/emmett": "^0.42.0",
-		"@event-driven-io/emmett-sqlite": "^0.42.0"
+		"@event-driven-io/emmett-sqlite": "^0.42.0",
+		"@starfederation/datastar-sdk": "^1.0.0-RC.3"
 	}
 }

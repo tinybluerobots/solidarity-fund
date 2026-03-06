@@ -1,2 +1,6 @@
 [tools]
 bun = "latest"
+
+[tasks.dev]
+run = "bun --hot src/web/index.ts"
+description = "Start the dev server with hot reload"
