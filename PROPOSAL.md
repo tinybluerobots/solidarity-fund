@@ -18,8 +18,8 @@ flowchart TD
         LINK --> FORM["Complete Online Form<br/>(name, phone number (required),<br/>email (optional),<br/>meeting place or address,<br/>payment preference: bank or cash)"]
 
         FORM --> ID{Identity<br/>Resolution}
-        ID -->|Email + name or<br/>phone + name match| EXISTING[Link to existing<br/>applicant profile]
-        ID -->|Known email or phone,<br/>different name| FLAG["📧 Auto-notify:<br/>'A volunteer will<br/>contact you shortly'"]
+        ID -->|Phone + name match| EXISTING[Link to existing<br/>applicant profile]
+        ID -->|Known phone,<br/>different name| FLAG["📧 Auto-notify:<br/>'A volunteer will<br/>contact you shortly'"]
         ID -->|No match| NEW[Create new<br/>applicant profile]
 
         EXISTING --> ELIG
@@ -123,7 +123,7 @@ flowchart TD
 - Moving waitlisted people up when a slot opens
 
 ### Volunteers need to
-- Check identity when a known contact applies with a different name
+- Check identity when a known phone number applies with a different name
 - Review proof of address uploads (for bank transfers)
 - Meet recipients in person to hand over cash
 - Handle any paused payments (e.g. if funds run low mid-cycle)

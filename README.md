@@ -18,8 +18,8 @@ flowchart TD
         LINK --> FORM["Complete Online Form<br/>(name, phone number (required),<br/>email (optional),<br/>meeting place or address,<br/>payment preference: bank or cash)"]
 
         FORM --> ID{Identity<br/>Resolution}
-        ID -->|Email + name or<br/>phone + name match| EXISTING[Link to existing<br/>applicant profile]
-        ID -->|Known email or phone,<br/>different name| FLAG["📧 Auto-notify:<br/>'A volunteer will<br/>contact you shortly'"]
+        ID -->|Phone + name match| EXISTING[Link to existing<br/>applicant profile]
+        ID -->|Known phone,<br/>different name| FLAG["📧 Auto-notify:<br/>'A volunteer will<br/>contact you shortly'"]
         ID -->|No match| NEW[Create new<br/>applicant profile]
 
         EXISTING --> ELIG
@@ -103,7 +103,7 @@ stateDiagram-v2
 
     state "📥 Intake" as intake {
         [*] --> Submitted: Form completed
-        Submitted --> FlaggedForReview: Known contact,\nname mismatch
+        Submitted --> FlaggedForReview: Known phone,\nname mismatch
         Submitted --> Accepted: Eligibility passed
         Submitted --> Rejected: Cooldown / duplicate
         FlaggedForReview --> Accepted: Volunteer confirms
@@ -171,7 +171,7 @@ stateDiagram-v2
 - Waitlist promotion
 
 ### Volunteer Actions
-- Resolve identity mismatches (known contact, different name)
+- Resolve identity mismatches (known phone number, different name)
 - Verify proof of address uploads
 - Contact recipients and hand over cash
 - Handle edge cases / paused payments
@@ -184,7 +184,7 @@ stateDiagram-v2
 |-------|---------|--------------|
 | `FormLinkRequested` | SMS/email received | Auto-reply with unique pre-filled form URL |
 | `ApplicationSubmitted` | Form completed | Resolve identity → Check eligibility |
-| `IdentityFlagged` | Known email or phone, different name | Auto-notify applicant; add to volunteer queue |
+| `IdentityFlagged` | Known phone, different name | Auto-notify applicant; add to volunteer queue |
 | `IdentityConfirmed` | Volunteer confirms flagged applicant | Proceed to eligibility check |
 | `ApplicationAccepted` | Eligibility passed | Add to lottery pool |
 | `ApplicationRejected` | Cooldown/duplicate/ineligible | Notify applicant with reason |
