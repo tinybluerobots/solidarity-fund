@@ -52,6 +52,7 @@ describe("recipient decider", () => {
 				type: "UpdateRecipient",
 				data: {
 					id: "r-1",
+					volunteerId: "v-1",
 					phone: "07700900001",
 					name: "Alicia",
 					paymentPreference: "bank",
@@ -69,6 +70,7 @@ describe("recipient decider", () => {
 				type: "UpdateRecipient",
 				data: {
 					id: "r-1",
+					volunteerId: "v-1",
 					phone: "07700900001",
 					name: "Alicia",
 					paymentPreference: "cash",
@@ -81,7 +83,11 @@ describe("recipient decider", () => {
 		test("DeleteRecipient emits RecipientDeleted from active state", () => {
 			const cmd: RecipientCommand = {
 				type: "DeleteRecipient",
-				data: { id: "r-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				data: {
+					id: "r-1",
+					volunteerId: "v-1",
+					deletedAt: "2026-01-03T00:00:00.000Z",
+				},
 			};
 			const events = decide(cmd, activeState);
 			expect(events).toHaveLength(1);
@@ -91,7 +97,11 @@ describe("recipient decider", () => {
 		test("DeleteRecipient rejects from initial state", () => {
 			const cmd: RecipientCommand = {
 				type: "DeleteRecipient",
-				data: { id: "r-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				data: {
+					id: "r-1",
+					volunteerId: "v-1",
+					deletedAt: "2026-01-03T00:00:00.000Z",
+				},
 			};
 			expect(() => decide(cmd, initialState())).toThrow(IllegalStateError);
 		});
@@ -99,7 +109,11 @@ describe("recipient decider", () => {
 		test("DeleteRecipient rejects from deleted state", () => {
 			const cmd: RecipientCommand = {
 				type: "DeleteRecipient",
-				data: { id: "r-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				data: {
+					id: "r-1",
+					volunteerId: "v-1",
+					deletedAt: "2026-01-03T00:00:00.000Z",
+				},
 			};
 			expect(() => decide(cmd, { status: "deleted" })).toThrow(
 				IllegalStateError,
@@ -128,6 +142,7 @@ describe("recipient decider", () => {
 				type: "RecipientUpdated",
 				data: {
 					id: "r-1",
+					volunteerId: "v-1",
 					phone: "07700900001",
 					name: "Alicia",
 					paymentPreference: "bank",
@@ -147,7 +162,11 @@ describe("recipient decider", () => {
 		test("RecipientDeleted transitions to deleted", () => {
 			const event: RecipientEvent = {
 				type: "RecipientDeleted",
-				data: { id: "r-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				data: {
+					id: "r-1",
+					volunteerId: "v-1",
+					deletedAt: "2026-01-03T00:00:00.000Z",
+				},
 			};
 			const state = evolve(activeState, event);
 			expect(state.status).toBe("deleted");

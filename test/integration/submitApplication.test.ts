@@ -5,6 +5,7 @@ import type {
 } from "@event-driven-io/emmett-sqlite";
 import { submitApplication } from "../../src/domain/application/submitApplication.ts";
 import type { RecipientRepository } from "../../src/domain/recipient/repository.ts";
+import type { RecipientEvent } from "../../src/domain/recipient/types.ts";
 import { createEventStore } from "../../src/infrastructure/eventStore.ts";
 import { SQLiteRecipientRepository } from "../../src/infrastructure/recipient/sqliteRecipientRepository.ts";
 
@@ -65,6 +66,30 @@ describe("submitApplication", () => {
 		expect(recipient!.name).toBe("Alice");
 		expect(recipient!.paymentPreference).toBe("bank");
 		expect(recipient!.meetingPlace).toBe("Mill Road");
+	});
+
+	test("new phone → RecipientCreated event includes applicationId", async () => {
+		await submitApplication(
+			{
+				applicationId: "app-1",
+				phone: "07700900001",
+				name: "Alice",
+				paymentPreference: "bank",
+				meetingPlace: "Mill Road",
+				monthCycle: "2026-03",
+				eligibility: { status: "eligible" },
+			},
+			eventStore,
+			recipientRepo,
+		);
+
+		const recipient = await recipientRepo.getByPhone("07700900001");
+		const { events } = await eventStore.readStream<RecipientEvent>(
+			`recipient-${recipient!.id}`,
+		);
+		const created = events.find((e) => e.type === "RecipientCreated");
+		expect(created).toBeDefined();
+		expect(created!.data.applicationId).toBe("app-1");
 	});
 
 	test("known phone + same name → Submitted + Accepted with existing applicantId", async () => {

@@ -30,6 +30,8 @@ export async function createRecipient(
 				type: "CreateRecipient",
 				data: {
 					id,
+					volunteerId: data.volunteerId,
+					applicationId: data.applicationId,
 					phone: data.phone,
 					name: data.name,
 					email: data.email,
@@ -49,6 +51,7 @@ export async function createRecipient(
 
 export async function updateRecipient(
 	id: string,
+	volunteerId: string,
 	data: UpdateRecipient,
 	eventStore: SQLiteEventStore,
 ): Promise<void> {
@@ -63,6 +66,7 @@ export async function updateRecipient(
 
 		const merged = {
 			id,
+			volunteerId,
 			phone: data.phone ?? state.phone,
 			name: data.name ?? state.name,
 			email: data.email === null ? undefined : (data.email ?? state.email),
@@ -85,11 +89,15 @@ export async function updateRecipient(
 
 export async function deleteRecipient(
 	id: string,
+	volunteerId: string,
 	eventStore: SQLiteEventStore,
 ): Promise<void> {
 	const now = new Date().toISOString();
 
 	await handle(eventStore, streamId(id), (state) =>
-		decide({ type: "DeleteRecipient", data: { id, deletedAt: now } }, state),
+		decide(
+			{ type: "DeleteRecipient", data: { id, volunteerId, deletedAt: now } },
+			state,
+		),
 	);
 }

@@ -9,6 +9,7 @@ import {
 	updateRecipient,
 } from "../../src/domain/recipient/commandHandlers.ts";
 import type { RecipientRepository } from "../../src/domain/recipient/repository.ts";
+import type { RecipientEvent } from "../../src/domain/recipient/types.ts";
 import { createEventStore } from "../../src/infrastructure/eventStore.ts";
 import { SQLiteRecipientRepository } from "../../src/infrastructure/recipient/sqliteRecipientRepository.ts";
 
@@ -142,7 +143,7 @@ describe("Recipient (event-sourced)", () => {
 				eventStore,
 			);
 			await new Promise((r) => setTimeout(r, 5));
-			await updateRecipient(id, { name: "Alicia" }, eventStore);
+			await updateRecipient(id, "v-1", { name: "Alicia" }, eventStore);
 
 			const found = await repo.getById(id);
 			expect(found!.name).toBe("Alicia");
@@ -156,6 +157,7 @@ describe("Recipient (event-sourced)", () => {
 			);
 			await updateRecipient(
 				id,
+				"v-1",
 				{ bankDetails: { sortCode: "12-34-56", accountNumber: "12345678" } },
 				eventStore,
 			);
@@ -172,7 +174,7 @@ describe("Recipient (event-sourced)", () => {
 				{ phone: "07700900001", name: "Alice", notes: "Some note" },
 				eventStore,
 			);
-			await updateRecipient(id, { name: "Alicia" }, eventStore);
+			await updateRecipient(id, "v-1", { name: "Alicia" }, eventStore);
 
 			const found = await repo.getById(id);
 			expect(found!.notes).toBe("Some note");
@@ -188,7 +190,12 @@ describe("Recipient (event-sourced)", () => {
 				},
 				eventStore,
 			);
-			await updateRecipient(id, { notes: null, email: null }, eventStore);
+			await updateRecipient(
+				id,
+				"v-1",
+				{ notes: null, email: null },
+				eventStore,
+			);
 
 			const found = await repo.getById(id);
 			expect(found!.notes).toBeUndefined();
@@ -202,10 +209,69 @@ describe("Recipient (event-sourced)", () => {
 				{ phone: "07700900001", name: "Alice" },
 				eventStore,
 			);
-			await deleteRecipient(id, eventStore);
+			await deleteRecipient(id, "v-1", eventStore);
 			const found = await repo.getById(id);
 
 			expect(found).toBeNull();
+		});
+	});
+
+	describe("audit trail", () => {
+		test("create stores volunteerId in event", async () => {
+			const { id } = await createRecipient(
+				{ volunteerId: "v-1", phone: "07700900001", name: "Alice" },
+				eventStore,
+			);
+
+			const { events } = await eventStore.readStream<RecipientEvent>(
+				`recipient-${id}`,
+			);
+			const created = events.find((e) => e.type === "RecipientCreated");
+			expect(created).toBeDefined();
+			expect(created!.data.volunteerId).toBe("v-1");
+		});
+
+		test("create without volunteerId stores undefined", async () => {
+			const { id } = await createRecipient(
+				{ phone: "07700900001", name: "Alice" },
+				eventStore,
+			);
+
+			const { events } = await eventStore.readStream<RecipientEvent>(
+				`recipient-${id}`,
+			);
+			const created = events.find((e) => e.type === "RecipientCreated");
+			expect(created!.data.volunteerId).toBeUndefined();
+		});
+
+		test("update stores volunteerId in event", async () => {
+			const { id } = await createRecipient(
+				{ phone: "07700900001", name: "Alice" },
+				eventStore,
+			);
+			await updateRecipient(id, "v-2", { name: "Alicia" }, eventStore);
+
+			const { events } = await eventStore.readStream<RecipientEvent>(
+				`recipient-${id}`,
+			);
+			const updated = events.find((e) => e.type === "RecipientUpdated");
+			expect(updated).toBeDefined();
+			expect(updated!.data.volunteerId).toBe("v-2");
+		});
+
+		test("delete stores volunteerId in event", async () => {
+			const { id } = await createRecipient(
+				{ phone: "07700900001", name: "Alice" },
+				eventStore,
+			);
+			await deleteRecipient(id, "v-3", eventStore);
+
+			const { events } = await eventStore.readStream<RecipientEvent>(
+				`recipient-${id}`,
+			);
+			const deleted = events.find((e) => e.type === "RecipientDeleted");
+			expect(deleted).toBeDefined();
+			expect(deleted!.data.volunteerId).toBe("v-3");
 		});
 	});
 });

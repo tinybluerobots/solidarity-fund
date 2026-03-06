@@ -19,6 +19,8 @@ export type Recipient = {
 };
 
 export type CreateRecipient = {
+	volunteerId?: string;
+	applicationId?: string;
 	phone: string;
 	name: string;
 	email?: string;
@@ -46,6 +48,8 @@ export type CreateRecipientCommand = Command<
 	"CreateRecipient",
 	{
 		id: string;
+		volunteerId?: string;
+		applicationId?: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -61,6 +65,7 @@ export type UpdateRecipientCommand = Command<
 	"UpdateRecipient",
 	{
 		id: string;
+		volunteerId: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -76,6 +81,7 @@ export type DeleteRecipientCommand = Command<
 	"DeleteRecipient",
 	{
 		id: string;
+		volunteerId: string;
 		deletedAt: string;
 	}
 >;
@@ -91,6 +97,8 @@ export type RecipientCreated = Event<
 	"RecipientCreated",
 	{
 		id: string;
+		volunteerId?: string;
+		applicationId?: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -106,6 +114,7 @@ export type RecipientUpdated = Event<
 	"RecipientUpdated",
 	{
 		id: string;
+		volunteerId: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -121,6 +130,7 @@ export type RecipientDeleted = Event<
 	"RecipientDeleted",
 	{
 		id: string;
+		volunteerId: string;
 		deletedAt: string;
 	}
 >;
