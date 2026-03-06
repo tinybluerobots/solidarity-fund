@@ -1,6 +1,22 @@
 [tools]
 bun = "latest"
 
-[tasks.dev]
+[tasks.seed]
+run = "bun src/web/seed.ts"
+description = "Seed a test user (name: Test, password: test)"
+
+[tasks.css]
+run = "bunx @tailwindcss/cli -i src/web/styles/app.css -o src/web/styles/dist/app.css --watch"
+description = "Watch and rebuild Tailwind CSS"
+
+[tasks."css:build"]
+run = "bunx @tailwindcss/cli -i src/web/styles/app.css -o src/web/styles/dist/app.css --minify"
+description = "Build Tailwind CSS (production)"
+
+[tasks.server]
 run = "bun --hot src/web/index.ts"
 description = "Start the dev server with hot reload"
+
+[tasks.dev]
+run = "mise run css ::: server"
+description = "Start CSS watcher and dev server in parallel"

@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@source "../**/*.ts";
+
+@theme {
+	--color-cream-50: #fffdf8;
+	--color-cream-100: #f5f0e8;
+	--color-cream-200: #e0d6c4;
+	--color-cream-300: #d4c9b4;
+
+	--color-bark: #2c2416;
+	--color-bark-light: #4a3f30;
+	--color-bark-muted: #7a6e5d;
+
+	--color-amber: #c8943e;
+	--color-amber-dark: #b07f2f;
+
+	--font-heading: 'Fraunces', 'Georgia', serif;
+	--font-body: 'Source Serif 4', 'Georgia', serif;
+}

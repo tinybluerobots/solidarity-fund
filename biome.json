@@ -28,11 +28,22 @@
 					}
 				}
 			}
+		},
+		{
+			"includes": ["src/web/styles/**/*.css"],
+			"formatter": { "enabled": false },
+			"linter": { "enabled": false }
 		}
 	],
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double"
+		}
+	},
+	"css": {
+		"parser": {
+			"cssModules": false,
+			"tailwindDirectives": true
 		}
 	},
 	"assist": {

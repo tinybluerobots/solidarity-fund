@@ -1,6 +1,7 @@
 import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
 import type { SessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
+import { dashboardPage } from "./pages/dashboard.ts";
 import { loginPage } from "./pages/login.ts";
 import { handleLogin, handleLogout } from "./routes/auth.ts";
 
@@ -28,6 +29,14 @@ export function startServer(
 	return Bun.serve({
 		port,
 		routes: {
+			"/styles/app.css": {
+				GET: async () => {
+					const file = Bun.file("src/web/styles/dist/app.css");
+					return new Response(file, {
+						headers: { "Content-Type": "text/css" },
+					});
+				},
+			},
 			"/": {
 				GET: async (req) => {
 					const volunteer = await getAuthenticatedVolunteer(
@@ -38,8 +47,8 @@ export function startServer(
 					if (!volunteer) {
 						return Response.redirect("/login", 302);
 					}
-					return new Response(`Welcome, ${volunteer.name}!`, {
-						headers: { "Content-Type": "text/plain" },
+					return new Response(dashboardPage(volunteer), {
+						headers: { "Content-Type": "text/html" },
 					});
 				},
 			},
