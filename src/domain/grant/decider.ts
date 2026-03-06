@@ -9,6 +9,7 @@ import type {
 	GrantEvent,
 	GrantState,
 	RecordPayment,
+	RecordReimbursement,
 	RejectProofOfAddress,
 	ReleaseSlot,
 	SubmitBankDetails,
@@ -36,6 +37,8 @@ export function decide(command: GrantCommand, state: GrantState): GrantEvent[] {
 			return decideRecordPayment(command, state);
 		case "ReleaseSlot":
 			return decideReleaseSlot(command, state);
+		case "RecordReimbursement":
+			return decideRecordReimbursement(command, state);
 	}
 }
 
@@ -64,6 +67,8 @@ function isNonTerminal(state: GrantState): state is GrantState & {
 	return (
 		state.status !== "initial" &&
 		state.status !== "paid" &&
+		state.status !== "awaiting_reimbursement" &&
+		state.status !== "reimbursed" &&
 		state.status !== "released"
 	);
 }
@@ -242,6 +247,23 @@ function decideRecordPayment(
 	];
 }
 
+function decideRecordReimbursement(
+	command: RecordReimbursement,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "awaiting_reimbursement") {
+		throw new IllegalStateError(
+			`Cannot record reimbursement in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "VolunteerReimbursed",
+			data: { ...command.data },
+		},
+	];
+}
+
 function decideReleaseSlot(
 	command: ReleaseSlot,
 	state: GrantState,
@@ -351,18 +373,21 @@ export function evolve(state: GrantState, event: GrantEvent): GrantState {
 		}
 		case "GrantPaid": {
 			if (state.status === "initial") return state;
-			return {
+			const base = {
 				grantId: state.grantId,
 				applicationId: state.applicationId,
 				applicantId: state.applicantId,
 				monthCycle: state.monthCycle,
 				rank: state.rank,
 				volunteerId: state.volunteerId,
-				status: "paid",
 				amount: event.data.amount,
-				method: event.data.method,
+				paidBy: event.data.paidBy,
 				paidAt: event.data.paidAt,
 			};
+			if (event.data.method === "cash") {
+				return { ...base, status: "awaiting_reimbursement" };
+			}
+			return { ...base, status: "paid", method: event.data.method };
 		}
 		case "SlotReleased": {
 			if (state.status === "initial") return state;
@@ -376,6 +401,23 @@ export function evolve(state: GrantState, event: GrantEvent): GrantState {
 				status: "released",
 				reason: event.data.reason,
 				releasedAt: event.data.releasedAt,
+			};
+		}
+		case "VolunteerReimbursed": {
+			if (state.status !== "awaiting_reimbursement") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "reimbursed",
+				amount: state.amount,
+				paidBy: state.paidBy,
+				paidAt: state.paidAt,
+				expenseReference: event.data.expenseReference,
+				reimbursedAt: event.data.reimbursedAt,
 			};
 		}
 		default: {

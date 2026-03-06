@@ -52,6 +52,16 @@ function paidState(): GrantState {
 	};
 }
 
+function awaitingReimbursement(): GrantState {
+	return {
+		...core,
+		status: "awaiting_reimbursement",
+		amount: 40,
+		paidBy: "vol-1",
+		paidAt: "2026-03-15T10:00:00Z",
+	};
+}
+
 function releasedState(): GrantState {
 	return {
 		...core,
@@ -580,5 +590,89 @@ describe("evolve", () => {
 		if (state.status === "awaiting_bank_details") {
 			expect(state.volunteerId).toBe("vol-1");
 		}
+	});
+
+	test("GrantPaid with cash → awaiting_reimbursement", () => {
+		const state = evolve(awaitingCashHandover(), {
+			type: "GrantPaid",
+			data: {
+				grantId: "grant-1",
+				applicationId: "app-1",
+				applicantId: "applicant-1",
+				monthCycle: "2026-03",
+				amount: 40,
+				method: "cash",
+				paidBy: "vol-1",
+				paidAt: "2026-03-10T00:00:00Z",
+			},
+		});
+		expect(state.status).toBe("awaiting_reimbursement");
+		if (state.status === "awaiting_reimbursement") {
+			expect(state.amount).toBe(40);
+			expect(state.paidBy).toBe("vol-1");
+		}
+	});
+
+	test("GrantPaid with bank → paid", () => {
+		const state = evolve(poaApproved(), {
+			type: "GrantPaid",
+			data: {
+				grantId: "grant-1",
+				applicationId: "app-1",
+				applicantId: "applicant-1",
+				monthCycle: "2026-03",
+				amount: 100,
+				method: "bank",
+				paidBy: "admin-1",
+				paidAt: "2026-03-10T00:00:00Z",
+			},
+		});
+		expect(state).toMatchObject({ status: "paid", amount: 100, method: "bank" });
+	});
+
+	test("VolunteerReimbursed → reimbursed state", () => {
+		const state = evolve(awaitingReimbursement(), {
+			type: "VolunteerReimbursed",
+			data: {
+				grantId: "grant-1",
+				volunteerId: "vol-1",
+				expenseReference: "EXP-001",
+				reimbursedAt: "2026-03-20T00:00:00Z",
+			},
+		});
+		expect(state).toMatchObject({
+			status: "reimbursed",
+			expenseReference: "EXP-001",
+			reimbursedAt: "2026-03-20T00:00:00Z",
+		});
+	});
+});
+
+// --- RecordReimbursement ---
+
+describe("RecordReimbursement", () => {
+	const reimburseCmd = {
+		type: "RecordReimbursement" as const,
+		data: {
+			grantId: "grant-1",
+			volunteerId: "vol-1",
+			expenseReference: "EXP-001",
+			reimbursedAt: "2026-03-20T00:00:00Z",
+		},
+	};
+
+	test("awaiting_reimbursement → VolunteerReimbursed", () => {
+		const events = decide(reimburseCmd, awaitingReimbursement());
+		expect(events).toHaveLength(1);
+		expect(events[0]!.type).toBe("VolunteerReimbursed");
+		expect(events[0]!.data.expenseReference).toBe("EXP-001");
+	});
+
+	test("throws from paid state", () => {
+		expect(() => decide(reimburseCmd, paidState())).toThrow(IllegalStateError);
+	});
+
+	test("throws from initial state", () => {
+		expect(() => decide(reimburseCmd, initialState())).toThrow(IllegalStateError);
 	});
 });
