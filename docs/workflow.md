@@ -126,7 +126,8 @@ stateDiagram-v2
         OfferedCash --> Released: Declines
         AwaitingBankDetails --> DueDiligencePassed: POA verified
         DueDiligencePassed --> Paid: Transfer sent
-        CashHandover --> Paid: Volunteer hands over cash
+        CashHandover --> AwaitingReimbursement: Volunteer hands over cash
+        AwaitingReimbursement --> Reimbursed: Volunteer logs\nOC expense
     }
 
     state "📋 Release & Waitlist" as release {
@@ -137,6 +138,7 @@ stateDiagram-v2
     }
 
     Paid --> [*]: Cooldown recorded
+    Reimbursed --> [*]: Cooldown recorded
     Rejected --> [*]
     NotSelected --> [*]
 
