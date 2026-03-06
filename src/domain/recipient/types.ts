@@ -28,6 +28,12 @@ export type CreateRecipient = {
 	notes?: string;
 };
 
-export type UpdateRecipient = Partial<Omit<CreateRecipient, "phone">> & {
+export type UpdateRecipient = {
 	phone?: string;
+	name?: string;
+	email?: string | null;
+	paymentPreference?: PaymentPreference;
+	meetingPlace?: string | null;
+	bankDetails?: BankDetails | null;
+	notes?: string | null;
 };

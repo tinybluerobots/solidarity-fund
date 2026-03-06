@@ -111,6 +111,7 @@ describe("RecipientRepository", () => {
 	describe("update", () => {
 		test("updates name", async () => {
 			const created = await repo.create({ phone: "07700900001", name: "Alice" });
+			await new Promise((r) => setTimeout(r, 5));
 			const updated = await repo.update(created.id, { name: "Alicia" });
 
 			expect(updated.name).toBe("Alicia");
@@ -136,9 +137,22 @@ describe("RecipientRepository", () => {
 				name: "Alice",
 				notes: "Some note",
 			});
-			const updated = await repo.update(created.id, { notes: undefined });
+			const updated = await repo.update(created.id, { name: "Alicia" });
 
 			expect(updated.notes).toBe("Some note");
+		});
+
+		test("clears optional fields when set to null", async () => {
+			const created = await repo.create({
+				phone: "07700900001",
+				name: "Alice",
+				notes: "Some note",
+				email: "alice@example.com",
+			});
+			const updated = await repo.update(created.id, { notes: null, email: null });
+
+			expect(updated.notes).toBeUndefined();
+			expect(updated.email).toBeUndefined();
 		});
 
 		test("throws for unknown id", async () => {

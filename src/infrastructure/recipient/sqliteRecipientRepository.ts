@@ -2,6 +2,7 @@ import type { SQLiteConnectionPool } from "@event-driven-io/emmett-sqlite";
 import type { RecipientRepository } from "../../domain/recipient/repository.ts";
 import type {
 	CreateRecipient,
+	PaymentPreference,
 	Recipient,
 	UpdateRecipient,
 } from "../../domain/recipient/types.ts";
@@ -20,13 +21,20 @@ type RecipientRow = {
 	updated_at: string;
 };
 
+function isPaymentPreference(v: string): v is PaymentPreference {
+	return v === "bank" || v === "cash";
+}
+
 function rowToRecipient(row: RecipientRow): Recipient {
+	if (!isPaymentPreference(row.payment_preference)) {
+		throw new Error(`Invalid payment_preference in DB: ${row.payment_preference}`);
+	}
 	return {
 		id: row.id,
 		phone: row.phone,
 		name: row.name,
 		email: row.email ?? undefined,
-		paymentPreference: row.payment_preference as Recipient["paymentPreference"],
+		paymentPreference: row.payment_preference,
 		meetingPlace: row.meeting_place ?? undefined,
 		bankDetails:
 			row.bank_sort_code && row.bank_account_number
@@ -63,6 +71,7 @@ export async function SQLiteRecipientRepository(
 		async create(data: CreateRecipient): Promise<Recipient> {
 			const id = crypto.randomUUID();
 			const now = new Date().toISOString();
+			const paymentPreference = data.paymentPreference ?? "cash";
 			await pool.withConnection(async (conn) => {
 				await conn.command(
 					`INSERT INTO recipients (id, phone, name, email, payment_preference, meeting_place, bank_sort_code, bank_account_number, notes, created_at, updated_at)
@@ -72,7 +81,7 @@ export async function SQLiteRecipientRepository(
 						data.phone,
 						data.name,
 						data.email ?? null,
-						data.paymentPreference ?? "cash",
+						paymentPreference,
 						data.meetingPlace ?? null,
 						data.bankDetails?.sortCode ?? null,
 						data.bankDetails?.accountNumber ?? null,
@@ -82,7 +91,18 @@ export async function SQLiteRecipientRepository(
 					],
 				);
 			});
-			return (await this.getById(id))!;
+			return {
+				id,
+				phone: data.phone,
+				name: data.name,
+				email: data.email,
+				paymentPreference,
+				meetingPlace: data.meetingPlace,
+				bankDetails: data.bankDetails,
+				notes: data.notes,
+				createdAt: now,
+				updatedAt: now,
+			};
 		},
 
 		async getById(id: string): Promise<Recipient | null> {
@@ -119,6 +139,19 @@ export async function SQLiteRecipientRepository(
 			if (!existing) throw new Error(`Recipient not found: ${id}`);
 
 			const now = new Date().toISOString();
+			const merged: Recipient = {
+				id,
+				phone: data.phone ?? existing.phone,
+				name: data.name ?? existing.name,
+				email: data.email === null ? undefined : (data.email ?? existing.email),
+				paymentPreference: data.paymentPreference ?? existing.paymentPreference,
+				meetingPlace: data.meetingPlace === null ? undefined : (data.meetingPlace ?? existing.meetingPlace),
+				bankDetails: data.bankDetails === null ? undefined : (data.bankDetails ?? existing.bankDetails),
+				notes: data.notes === null ? undefined : (data.notes ?? existing.notes),
+				createdAt: existing.createdAt,
+				updatedAt: now,
+			};
+
 			await pool.withConnection(async (conn) => {
 				await conn.command(
 					`UPDATE recipients SET
@@ -127,24 +160,20 @@ export async function SQLiteRecipientRepository(
 						notes = ?, updated_at = ?
 					WHERE id = ?`,
 					[
-						data.phone ?? existing.phone,
-						data.name ?? existing.name,
-						data.email !== undefined ? data.email : (existing.email ?? null),
-						data.paymentPreference ?? existing.paymentPreference,
-						data.meetingPlace !== undefined ? data.meetingPlace : (existing.meetingPlace ?? null),
-						data.bankDetails !== undefined
-							? (data.bankDetails?.sortCode ?? null)
-							: (existing.bankDetails?.sortCode ?? null),
-						data.bankDetails !== undefined
-							? (data.bankDetails?.accountNumber ?? null)
-							: (existing.bankDetails?.accountNumber ?? null),
-						data.notes !== undefined ? data.notes : (existing.notes ?? null),
+						merged.phone,
+						merged.name,
+						merged.email ?? null,
+						merged.paymentPreference,
+						merged.meetingPlace ?? null,
+						merged.bankDetails?.sortCode ?? null,
+						merged.bankDetails?.accountNumber ?? null,
+						merged.notes ?? null,
 						now,
 						id,
 					],
 				);
 			});
-			return (await this.getById(id))!;
+			return merged;
 		},
 
 		async delete(id: string): Promise<void> {
