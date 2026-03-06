@@ -1,0 +1,375 @@
+import { IllegalStateError } from "@event-driven-io/emmett";
+import type {
+	AcceptCashAlternative,
+	ApproveProofOfAddress,
+	AssignVolunteer,
+	CreateGrant,
+	DeclineCashAlternative,
+	GrantCommand,
+	GrantEvent,
+	GrantState,
+	RecordPayment,
+	RejectProofOfAddress,
+	ReleaseSlot,
+	SubmitBankDetails,
+} from "./types.ts";
+
+export const initialState = (): GrantState => ({ status: "initial" });
+
+export function decide(command: GrantCommand, state: GrantState): GrantEvent[] {
+	switch (command.type) {
+		case "CreateGrant":
+			return decideCreate(command, state);
+		case "AssignVolunteer":
+			return decideAssignVolunteer(command, state);
+		case "SubmitBankDetails":
+			return decideSubmitBankDetails(command, state);
+		case "ApproveProofOfAddress":
+			return decideApprovePoA(command, state);
+		case "RejectProofOfAddress":
+			return decideRejectPoA(command, state);
+		case "AcceptCashAlternative":
+			return decideAcceptCashAlt(command, state);
+		case "DeclineCashAlternative":
+			return decideDeclineCashAlt(command, state);
+		case "RecordPayment":
+			return decideRecordPayment(command, state);
+		case "ReleaseSlot":
+			return decideReleaseSlot(command, state);
+	}
+}
+
+function decideCreate(command: CreateGrant, state: GrantState): GrantEvent[] {
+	if (state.status !== "initial") {
+		throw new IllegalStateError(
+			`Grant already created (status: ${state.status})`,
+		);
+	}
+	return [
+		{
+			type: "GrantCreated",
+			data: { ...command.data },
+		},
+	];
+}
+
+function isNonTerminal(state: GrantState): state is GrantState & {
+	status:
+		| "awaiting_bank_details"
+		| "bank_details_submitted"
+		| "poa_approved"
+		| "offered_cash_alternative"
+		| "awaiting_cash_handover";
+} {
+	return (
+		state.status !== "initial" &&
+		state.status !== "paid" &&
+		state.status !== "released"
+	);
+}
+
+function decideAssignVolunteer(
+	command: AssignVolunteer,
+	state: GrantState,
+): GrantEvent[] {
+	if (!isNonTerminal(state)) {
+		throw new IllegalStateError(
+			`Cannot assign volunteer in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "VolunteerAssigned",
+			data: { ...command.data },
+		},
+	];
+}
+
+function decideSubmitBankDetails(
+	command: SubmitBankDetails,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "awaiting_bank_details") {
+		throw new IllegalStateError(
+			`Cannot submit bank details in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "BankDetailsSubmitted",
+			data: { ...command.data },
+		},
+	];
+}
+
+function decideApprovePoA(
+	command: ApproveProofOfAddress,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "bank_details_submitted") {
+		throw new IllegalStateError(
+			`Cannot approve proof of address in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "ProofOfAddressApproved",
+			data: { ...command.data },
+		},
+	];
+}
+
+function decideRejectPoA(
+	command: RejectProofOfAddress,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "bank_details_submitted") {
+		throw new IllegalStateError(
+			`Cannot reject proof of address in ${state.status} state`,
+		);
+	}
+
+	const attempt = state.poaAttempts;
+	const events: GrantEvent[] = [
+		{
+			type: "ProofOfAddressRejected",
+			data: {
+				grantId: command.data.grantId,
+				reason: command.data.reason,
+				attempt,
+				rejectedBy: command.data.rejectedBy,
+				rejectedAt: command.data.rejectedAt,
+			},
+		},
+	];
+
+	if (attempt >= 3) {
+		events.push({
+			type: "CashAlternativeOffered",
+			data: {
+				grantId: command.data.grantId,
+				offeredAt: command.data.rejectedAt,
+			},
+		});
+	}
+
+	return events;
+}
+
+function decideAcceptCashAlt(
+	command: AcceptCashAlternative,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "offered_cash_alternative") {
+		throw new IllegalStateError(
+			`Cannot accept cash alternative in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "CashAlternativeAccepted",
+			data: { ...command.data },
+		},
+	];
+}
+
+function decideDeclineCashAlt(
+	command: DeclineCashAlternative,
+	state: GrantState,
+): GrantEvent[] {
+	if (state.status !== "offered_cash_alternative") {
+		throw new IllegalStateError(
+			`Cannot decline cash alternative in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "CashAlternativeDeclined",
+			data: { ...command.data },
+		},
+		{
+			type: "SlotReleased",
+			data: {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				reason: "Cash alternative declined",
+				releasedBy: "system",
+				releasedAt: command.data.declinedAt,
+			},
+		},
+	];
+}
+
+function decideRecordPayment(
+	command: RecordPayment,
+	state: GrantState,
+): GrantEvent[] {
+	if (
+		state.status !== "poa_approved" &&
+		state.status !== "awaiting_cash_handover"
+	) {
+		throw new IllegalStateError(
+			`Cannot record payment in ${state.status} state`,
+		);
+	}
+	return [
+		{
+			type: "GrantPaid",
+			data: {
+				grantId: command.data.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				amount: command.data.amount,
+				method: command.data.method,
+				paidBy: command.data.paidBy,
+				paidAt: command.data.paidAt,
+			},
+		},
+	];
+}
+
+function decideReleaseSlot(
+	command: ReleaseSlot,
+	state: GrantState,
+): GrantEvent[] {
+	if (!isNonTerminal(state)) {
+		throw new IllegalStateError(`Cannot release slot in ${state.status} state`);
+	}
+	return [
+		{
+			type: "SlotReleased",
+			data: {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				reason: command.data.reason,
+				releasedBy: command.data.releasedBy,
+				releasedAt: command.data.releasedAt,
+			},
+		},
+	];
+}
+
+export function evolve(state: GrantState, event: GrantEvent): GrantState {
+	switch (event.type) {
+		case "GrantCreated": {
+			const coreData = {
+				grantId: event.data.grantId,
+				applicationId: event.data.applicationId,
+				applicantId: event.data.applicantId,
+				monthCycle: event.data.monthCycle,
+				rank: event.data.rank,
+			};
+			if (event.data.paymentPreference === "cash") {
+				return { ...coreData, status: "awaiting_cash_handover" };
+			}
+			return { ...coreData, status: "awaiting_bank_details", poaAttempts: 0 };
+		}
+		case "VolunteerAssigned": {
+			if (state.status === "initial") return state;
+			return { ...state, volunteerId: event.data.volunteerId };
+		}
+		case "BankDetailsSubmitted": {
+			if (state.status !== "awaiting_bank_details") return state;
+			return {
+				...state,
+				status: "bank_details_submitted",
+				poaAttempts: state.poaAttempts + 1,
+				sortCode: event.data.sortCode,
+				accountNumber: event.data.accountNumber,
+				proofOfAddressRef: event.data.proofOfAddressRef,
+			};
+		}
+		case "ProofOfAddressApproved": {
+			if (state.status !== "bank_details_submitted") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "poa_approved",
+				poaAttempts: state.poaAttempts,
+			};
+		}
+		case "ProofOfAddressRejected": {
+			if (state.status !== "bank_details_submitted") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "awaiting_bank_details",
+				poaAttempts: state.poaAttempts,
+			};
+		}
+		case "CashAlternativeOffered": {
+			if (state.status === "initial") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "offered_cash_alternative",
+			};
+		}
+		case "CashAlternativeAccepted": {
+			if (state.status !== "offered_cash_alternative") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "awaiting_cash_handover",
+			};
+		}
+		case "CashAlternativeDeclined": {
+			// No-op — SlotReleased follows immediately
+			return state;
+		}
+		case "GrantPaid": {
+			if (state.status === "initial") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "paid",
+				amount: event.data.amount,
+				method: event.data.method,
+				paidAt: event.data.paidAt,
+			};
+		}
+		case "SlotReleased": {
+			if (state.status === "initial") return state;
+			return {
+				grantId: state.grantId,
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				monthCycle: state.monthCycle,
+				rank: state.rank,
+				volunteerId: state.volunteerId,
+				status: "released",
+				reason: event.data.reason,
+				releasedAt: event.data.releasedAt,
+			};
+		}
+		default: {
+			const _exhaustive: never = event;
+			return state;
+		}
+	}
+}
