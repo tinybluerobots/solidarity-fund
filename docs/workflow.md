@@ -186,6 +186,7 @@ stateDiagram-v2
 - Verify proof of address uploads (approve/reject)
 - Assign volunteer to grant
 - Record payment (bank transfer or cash handover)
+- Record reimbursement (volunteer logs OC expense reference after cash handover)
 - Release slot for unresponsive winners
 
 ### Volunteer Actions (not yet implemented)
