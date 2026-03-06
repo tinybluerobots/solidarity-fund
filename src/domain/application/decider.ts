@@ -10,7 +10,11 @@ import type {
 	SubmitApplication,
 } from "./types.ts";
 
-export type ApplicationCommand = SubmitApplication | ReviewApplication | SelectApplication | RejectFromLottery;
+export type ApplicationCommand =
+	| SubmitApplication
+	| ReviewApplication
+	| SelectApplication
+	| RejectFromLottery;
 
 export const initialState = (): ApplicationState => ({ status: "initial" });
 

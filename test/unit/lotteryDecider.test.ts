@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { IllegalStateError } from "@event-driven-io/emmett";
-import { decide, evolve, initialState } from "../../src/domain/lottery/decider.ts";
+import {
+	decide,
+	evolve,
+	initialState,
+} from "../../src/domain/lottery/decider.ts";
 import type {
 	CloseApplicationWindow,
 	DrawLottery,
@@ -140,10 +144,7 @@ describe("lottery decider", () => {
 				status: "windowClosed",
 				monthCycle: "2026-03",
 			};
-			const events = decide(
-				drawCommand({ applicantPool: [] }),
-				state,
-			);
+			const events = decide(drawCommand({ applicantPool: [] }), state);
 			expect(events[0]!.data.selected).toHaveLength(0);
 			expect(events[0]!.data.notSelected).toHaveLength(0);
 		});
@@ -195,9 +196,7 @@ describe("lottery decider", () => {
 						availableBalance: 40,
 						reserve: 0,
 						grantAmount: 40,
-						selected: [
-							{ applicationId: "app-1", applicantId: "a-1", rank: 1 },
-						],
+						selected: [{ applicationId: "app-1", applicantId: "a-1", rank: 1 }],
 						notSelected: [{ applicationId: "app-2", applicantId: "a-2" }],
 						drawnAt: "2026-04-01T10:00:00Z",
 					},

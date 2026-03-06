@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { IllegalStateError } from "@event-driven-io/emmett";
-import { decide, evolve, initialState } from "../../src/domain/application/decider.ts";
+import {
+	decide,
+	evolve,
+	initialState,
+} from "../../src/domain/application/decider.ts";
 import type { ApplicationState } from "../../src/domain/application/types.ts";
 
 function acceptedState(monthCycle = "2026-03"): ApplicationState {

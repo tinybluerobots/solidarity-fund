@@ -27,9 +27,7 @@ function decideClose(
 	state: LotteryState,
 ): LotteryEvent[] {
 	if (state.status !== "initial") {
-		throw new IllegalStateError(
-			`Cannot close window in ${state.status} state`,
-		);
+		throw new IllegalStateError(`Cannot close window in ${state.status} state`);
 	}
 	return [
 		{
@@ -42,14 +40,9 @@ function decideClose(
 	];
 }
 
-function decideDraw(
-	command: DrawLottery,
-	state: LotteryState,
-): LotteryEvent[] {
+function decideDraw(command: DrawLottery, state: LotteryState): LotteryEvent[] {
 	if (state.status !== "windowClosed") {
-		throw new IllegalStateError(
-			`Cannot draw lottery in ${state.status} state`,
-		);
+		throw new IllegalStateError(`Cannot draw lottery in ${state.status} state`);
 	}
 
 	const { data } = command;
@@ -85,10 +78,7 @@ function decideDraw(
 	];
 }
 
-export function evolve(
-	state: LotteryState,
-	event: LotteryEvent,
-): LotteryState {
+export function evolve(state: LotteryState, event: LotteryEvent): LotteryState {
 	switch (event.type) {
 		case "ApplicationWindowClosed":
 			return {
