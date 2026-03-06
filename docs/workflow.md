@@ -99,58 +99,6 @@ flowchart TD
 
 ---
 
-## Application State Machine
-
-```mermaid
-stateDiagram-v2
-    direction TB
-
-    state "📥 Intake" as intake {
-        [*] --> Submitted: Form completed
-        Submitted --> FlaggedForReview: Known phone,\nname mismatch
-        Submitted --> Accepted: Eligibility passed
-        Submitted --> Rejected: Cooldown / duplicate
-        FlaggedForReview --> Confirmed: Volunteer confirms\n+ eligible
-        FlaggedForReview --> Rejected: Volunteer confirms\n+ ineligible, or rejects
-    }
-
-    state "🎲 Lottery" as lottery {
-        Accepted --> Selected: Lottery win
-        Accepted --> NotSelected: Lottery loss
-        Confirmed --> Selected: Lottery win
-        Confirmed --> NotSelected: Lottery loss
-    }
-
-    state "💳 Payment" as payment {
-        Selected --> AwaitingBankDetails: Notified (chose bank)
-        Selected --> CashHandover: Notified (chose cash)
-        AwaitingBankDetails --> AwaitingBankDetails: Attempt failed\n(retries remain)
-        AwaitingBankDetails --> OfferedCash: Max attempts,\noffered cash
-        OfferedCash --> CashHandover: Accepts cash
-        OfferedCash --> Released: Declines
-        AwaitingBankDetails --> DueDiligencePassed: POA verified
-        DueDiligencePassed --> Paid: Transfer sent
-        CashHandover --> AwaitingReimbursement: Volunteer hands over cash
-        AwaitingReimbursement --> Reimbursed: Volunteer logs\nOC expense
-    }
-
-    state "📋 Release & Waitlist" as release {
-        Selected --> Released: No response (14 days)
-        AwaitingBankDetails --> Released: Declines cash alternative
-        CashHandover --> Released: No-show / timeout
-        Released --> Selected: Waitlist next-up
-    }
-
-    Paid --> [*]: Cooldown recorded
-    Reimbursed --> [*]: Cooldown recorded
-    Rejected --> [*]
-    NotSelected --> [*]
-
-    note right of Selected: Reminder + phone call at 7 days\nSlot held until month end
-```
-
----
-
 ## Key Rules
 
 | Rule | Detail |
