@@ -57,6 +57,31 @@ describe("historyPanel", () => {
 		expect(updatedIdx).toBeLessThan(createdIdx);
 	});
 
+	test("renders timeline with deleted event", () => {
+		const html = historyPanel([
+			{
+				type: "RecipientDeleted",
+				volunteerName: "Sarah",
+				timestamp: "2026-03-06T09:00:00.000Z",
+			},
+		]);
+		expect(html).toContain("Deleted");
+		expect(html).toContain("Sarah");
+		expect(html).toContain("bg-red-500");
+	});
+
+	test("shows unknown when volunteerName is null on update", () => {
+		const html = historyPanel([
+			{
+				type: "RecipientUpdated",
+				volunteerName: null,
+				timestamp: "2026-03-05T14:30:00.000Z",
+			},
+		]);
+		expect(html).toContain("Updated by");
+		expect(html).toContain("unknown");
+	});
+
 	test("renders empty state when no events", () => {
 		const html = historyPanel([]);
 		expect(html).toContain("No history");
