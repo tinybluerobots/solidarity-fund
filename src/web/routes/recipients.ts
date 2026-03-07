@@ -5,12 +5,14 @@ import {
 	updateRecipient,
 } from "../../domain/recipient/commandHandlers.ts";
 import type { RecipientRepository } from "../../domain/recipient/repository.ts";
-import type { RecipientEvent } from "../../domain/recipient/types.ts";
-import type { Recipient } from "../../domain/recipient/types.ts";
+import type {
+	Recipient,
+	RecipientEvent,
+} from "../../domain/recipient/types.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
 import {
-	historyPanel,
 	type HistoryEntry,
+	historyPanel,
 } from "../pages/recipientHistoryPanel.ts";
 import { createPanel, editPanel } from "../pages/recipientPanel.ts";
 import { recipientRow, recipientsPage } from "../pages/recipients.ts";

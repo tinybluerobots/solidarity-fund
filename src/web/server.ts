@@ -44,7 +44,11 @@ export function startServer(
 	const logout = handleLogout(sessionStore);
 	const loginHtml = loginPage();
 	const applyRoutes = createApplyRoutes(eventStore, pool, recipientRepo);
-	const recipientRoutes = createRecipientRoutes(recipientRepo, volunteerRepo, eventStore);
+	const recipientRoutes = createRecipientRoutes(
+		recipientRepo,
+		volunteerRepo,
+		eventStore,
+	);
 	const volunteerRoutes = createVolunteerRoutes(volunteerRepo, eventStore);
 	const appRepo = SQLiteApplicationRepository(pool);
 	const applicationRoutes = createApplicationRoutes(
