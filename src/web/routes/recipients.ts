@@ -5,8 +5,14 @@ import {
 	updateRecipient,
 } from "../../domain/recipient/commandHandlers.ts";
 import type { RecipientRepository } from "../../domain/recipient/repository.ts";
+import type { RecipientEvent } from "../../domain/recipient/types.ts";
 import type { Recipient } from "../../domain/recipient/types.ts";
-import { createPanel, editPanel, viewPanel } from "../pages/recipientPanel.ts";
+import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
+import {
+	historyPanel,
+	type HistoryEntry,
+} from "../pages/recipientHistoryPanel.ts";
+import { createPanel, editPanel } from "../pages/recipientPanel.ts";
 import { recipientRow, recipientsPage } from "../pages/recipients.ts";
 import {
 	patchElements,
@@ -16,6 +22,7 @@ import {
 
 export function createRecipientRoutes(
 	recipientRepo: RecipientRepository,
+	volunteerRepo: VolunteerRepository,
 	eventStore: SQLiteEventStore,
 ) {
 	return {
@@ -24,12 +31,6 @@ export function createRecipientRoutes(
 			return new Response(recipientsPage(recipients), {
 				headers: { "Content-Type": "text/html" },
 			});
-		},
-
-		async detail(id: string): Promise<Response> {
-			const recipient = await recipientRepo.getById(id);
-			if (!recipient) return new Response("Not found", { status: 404 });
-			return sseResponse(patchElements(viewPanel(recipient)));
 		},
 
 		async edit(id: string): Promise<Response> {
@@ -64,7 +65,7 @@ export function createRecipientRoutes(
 			if (!recipient) return new Response("Not found", { status: 404 });
 			return sseResponse(
 				patchElements(recipientsTableBody(recipients)),
-				patchElements(viewPanel(recipient)),
+				patchElements(editPanel(recipient)),
 			);
 		},
 
@@ -86,7 +87,7 @@ export function createRecipientRoutes(
 			if (!recipient) return new Response("Not found", { status: 404 });
 			const recipients = await recipientRepo.list();
 			return sseResponse(
-				patchElements(viewPanel(recipient)),
+				patchElements(editPanel(recipient)),
 				patchElements(recipientsTableBody(recipients)),
 			);
 		},
@@ -98,6 +99,48 @@ export function createRecipientRoutes(
 				patchElements('<div id="panel"></div>'),
 				patchElements(recipientsTableBody(recipients)),
 			);
+		},
+
+		async history(id: string): Promise<Response> {
+			const { events } = await eventStore.readStream<RecipientEvent>(
+				`recipient-${id}`,
+			);
+			if (events.length === 0)
+				return new Response("Not found", { status: 404 });
+
+			const volunteerIds = new Set(
+				events
+					.map((e) =>
+						"volunteerId" in e.data ? e.data.volunteerId : undefined,
+					)
+					.filter((vid): vid is string => !!vid),
+			);
+
+			const volunteerNames = new Map<string, string>();
+			for (const vid of volunteerIds) {
+				const vol = await volunteerRepo.getById(vid);
+				if (vol) volunteerNames.set(vid, vol.name);
+			}
+
+			const entries: HistoryEntry[] = events.map((e) => {
+				const volunteerId =
+					"volunteerId" in e.data ? e.data.volunteerId : undefined;
+				const timestamp =
+					"createdAt" in e.data
+						? e.data.createdAt
+						: "updatedAt" in e.data
+							? e.data.updatedAt
+							: (e.data as { deletedAt: string }).deletedAt;
+				return {
+					type: e.type,
+					volunteerName: volunteerId
+						? (volunteerNames.get(volunteerId) ?? "unknown")
+						: null,
+					timestamp,
+				};
+			});
+
+			return sseResponse(patchElements(historyPanel(entries)));
 		},
 	};
 }
@@ -114,6 +157,7 @@ function signalsToRecipientData(signals: Record<string, unknown>): {
 	const name = String(signals.name ?? "").trim();
 	const phone = String(signals.phone ?? "").trim();
 	if (!name || !phone) return null;
+	if (!/^\d+$/.test(phone)) return null;
 
 	const pref = signals.paymentPreference === "bank" ? "bank" : "cash";
 	const sortCode = String(signals.sortCode ?? "").trim();

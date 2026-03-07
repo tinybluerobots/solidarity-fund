@@ -44,7 +44,7 @@ export function startServer(
 	const logout = handleLogout(sessionStore);
 	const loginHtml = loginPage();
 	const applyRoutes = createApplyRoutes(eventStore, pool, recipientRepo);
-	const recipientRoutes = createRecipientRoutes(recipientRepo, eventStore);
+	const recipientRoutes = createRecipientRoutes(recipientRepo, volunteerRepo, eventStore);
 	const volunteerRoutes = createVolunteerRoutes(volunteerRepo, eventStore);
 	const appRepo = SQLiteApplicationRepository(pool);
 	const applicationRoutes = createApplicationRoutes(
@@ -194,17 +194,31 @@ export function startServer(
 				return volunteerRoutes.edit(volEditMatch[1], volunteer.id);
 			}
 
+			const volDisableMatch = url.pathname.match(
+				/^\/volunteers\/([^/]+)\/disable$/,
+			);
+			if (volDisableMatch?.[1] && req.method === "POST") {
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				return volunteerRoutes.handleDisable(volDisableMatch[1], volunteer.id);
+			}
+
+			const volEnableMatch = url.pathname.match(
+				/^\/volunteers\/([^/]+)\/enable$/,
+			);
+			if (volEnableMatch?.[1] && req.method === "POST") {
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				return volunteerRoutes.handleEnable(volEnableMatch[1], volunteer.id);
+			}
+
 			const volIdMatch = url.pathname.match(/^\/volunteers\/([^/]+)$/);
 			if (volIdMatch?.[1]) {
 				const id = volIdMatch[1];
 				if (!volunteer.isAdmin)
 					return new Response("Forbidden", { status: 403 });
-				if (req.method === "GET")
-					return volunteerRoutes.detail(id, volunteer.id);
 				if (req.method === "PUT")
 					return volunteerRoutes.handleUpdate(id, req, volunteer.id);
-				if (req.method === "DELETE")
-					return volunteerRoutes.handleDelete(id, volunteer.id);
 			}
 
 			// Application review (must come before detail match)
@@ -233,6 +247,13 @@ export function startServer(
 				return recipientRoutes.handleCreate(req, volunteer.id);
 			}
 
+			const historyMatch = url.pathname.match(
+				/^\/recipients\/([^/]+)\/history$/,
+			);
+			if (historyMatch?.[1] && req.method === "GET") {
+				return recipientRoutes.history(historyMatch[1]);
+			}
+
 			const editMatch = url.pathname.match(/^\/recipients\/([^/]+)\/edit$/);
 			if (editMatch?.[1] && req.method === "GET") {
 				return recipientRoutes.edit(editMatch[1]);
@@ -241,7 +262,6 @@ export function startServer(
 			const idMatch = url.pathname.match(/^\/recipients\/([^/]+)$/);
 			if (idMatch?.[1]) {
 				const id = idMatch[1];
-				if (req.method === "GET") return recipientRoutes.detail(id);
 				if (req.method === "PUT") {
 					return recipientRoutes.handleUpdate(id, req, volunteer.id);
 				}
