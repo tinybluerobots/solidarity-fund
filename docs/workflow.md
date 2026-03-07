@@ -33,7 +33,7 @@ flowchart TD
     end
 
     subgraph "🎲 LOTTERY PHASE · Month End"
-        TIMER([⏰ Month-end<br/>reminder fires]) --> CLOSE[Volunteer closes<br/>application window]
+        CLOSE([Volunteer closes<br/>application window])
         CLOSE --> BALANCE[Volunteer enters<br/>fund balance]
         BALANCE --> CALC["Calculate slots:<br/>floor((balance − reserve) ÷ £40)"]
         CALC --> DRAW[🎲 Draw lottery<br/>with auditable RNG seed]
@@ -80,7 +80,7 @@ flowchart TD
         WAIT -->|No| ROLLOVER[Funds roll over<br/>to next month]
     end
 
-    POOL -.->|End of month| TIMER
+    POOL -.->|End of month| CLOSE
 
     style SMS fill:#4CAF50,color:#fff
     style WEB fill:#4CAF50,color:#fff
