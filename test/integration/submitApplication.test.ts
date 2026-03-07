@@ -247,8 +247,106 @@ describe("submitApplication", () => {
 		expect(events[1]!.data).toMatchObject({ reason: "duplicate" });
 	});
 
+	describe("application window gate", () => {
+		test("window not opened → checkEligibility returns window_closed", async () => {
+			const eligibility = await checkEligibility(
+				toApplicantId("07700900001"),
+				"2026-03",
+				pool,
+			);
+			expect(eligibility).toEqual({ status: "window_closed" });
+		});
+
+		test("window not opened → Submitted + Rejected(window_closed)", async () => {
+			const eligibility = await checkEligibility(
+				toApplicantId("07700900001"),
+				"2026-03",
+				pool,
+			);
+
+			const { events } = await submitApplication(
+				{
+					applicationId: "app-1",
+					phone: "07700900001",
+					name: "Alice",
+					paymentPreference: "bank",
+					meetingPlace: "Mill Road",
+					monthCycle: "2026-03",
+					eligibility,
+				},
+				eventStore,
+				recipientRepo,
+			);
+
+			expect(events).toHaveLength(2);
+			expect(events[0]!.type).toBe("ApplicationSubmitted");
+			expect(events[1]!.type).toBe("ApplicationRejected");
+			expect(events[1]!.data).toMatchObject({
+				reason: "window_closed",
+				detail: "Application window is not open",
+			});
+		});
+
+		test("window open → eligible", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
+			const eligibility = await checkEligibility(
+				toApplicantId("07700900001"),
+				"2026-03",
+				pool,
+			);
+			expect(eligibility).toEqual({ status: "eligible" });
+		});
+
+		test("window closed → checkEligibility returns window_closed", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowClosed",
+					data: {
+						monthCycle: "2026-03",
+						closedAt: "2026-03-31T23:59:59Z",
+					},
+				},
+			]);
+
+			const eligibility = await checkEligibility(
+				toApplicantId("07700900001"),
+				"2026-03",
+				pool,
+			);
+			expect(eligibility).toEqual({ status: "window_closed" });
+		});
+	});
+
 	describe("eligibility end-to-end", () => {
 		test("accepted grant blocks same month (duplicate)", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
 			await submitApplication(
 				{
 					applicationId: "app-1",
@@ -289,6 +387,16 @@ describe("submitApplication", () => {
 		});
 
 		test("accepted-only does not trigger cooldown", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
 			await submitApplication(
 				{
 					applicationId: "app-1",
@@ -312,6 +420,16 @@ describe("submitApplication", () => {
 		});
 
 		test("selected application triggers cooldown in following months", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
 			await submitApplication(
 				{
 					applicationId: "app-1",
@@ -369,6 +487,16 @@ describe("submitApplication", () => {
 		});
 
 		test("eligible after cooldown expires", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
 			await submitApplication(
 				{
 					applicationId: "app-1",
@@ -422,6 +550,16 @@ describe("submitApplication", () => {
 		});
 
 		test("rejected grant does not block reapplication", async () => {
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
+
 			await submitApplication(
 				{
 					applicationId: "app-1",
@@ -484,6 +622,16 @@ describe("submitApplication", () => {
 		test("volunteer confirms eligible flagged application → ApplicationConfirmed", async () => {
 			await submitFlagged();
 
+			await eventStore.appendToStream("lottery-2026-06", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-06",
+						openedAt: "2026-06-01T00:00:00Z",
+					},
+				},
+			]);
+
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001"),
 				"2026-06",
@@ -508,6 +656,16 @@ describe("submitApplication", () => {
 
 		test("volunteer confirms but applicant in cooldown → ApplicationRejected", async () => {
 			await submitFlagged();
+
+			await eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+			]);
 
 			// Select the first application so cooldown triggers
 			await eventStore.appendToStream("application-app-first", [
@@ -567,6 +725,16 @@ describe("submitApplication", () => {
 
 		test("confirmed application creates accepted row in applications projection", async () => {
 			await submitFlagged();
+
+			await eventStore.appendToStream("lottery-2026-06", [
+				{
+					type: "ApplicationWindowOpened",
+					data: {
+						monthCycle: "2026-06",
+						openedAt: "2026-06-01T00:00:00Z",
+					},
+				},
+			]);
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001"),

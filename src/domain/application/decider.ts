@@ -114,7 +114,9 @@ function decideSubmit(
 	const detail =
 		data.eligibility.status === "cooldown"
 			? `Last grant in ${data.eligibility.lastGrantMonth}`
-			: "Already applied this month";
+			: data.eligibility.status === "duplicate"
+				? "Already applied this month"
+				: "Application window is not open";
 
 	return [
 		submitted,
@@ -180,7 +182,9 @@ function decideReview(
 	const detail =
 		data.eligibility.status === "cooldown"
 			? `Last grant in ${data.eligibility.lastGrantMonth}`
-			: "Already applied this month";
+			: data.eligibility.status === "duplicate"
+				? "Already applied this month"
+				: "Application window is not open";
 
 	return [
 		{

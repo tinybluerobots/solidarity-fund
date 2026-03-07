@@ -17,6 +17,23 @@ export async function checkEligibility(
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 ): Promise<EligibilityResult> {
 	return pool.withConnection(async (conn) => {
+		// Check if lottery_windows table exists
+		const windowTables = await conn.query<{ name: string }>(
+			"SELECT name FROM sqlite_master WHERE type='table' AND name='lottery_windows'",
+		);
+		if (windowTables.length === 0) {
+			return { status: "window_closed" } as const;
+		}
+
+		// Check window status
+		const windowRows = await conn.query<{ status: string }>(
+			"SELECT status FROM lottery_windows WHERE month_cycle = ? LIMIT 1",
+			[monthCycle],
+		);
+		if (windowRows.length === 0 || windowRows[0]?.status !== "open") {
+			return { status: "window_closed" } as const;
+		}
+
 		const tables = await conn.query<{ name: string }>(
 			"SELECT name FROM sqlite_master WHERE type='table' AND name='applications'",
 		);

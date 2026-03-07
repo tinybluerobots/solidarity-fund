@@ -22,7 +22,8 @@ export type IdentityResolution =
 export type EligibilityResult =
 	| { status: "eligible" }
 	| { status: "cooldown"; lastGrantMonth: string }
-	| { status: "duplicate" };
+	| { status: "duplicate" }
+	| { status: "window_closed" };
 
 // Commands
 
@@ -111,7 +112,7 @@ export type ApplicationRejected = Event<
 	{
 		applicationId: string;
 		applicantId: string;
-		reason: "cooldown" | "duplicate" | "identity_mismatch";
+		reason: "cooldown" | "duplicate" | "identity_mismatch" | "window_closed";
 		detail: string;
 		volunteerId?: string;
 		monthCycle: string;
