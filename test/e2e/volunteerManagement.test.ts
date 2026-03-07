@@ -25,11 +25,8 @@ test.describe("volunteer management", () => {
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		await expect(
-			page.locator("#panel h2", { hasText: "Alice Helper" }),
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
-		await expect(page.locator("#panel")).toContainText("07700900001");
-		await expect(page.locator("#panel")).toContainText("alice@example.com");
-		await expect(page.locator("#panel")).toContainText("Volunteer");
 		await expect(page.locator("#volunteer-rows")).toContainText("Alice Helper");
 	});
 
@@ -44,20 +41,18 @@ test.describe("volunteer management", () => {
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		await expect(
-			page.locator("#panel h2", { hasText: "Bob Admin" }),
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("#panel")).toContainText("Admin");
 	});
 
-	test("views volunteer detail", async ({ page }) => {
-		// Click on the Test user row
+	test("clicking volunteer opens edit panel", async ({ page }) => {
 		await page.locator("#volunteer-rows tr", { hasText: "Test" }).click();
 
-		await expect(page.locator("#panel h2", { hasText: "Test" })).toBeVisible({
-			timeout: 10000,
-		});
+		await expect(
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
+		).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("#panel")).toContainText("Admin");
-		await expect(page.locator("#panel")).toContainText("Edit");
 	});
 
 	test("edits a volunteer", async ({ page }) => {
@@ -67,20 +62,9 @@ test.describe("volunteer management", () => {
 		await page.locator("input[data-bind-name]").fill("Edit Me");
 		await page.locator("input[data-bind-password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
-		await expect(page.locator("#panel h2", { hasText: "Edit Me" })).toBeVisible(
-			{ timeout: 10000 },
-		);
-
-		// Click Edit
-		await page.locator("#panel button", { hasText: "Edit" }).click();
 		await expect(
 			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
-
-		// Admin checkbox should not be present on edit
-		await expect(page.locator("#panel")).toContainText(
-			"admin status can only be set at creation",
-		);
 
 		// Update name
 		const nameInput = page.locator("input[data-bind-name]");
@@ -89,47 +73,45 @@ test.describe("volunteer management", () => {
 
 		await page.locator('button[type="submit"]', { hasText: "Save" }).click();
 
-		await expect(
-			page.locator("#panel h2", { hasText: "Edited Name" }),
-		).toBeVisible({ timeout: 10000 });
-		await expect(page.locator("#volunteer-rows")).toContainText("Edited Name");
+		await expect(page.locator("#volunteer-rows")).toContainText("Edited Name", {
+			timeout: 10000,
+		});
 	});
 
-	test("deletes a volunteer", async ({ page }) => {
-		// Create a volunteer to delete
+	test("disables a volunteer", async ({ page }) => {
+		// Create a volunteer to disable
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
-		await page.locator("input[data-bind-name]").fill("Delete Me");
+		await page.locator("input[data-bind-name]").fill("Disable Me");
 		await page.locator("input[data-bind-password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(
-			page.locator("#panel h2", { hasText: "Delete Me" }),
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
 
-		// Click Delete, then Confirm
-		await page.locator("#panel button", { hasText: "Delete" }).click();
+		// Click Disable Account, then Confirm
+		await page.locator("#panel button", { hasText: "Disable" }).click();
 		await expect(
-			page.locator("#panel", { hasText: "Are you sure?" }),
+			page.locator("#panel", { hasText: "Sure?" }),
 		).toBeVisible();
 		await page.locator("#panel button", { hasText: "Confirm" }).click();
 
-		// Panel should close and volunteer should be gone
-		await expect(page.locator("#volunteer-rows")).not.toContainText(
-			"Delete Me",
-			{ timeout: 10000 },
-		);
+		// Volunteer should be marked as disabled in the table
+		await expect(
+			page.locator("#volunteer-rows tr", { hasText: "Disable Me" }),
+		).toContainText("Disabled", { timeout: 10000 });
 	});
 
-	test("cannot delete self", async ({ page }) => {
+	test("cannot disable self", async ({ page }) => {
 		// Click on the Test user (self)
 		await page.locator("#volunteer-rows tr", { hasText: "Test" }).click();
-		await expect(page.locator("#panel h2", { hasText: "Test" })).toBeVisible({
-			timeout: 10000,
-		});
-
-		// Delete button should not be present
 		await expect(
-			page.locator("#panel button", { hasText: "Delete" }),
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
+		).toBeVisible({ timeout: 10000 });
+
+		// Disable button should not be present
+		await expect(
+			page.locator("#panel button", { hasText: "Disable" }),
 		).not.toBeVisible();
 	});
 
@@ -149,7 +131,7 @@ test.describe("volunteer management", () => {
 		await page.locator("input[data-bind-password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(
-			page.locator("#panel h2", { hasText: "Searchable Person" }),
+			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
 
 		// Close panel and search
