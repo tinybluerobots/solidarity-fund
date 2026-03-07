@@ -63,6 +63,6 @@ describe("recipientsPage", () => {
 	test("table rows have data-on-click for SSE fetch", () => {
 		const html = recipientsPage([alice]);
 		expect(html).toContain("@get");
-		expect(html).toContain("/recipients/r-1");
+		expect(html).toContain("/recipients/r-1/edit");
 	});
 });
