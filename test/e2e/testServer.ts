@@ -1,4 +1,7 @@
-import { createVolunteer } from "../../src/domain/volunteer/commandHandlers.ts";
+import {
+	changePassword,
+	createVolunteer,
+} from "../../src/domain/volunteer/commandHandlers.ts";
 import { createEventStore } from "../../src/infrastructure/eventStore.ts";
 import { SQLiteRecipientRepository } from "../../src/infrastructure/recipient/sqliteRecipientRepository.ts";
 import { SQLiteSessionStore } from "../../src/infrastructure/session/sqliteSessionStore.ts";
@@ -12,7 +15,11 @@ const sessionStore = await SQLiteSessionStore(pool);
 const volunteerRepo = await SQLiteVolunteerRepository(pool);
 const recipientRepo = await SQLiteRecipientRepository(pool);
 
-await createVolunteer({ name: "Test", password: "test" }, eventStore);
+const { id } = await createVolunteer(
+	{ name: "Test", password: "test", isAdmin: true },
+	eventStore,
+);
+await changePassword(id, "test", eventStore);
 
 const server = startServer(
 	sessionStore,
