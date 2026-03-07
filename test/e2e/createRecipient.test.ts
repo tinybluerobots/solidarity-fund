@@ -1,0 +1,71 @@
+import { expect, test } from "./fixtures.ts";
+
+test.describe("create recipient", () => {
+	test.beforeEach(async ({ serverInstance, login, page }) => {
+		void serverInstance;
+		await login(page);
+		await page.goto("/recipients");
+		await page.locator("button", { hasText: "Add Recipient" }).click();
+		await page.locator("#panel h2", { hasText: "New Recipient" }).waitFor();
+	});
+
+	test("creates recipient with cash payment", async ({ page }) => {
+		await page.locator("input[data-bind-name]").fill("Alice Smith");
+		await page.locator("input[data-bind-phone]").fill("07700900001");
+
+		// Cash is default — meeting place should be visible
+		const meetingPlaceInput = page.locator("input[data-bind-meeting-place]");
+		await meetingPlaceInput.waitFor({ state: "visible" });
+		await meetingPlaceInput.fill("Town Hall");
+
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		await expect(
+			page.locator("#panel h2", { hasText: "Alice Smith" }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(page.locator("#recipient-rows")).toContainText("Alice Smith");
+		await expect(page.locator("#recipient-rows")).toContainText("07700900001");
+	});
+
+	test("creates recipient with bank payment", async ({ page }) => {
+		await page.locator("input[data-bind-name]").fill("Bob Jones");
+		await page.locator("input[data-bind-phone]").fill("07700900002");
+
+		await page.locator('input[type="radio"][value="bank"]').check();
+
+		const sortCodeInput = page.locator("input[data-bind-sort-code]");
+		await sortCodeInput.waitFor({ state: "visible", timeout: 10000 });
+		await sortCodeInput.fill("12-34-56");
+		await page.locator("input[data-bind-account-number]").fill("12345678");
+
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		await expect(
+			page.locator("#panel h2", { hasText: "Bob Jones" }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(page.locator("#panel")).toContainText("12-34-56");
+		await expect(page.locator("#panel")).toContainText("12345678");
+		await expect(page.locator("#recipient-rows")).toContainText("Bob Jones");
+	});
+
+	test("creates recipient with all optional fields", async ({ page }) => {
+		await page.locator("input[data-bind-name]").fill("Carol White");
+		await page.locator("input[data-bind-phone]").fill("07700900003");
+		await page.locator("input[data-bind-email]").fill("carol@example.com");
+
+		const meetingPlaceInput = page.locator("input[data-bind-meeting-place]");
+		await meetingPlaceInput.waitFor({ state: "visible" });
+		await meetingPlaceInput.fill("Library");
+
+		await page.locator("textarea[data-bind-notes]").fill("Prefers mornings");
+
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		await expect(
+			page.locator("#panel h2", { hasText: "Carol White" }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(page.locator("#panel")).toContainText("carol@example.com");
+		await expect(page.locator("#panel")).toContainText("Library");
+		await expect(page.locator("#panel")).toContainText("Prefers mornings");
+	});
+});
