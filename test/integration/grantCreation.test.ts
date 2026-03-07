@@ -67,6 +67,19 @@ describe("grant creation end-to-end", () => {
 		await handle(eventStore, lotteryStream, (state) =>
 			lotteryDecide(
 				{
+					type: "OpenApplicationWindow",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+				state,
+			),
+		);
+
+		await handle(eventStore, lotteryStream, (state) =>
+			lotteryDecide(
+				{
 					type: "CloseApplicationWindow",
 					data: {
 						monthCycle: "2026-03",

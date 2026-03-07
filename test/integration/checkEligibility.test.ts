@@ -20,6 +20,15 @@ describe("checkEligibility", () => {
 		await pool.close();
 	});
 
+	async function openWindow(monthCycle: string) {
+		await eventStore.appendToStream(`lottery-${monthCycle}`, [
+			{
+				type: "ApplicationWindowOpened",
+				data: { monthCycle, openedAt: "2026-01-01T00:00:00Z" },
+			},
+		]);
+	}
+
 	async function submitAndAccept(
 		applicantId: string,
 		monthCycle: string,
@@ -71,6 +80,7 @@ describe("checkEligibility", () => {
 	}
 
 	test("eligible when prior application was not_selected", async () => {
+		await openWindow("2026-04");
 		await submitAndAccept("applicant-07700900001", "2026-03", "app-1");
 		await eventStore.appendToStream("application-app-1", [
 			{
@@ -93,6 +103,7 @@ describe("checkEligibility", () => {
 	});
 
 	test("cooldown returns most recent selected month", async () => {
+		await openWindow("2026-03");
 		await submitAcceptAndSelect("applicant-07700900001", "2026-01", "app-1");
 		await submitAcceptAndSelect("applicant-07700900001", "2026-02", "app-2");
 
@@ -105,6 +116,7 @@ describe("checkEligibility", () => {
 	});
 
 	test("different applicant is not affected", async () => {
+		await openWindow("2026-03");
 		await submitAcceptAndSelect("applicant-07700900002", "2026-03", "app-1");
 
 		const result = await checkEligibility(
@@ -116,6 +128,7 @@ describe("checkEligibility", () => {
 	});
 
 	test("cooldown across year boundary", async () => {
+		await openWindow("2026-02");
 		await submitAcceptAndSelect("applicant-07700900001", "2025-12", "app-1");
 
 		const result = await checkEligibility(
@@ -130,6 +143,7 @@ describe("checkEligibility", () => {
 	});
 
 	test("accepted-only does not trigger cooldown", async () => {
+		await openWindow("2026-03");
 		await submitAndAccept("applicant-07700900001", "2026-01", "app-1");
 
 		const result = await checkEligibility(

@@ -67,6 +67,19 @@ describe("lottery draw end-to-end", () => {
 		await lotteryHandle(eventStore, lotteryStream, (state) =>
 			lotteryDecide(
 				{
+					type: "OpenApplicationWindow",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+				state,
+			),
+		);
+
+		await lotteryHandle(eventStore, lotteryStream, (state) =>
+			lotteryDecide(
+				{
 					type: "CloseApplicationWindow",
 					data: { monthCycle: "2026-03", closedAt: "2026-03-31T23:59:59Z" },
 				},
@@ -147,6 +160,19 @@ describe("lottery draw end-to-end", () => {
 		await lotteryHandle(eventStore, lotteryStream, (state) =>
 			lotteryDecide(
 				{
+					type: "OpenApplicationWindow",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+				state,
+			),
+		);
+
+		await lotteryHandle(eventStore, lotteryStream, (state) =>
+			lotteryDecide(
+				{
 					type: "CloseApplicationWindow",
 					data: { monthCycle: "2026-03", closedAt: "2026-03-31T23:59:59Z" },
 				},
@@ -203,6 +229,19 @@ describe("lottery draw end-to-end", () => {
 		await lotteryHandle(eventStore, "lottery-2026-03", (state) =>
 			lotteryDecide(
 				{
+					type: "OpenApplicationWindow",
+					data: {
+						monthCycle: "2026-03",
+						openedAt: "2026-03-01T00:00:00Z",
+					},
+				},
+				state,
+			),
+		);
+
+		await lotteryHandle(eventStore, "lottery-2026-03", (state) =>
+			lotteryDecide(
+				{
 					type: "CloseApplicationWindow",
 					data: { monthCycle: "2026-03", closedAt: "2026-03-31T23:59:59Z" },
 				},
@@ -238,6 +277,16 @@ describe("lottery draw end-to-end", () => {
 		);
 
 		await processLotteryDrawn(newEvents[0]!, eventStore);
+
+		await eventStore.appendToStream("lottery-2026-04", [
+			{
+				type: "ApplicationWindowOpened",
+				data: {
+					monthCycle: "2026-04",
+					openedAt: "2026-04-01T00:00:00Z",
+				},
+			},
+		]);
 
 		const result = await checkEligibility(
 			"applicant-07700900001",
