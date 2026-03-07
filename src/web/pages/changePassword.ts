@@ -1,5 +1,13 @@
 import { layout } from "./layout.ts";
 
+function escapeHtml(s: string): string {
+	return s
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;");
+}
+
 export function changePasswordPage(error?: string): string {
 	const errorHtml = error
 		? `<div id="error-message" class="bg-red-50 border border-red-200 text-red-800 px-3 py-2.5 rounded-md text-sm mb-5">${escapeHtml(error)}</div>`
@@ -69,12 +77,4 @@ export function changePasswordPage(error?: string): string {
 	</style>
 `,
 	);
-}
-
-function escapeHtml(s: string): string {
-	return s
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
 }

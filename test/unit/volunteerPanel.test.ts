@@ -53,12 +53,12 @@ describe("viewPanel", () => {
 	test("hides delete button for self", () => {
 		const html = viewPanel(alice, "v-1");
 		expect(html).toContain("Edit");
-		expect(html).not.toContain("Delete");
+		expect(html).not.toContain(">Delete</button>");
 	});
 
 	test("uses signal-driven delete confirmation", () => {
 		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("confirmDel");
+		expect(html).toContain("confirmDelete");
 		expect(html).toContain("Are you sure?");
 		expect(html).toContain("Confirm");
 	});

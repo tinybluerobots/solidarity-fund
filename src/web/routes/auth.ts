@@ -15,10 +15,15 @@ export function handleLogin(
 ) {
 	return async (req: Request): Promise<Response> => {
 		const form = await req.formData();
-		const name = form.get("name") as string;
-		const password = form.get("password") as string;
+		const name = form.get("name");
+		const password = form.get("password");
 
-		if (!name || !password) {
+		if (
+			typeof name !== "string" ||
+			typeof password !== "string" ||
+			!name ||
+			!password
+		) {
 			return loginResponse("Name and password are required");
 		}
 
@@ -64,11 +69,18 @@ export function handleChangePassword(
 ) {
 	return async (req: Request, volunteerId: string): Promise<Response> => {
 		const form = await req.formData();
-		const currentPassword = form.get("currentPassword") as string;
-		const newPassword = form.get("newPassword") as string;
-		const confirmPassword = form.get("confirmPassword") as string;
+		const currentPassword = form.get("currentPassword");
+		const newPassword = form.get("newPassword");
+		const confirmPassword = form.get("confirmPassword");
 
-		if (!currentPassword || !newPassword || !confirmPassword) {
+		if (
+			typeof currentPassword !== "string" ||
+			typeof newPassword !== "string" ||
+			typeof confirmPassword !== "string" ||
+			!currentPassword ||
+			!newPassword ||
+			!confirmPassword
+		) {
 			return changePasswordResponse("All fields are required");
 		}
 		if (newPassword !== confirmPassword) {

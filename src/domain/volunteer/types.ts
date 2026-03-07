@@ -18,7 +18,7 @@ export type CreateVolunteer = {
 };
 
 export type UpdateVolunteer = {
-	name?: string;
+	name: string;
 	phone?: string | null;
 	email?: string | null;
 	password?: string;

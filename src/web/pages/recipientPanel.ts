@@ -59,7 +59,7 @@ export function viewPanel(r: Recipient): string {
     <div class="flex gap-3 mt-6">
       <button class="${btnAmber}" data-on-click="@get('/recipients/${r.id}/edit')">Edit</button>
       <button class="${btnSecondary}" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
-      <span data-show="$confirmDelete" class="flex items-center gap-2">
+      <span data-show="$confirmDelete" class="flex items-center gap-2" style="display:none">
         <span class="font-body text-bark-muted text-sm">Are you sure?</span>
         <button class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="@delete('/recipients/${r.id}')">Confirm</button>
         <button class="${btnSecondary}" data-on-click="$confirmDelete = false">Cancel</button>

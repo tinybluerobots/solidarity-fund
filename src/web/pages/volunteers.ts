@@ -1,5 +1,5 @@
-import type { Volunteer } from "../../domain/volunteer/types";
-import { layout } from "./layout";
+import type { Volunteer } from "../../domain/volunteer/types.ts";
+import { layout } from "./layout.ts";
 
 function escapeHtml(s: string): string {
 	return s

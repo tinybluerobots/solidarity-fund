@@ -136,19 +136,21 @@ function signalsToVolunteerCreateData(signals: Record<string, unknown>): {
 
 function signalsToVolunteerUpdateData(signals: Record<string, unknown>): {
 	name?: string;
-	phone?: string;
-	email?: string;
+	phone?: string | null;
+	email?: string | null;
 	password?: string;
 } | null {
 	const name = String(signals.name ?? "").trim();
 	if (!name) return null;
 
 	const password = String(signals.password ?? "").trim() || undefined;
+	const phone = String(signals.phone ?? "").trim();
+	const email = String(signals.email ?? "").trim();
 
 	return {
 		name,
-		phone: String(signals.phone ?? "").trim() || undefined,
-		email: String(signals.email ?? "").trim() || undefined,
+		phone: phone || null,
+		email: email || null,
 		password,
 	};
 }

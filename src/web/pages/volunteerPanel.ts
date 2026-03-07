@@ -40,15 +40,15 @@ export function viewPanel(v: Volunteer, currentVolunteerId: string): string {
 
 	const deleteButton = isSelf
 		? ""
-		: `<button class="${btnSecondary}" data-show="!$confirmDel" data-on-click="$confirmDel = true">Delete</button>
-      <span data-show="$confirmDel" class="flex items-center gap-2">
+		: `<button class="${btnSecondary}" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
+      <span data-show="$confirmDelete" class="flex items-center gap-2" style="display:none">
         <span class="font-body text-bark-muted text-sm">Are you sure?</span>
         <button class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="@delete('/volunteers/${v.id}')">Confirm</button>
-        <button class="${btnSecondary}" data-on-click="$confirmDel = false">Cancel</button>
+        <button class="${btnSecondary}" data-on-click="$confirmDelete = false">Cancel</button>
       </span>`;
 
 	return panelWrapper(`
-    <div class="flex items-center justify-between mb-6" data-signals="{confirmDel: false}">
+    <div class="flex items-center justify-between mb-6" data-signals="{confirmDelete: false}">
       <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(v.name)}</h2>
       <button class="${btnSecondary}" data-on-click="@get('/volunteers/close')">Close</button>
     </div>
@@ -82,8 +82,6 @@ function volunteerForm(opts: {
 	const hintHtml = opts.passwordHint
 		? `<p class="text-xs text-bark-muted mt-1">${opts.passwordHint}</p>`
 		: "";
-	const adminChecked = opts.isAdmin ? "checked" : "";
-
 	return `
     <div data-signals="{name: '${escapeSignalValue(opts.name)}', phone: '${escapeSignalValue(opts.phone)}', email: '${escapeSignalValue(opts.email)}', password: '', isAdmin: ${opts.isAdmin}}">
       <form data-on-submit__prevent="${opts.method}('${opts.action}')">
@@ -108,7 +106,7 @@ function volunteerForm(opts: {
 					opts.showAdminCheckbox
 						? `<div class="mb-6">
           <label class="flex items-center gap-2 font-body text-bark cursor-pointer">
-            <input type="checkbox" data-bind-is-admin ${adminChecked} />
+            <input type="checkbox" data-bind-is-admin />
             Admin
           </label>
         </div>`

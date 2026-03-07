@@ -1,6 +1,7 @@
 import type { SQLiteConnectionPool } from "@event-driven-io/emmett-sqlite";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
 import type { Volunteer } from "../../domain/volunteer/types.ts";
+import { VOLUNTEERS_TABLE_DDL } from "./schema.ts";
 
 type VolunteerRow = {
 	id: string;
@@ -20,8 +21,8 @@ function rowToVolunteer(row: VolunteerRow): Volunteer {
 		name: row.name,
 		phone: row.phone ?? undefined,
 		email: row.email ?? undefined,
-		isAdmin: row.is_admin === 1,
-		requiresPasswordReset: row.requires_password_reset === 1,
+		isAdmin: row.is_admin !== 0,
+		requiresPasswordReset: row.requires_password_reset !== 0,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
 	};
@@ -31,19 +32,7 @@ export async function SQLiteVolunteerRepository(
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 ): Promise<VolunteerRepository> {
 	await pool.withConnection(async (conn) => {
-		await conn.command(`
-			CREATE TABLE IF NOT EXISTS volunteers (
-				id TEXT PRIMARY KEY,
-				name TEXT NOT NULL,
-				phone TEXT,
-				email TEXT,
-				password_hash TEXT NOT NULL,
-				is_admin INTEGER NOT NULL DEFAULT 0,
-				requires_password_reset INTEGER NOT NULL DEFAULT 0,
-				created_at TEXT NOT NULL,
-				updated_at TEXT NOT NULL
-			)
-		`);
+		await conn.command(VOLUNTEERS_TABLE_DDL);
 	});
 
 	return {

@@ -1,5 +1,6 @@
 import { sqliteProjection } from "@event-driven-io/emmett-sqlite";
 import type { VolunteerEvent } from "../../domain/volunteer/types.ts";
+import { VOLUNTEERS_TABLE_DDL } from "../volunteer/schema.ts";
 
 export const volunteerProjection = sqliteProjection<VolunteerEvent>({
 	canHandle: [
@@ -10,19 +11,7 @@ export const volunteerProjection = sqliteProjection<VolunteerEvent>({
 	],
 
 	init: async ({ context: { connection } }) => {
-		await connection.command(`
-			CREATE TABLE IF NOT EXISTS volunteers (
-				id TEXT PRIMARY KEY,
-				name TEXT NOT NULL,
-				phone TEXT,
-				email TEXT,
-				password_hash TEXT NOT NULL,
-				is_admin INTEGER NOT NULL DEFAULT 0,
-				requires_password_reset INTEGER NOT NULL DEFAULT 0,
-				created_at TEXT NOT NULL,
-				updated_at TEXT NOT NULL
-			)
-		`);
+		await connection.command(VOLUNTEERS_TABLE_DDL);
 	},
 
 	handle: async (events, { connection }) => {
