@@ -68,4 +68,75 @@ test.describe("create recipient", () => {
 		await expect(page.locator("#panel")).toContainText("Library");
 		await expect(page.locator("#panel")).toContainText("Prefers mornings");
 	});
+
+	test("prevents submission with empty name", async ({ page }) => {
+		await page.locator("input[data-bind-phone]").fill("07700900010");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		// Form should still be open
+		await expect(
+			page.locator("#panel h2", { hasText: "New Recipient" }),
+		).toBeVisible();
+
+		// No recipient should appear in the table
+		await expect(page.locator("#recipient-rows")).not.toContainText(
+			"07700900010",
+		);
+	});
+
+	test("prevents submission with empty phone", async ({ page }) => {
+		await page.locator("input[data-bind-name]").fill("No Phone Person");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		// Form should still be open
+		await expect(
+			page.locator("#panel h2", { hasText: "New Recipient" }),
+		).toBeVisible();
+
+		// No recipient should appear in the table
+		await expect(page.locator("#recipient-rows")).not.toContainText(
+			"No Phone Person",
+		);
+	});
+
+	test("rejects duplicate phone number", async ({ page }) => {
+		// Create first recipient
+		await page.locator("input[data-bind-name]").fill("First Person");
+		await page.locator("input[data-bind-phone]").fill("07700900099");
+		const meetingPlaceInput = page.locator("input[data-bind-meeting-place]");
+		await meetingPlaceInput.waitFor({ state: "visible" });
+		await meetingPlaceInput.fill("Park");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		await expect(
+			page.locator("#panel h2", { hasText: "First Person" }),
+		).toBeVisible({ timeout: 10000 });
+
+		// Navigate back to get a clean page state
+		await page.goto("/recipients");
+		await expect(page.locator("#recipient-rows")).toContainText(
+			"First Person",
+			{
+				timeout: 10000,
+			},
+		);
+
+		await page.locator("button", { hasText: "Add Recipient" }).click();
+		await page.locator("#panel h2", { hasText: "New Recipient" }).waitFor();
+
+		await page.locator("input[data-bind-name]").fill("Second Person");
+		await page.locator("input[data-bind-phone]").fill("07700900099");
+		const meetingPlace2 = page.locator("input[data-bind-meeting-place]");
+		await meetingPlace2.waitFor({ state: "visible" });
+		await meetingPlace2.fill("Square");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+
+		// Wait for the server to process (it will fail with SQLITE_CONSTRAINT)
+		await page.waitForTimeout(2000);
+
+		// The view panel for "Second Person" should NOT appear — the create failed
+		await expect(
+			page.locator("#panel h2", { hasText: "Second Person" }),
+		).not.toBeVisible();
+	});
 });
