@@ -11,6 +11,11 @@ const sessionStore = await SQLiteSessionStore(pool);
 const volunteerRepo = await SQLiteVolunteerRepository(pool);
 const recipientRepo = await SQLiteRecipientRepository(pool);
 
-const server = startServer(sessionStore, volunteerRepo, recipientRepo, eventStore);
+const server = startServer(
+	sessionStore,
+	volunteerRepo,
+	recipientRepo,
+	eventStore,
+);
 
 console.log(`CSF server running at http://localhost:${server.port}`);

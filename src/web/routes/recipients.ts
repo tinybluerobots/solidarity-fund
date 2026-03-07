@@ -46,9 +46,10 @@ export function createRecipientRoutes(
 			);
 			const recipients = await recipientRepo.list();
 			const recipient = await recipientRepo.getById(id);
+			if (!recipient) return new Response("Not found", { status: 404 });
 			return sseResponse(
 				patchElements(recipientsTableBody(recipients)),
-				patchElements(viewPanel(recipient!)),
+				patchElements(viewPanel(recipient)),
 			);
 		},
 
@@ -60,9 +61,10 @@ export function createRecipientRoutes(
 			const data = formToRecipientData(form);
 			await updateRecipient(id, volunteerId, data, eventStore);
 			const recipient = await recipientRepo.getById(id);
+			if (!recipient) return new Response("Not found", { status: 404 });
 			const recipients = await recipientRepo.list();
 			return sseResponse(
-				patchElements(viewPanel(recipient!)),
+				patchElements(viewPanel(recipient)),
 				patchElements(recipientsTableBody(recipients)),
 			);
 		},

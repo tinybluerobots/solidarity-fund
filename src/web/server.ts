@@ -92,13 +92,13 @@ export function startServer(
 			}
 
 			const editMatch = url.pathname.match(/^\/recipients\/([^/]+)\/edit$/);
-			if (editMatch) {
-				return recipientRoutes.edit(editMatch[1]!);
+			if (editMatch?.[1]) {
+				return recipientRoutes.edit(editMatch[1]);
 			}
 
 			const idMatch = url.pathname.match(/^\/recipients\/([^/]+)$/);
-			if (idMatch) {
-				const id = idMatch[1]!;
+			if (idMatch?.[1]) {
+				const id = idMatch[1];
 				if (req.method === "GET") return recipientRoutes.detail(id);
 				if (req.method === "PUT") {
 					const form = await req.formData();
