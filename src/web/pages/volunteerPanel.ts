@@ -29,7 +29,6 @@ function volunteerForm(opts: {
 	isAdmin: boolean;
 	passwordRequired: boolean;
 	passwordHint?: string;
-	cancelAction: string;
 	disableAction?: string;
 	enableAction?: string;
 }): string {
@@ -65,7 +64,6 @@ function volunteerForm(opts: {
         </div>
         <div class="flex gap-3" data-signals="{confirmDisable: false}">
           <button type="submit" class="${btnAmber}">${opts.submitLabel}</button>
-          <button type="button" class="${btnSecondary}" data-on-click="${opts.cancelAction}">Cancel</button>
           ${
 						opts.enableAction
 							? `<button type="button" class="${btnSecondary} ml-auto" data-on-click="${opts.enableAction}">Enable</button>`
@@ -117,7 +115,7 @@ export function editPanel(v: Volunteer, currentVolunteerId: string): string {
 			isAdmin: v.isAdmin,
 			passwordRequired: false,
 			passwordHint: "Leave blank to keep current",
-			cancelAction: "@get('/volunteers/close')",
+
 			disableAction:
 				!isSelf && !v.isDisabled
 					? `@post('/volunteers/${v.id}/disable')`
@@ -151,7 +149,6 @@ export function createPanel(): string {
 			password: "",
 			isAdmin: false,
 			passwordRequired: true,
-			cancelAction: "@get('/volunteers/close')",
 		})}
   `);
 }

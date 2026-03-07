@@ -30,7 +30,6 @@ function recipientForm(opts: {
 	accountNumber: string;
 	meetingPlace: string;
 	notes: string;
-	cancelAction: string;
 	deleteAction?: string;
 }): string {
 	const bankChecked = opts.paymentPreference === "bank" ? "checked" : "";
@@ -86,7 +85,6 @@ function recipientForm(opts: {
         </div>
         <div class="flex gap-3" data-signals="{confirmDelete: false}">
           <button type="submit" class="${btnAmber}">${opts.submitLabel}</button>
-          <button type="button" class="${btnSecondary}" data-on-click="${opts.cancelAction}">Cancel</button>
           ${
 						opts.deleteAction
 							? `<button type="button" class="${btnSecondary} ml-auto" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
@@ -135,7 +133,7 @@ export function editPanel(r: Recipient): string {
 			accountNumber: r.bankDetails?.accountNumber ?? "",
 			meetingPlace: r.meetingPlace ?? "",
 			notes: r.notes ?? "",
-			cancelAction: "@get('/recipients/close')",
+
 			deleteAction: `@delete('/recipients/${r.id}')`,
 		})}
     </div>
@@ -164,7 +162,6 @@ export function createPanel(): string {
 			accountNumber: "",
 			meetingPlace: "",
 			notes: "",
-			cancelAction: "@get('/recipients/close')",
 		})}
   `);
 }

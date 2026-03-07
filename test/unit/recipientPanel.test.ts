@@ -29,10 +29,9 @@ describe("editPanel", () => {
 		expect(html).toContain("alice@example.com");
 	});
 
-	test("has Save and Cancel buttons", () => {
+	test("has Save button", () => {
 		const html = editPanel(alice);
 		expect(html).toContain("Save");
-		expect(html).toContain("Cancel");
 	});
 
 	test("uses @put for existing recipient", () => {
@@ -89,10 +88,9 @@ describe("createPanel", () => {
 		expect(html).toContain("phone: ''");
 	});
 
-	test("has Create and Cancel buttons", () => {
+	test("has Create button", () => {
 		const html = createPanel();
 		expect(html).toContain("Create");
-		expect(html).toContain("Cancel");
 	});
 
 	test("uses @post for new recipient", () => {

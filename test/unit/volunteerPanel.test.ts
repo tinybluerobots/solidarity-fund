@@ -50,10 +50,9 @@ describe("editPanel", () => {
 		expect(html).toContain("Leave blank to keep current");
 	});
 
-	test("has Save and Cancel buttons", () => {
+	test("has Save button", () => {
 		const html = editPanel(alice, "v-other");
 		expect(html).toContain("Save");
-		expect(html).toContain("Cancel");
 	});
 
 	test("uses @put for existing volunteer", () => {
@@ -115,10 +114,9 @@ describe("createPanel", () => {
 		expect(html).toContain("required");
 	});
 
-	test("has Create and Cancel buttons", () => {
+	test("has Create button", () => {
 		const html = createPanel();
 		expect(html).toContain("Create");
-		expect(html).toContain("Cancel");
 	});
 
 	test("uses @post for new volunteer", () => {
