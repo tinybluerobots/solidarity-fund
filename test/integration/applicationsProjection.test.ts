@@ -61,6 +61,33 @@ describe("applicationsProjection", () => {
 		expect(apps[0]!.payment_preference).toBe("bank");
 	});
 
+	test("stores name and phone from ApplicationSubmitted", async () => {
+		await eventStore.appendToStream("application-app-1", [
+			{
+				type: "ApplicationSubmitted",
+				data: {
+					applicationId: "app-1",
+					applicantId: "applicant-07700900001",
+					identity: { phone: "07700900001", name: "Alice" },
+					paymentPreference: "bank",
+					meetingDetails: { place: "Mill Road" },
+					monthCycle: "2026-03",
+					submittedAt: "2026-03-01T10:00:00Z",
+				},
+			},
+		]);
+
+		const rows = await pool.withConnection(async (conn) =>
+			conn.query<{ name: string; phone: string }>(
+				"SELECT name, phone FROM applications WHERE id = ?",
+				["app-1"],
+			),
+		);
+		expect(rows).toHaveLength(1);
+		expect(rows[0]!.name).toBe("Alice");
+		expect(rows[0]!.phone).toBe("07700900001");
+	});
+
 	test("ApplicationAccepted updates to accepted", async () => {
 		await eventStore.appendToStream("application-app-1", [
 			{
