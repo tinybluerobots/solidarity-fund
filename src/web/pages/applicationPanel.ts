@@ -95,8 +95,8 @@ export function reviewPanel(app: ApplicationRow): string {
       ${detailFields(app)}
     </dl>
     <div class="flex gap-3 mt-6">
-      <button class="${btnAmber}" data-on-click="@post('/applications/${app.id}/review?decision=confirm')">Confirm</button>
-      <button class="${btnDanger}" data-on-click="@post('/applications/${app.id}/review?decision=reject')">Reject</button>
+      <button class="${btnAmber}" data-on-click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
+      <button class="${btnDanger}" data-on-click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
     </div>
   `);
 }

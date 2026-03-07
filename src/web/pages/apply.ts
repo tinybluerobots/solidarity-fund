@@ -50,8 +50,8 @@ export function applyPage(): string {
 				<input type="email" id="email" name="email" class="${inputClass}" />
 			</div>
 			<div>
-				<label for="meetingPlace" class="block text-sm font-body text-bark mb-1">Where did you hear about us?</label>
-				<input type="text" id="meetingPlace" name="meetingPlace" class="${inputClass}" />
+				<label for="meetingPlace" class="block text-sm font-body text-bark mb-1">Meeting Place or Address</label>
+				<input type="text" id="meetingPlace" name="meetingPlace" required class="${inputClass}" />
 			</div>
 			<fieldset>
 				<legend class="block text-sm font-body text-bark mb-2">Payment Preference</legend>
@@ -150,7 +150,7 @@ export function applyResultPage(status: string, reason?: string): string {
 		`<div class="w-full max-w-md">
 	<div class="bg-white rounded-xl border border-cream-200 shadow-sm p-8 text-center">
 		<h1 class="font-heading text-2xl font-bold text-bark mb-4">${escapeHtml(heading)}</h1>
-		<p class="text-bark-muted font-body">${message}</p>
+		<p class="text-bark-muted font-body">${escapeHtml(message)}</p>
 	</div>
 </div>`,
 	);
