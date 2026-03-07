@@ -3,10 +3,16 @@ import type { RecipientRepository } from "../domain/recipient/repository.ts";
 import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
 import type { SessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
+import { changePasswordPage } from "./pages/changePassword.ts";
 import { dashboardPage } from "./pages/dashboard.ts";
 import { loginPage } from "./pages/login.ts";
-import { handleLogin, handleLogout } from "./routes/auth.ts";
+import {
+	handleChangePassword,
+	handleLogin,
+	handleLogout,
+} from "./routes/auth.ts";
 import { createRecipientRoutes } from "./routes/recipients.ts";
+import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 export async function getAuthenticatedVolunteer(
 	req: Request,
@@ -31,6 +37,8 @@ export function startServer(
 	const logout = handleLogout(sessionStore);
 	const loginHtml = loginPage();
 	const recipientRoutes = createRecipientRoutes(recipientRepo, eventStore);
+	const volunteerRoutes = createVolunteerRoutes(volunteerRepo, eventStore);
+	const changePasswordHandler = handleChangePassword(volunteerRepo, eventStore);
 
 	async function requireAuth(req: Request) {
 		return getAuthenticatedVolunteer(req, sessionStore, volunteerRepo);
@@ -66,6 +74,47 @@ export function startServer(
 			"/logout": {
 				GET: (req) => logout(req),
 			},
+			"/change-password": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					return new Response(changePasswordPage(), {
+						headers: { "Content-Type": "text/html" },
+					});
+				},
+				POST: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					return changePasswordHandler(req, volunteer.id);
+				},
+			},
+			"/volunteers": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return volunteerRoutes.list();
+				},
+			},
+			"/volunteers/new": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return volunteerRoutes.create();
+				},
+			},
+			"/volunteers/close": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return volunteerRoutes.closePanel();
+				},
+			},
 			"/recipients": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
@@ -92,6 +141,32 @@ export function startServer(
 			const url = new URL(req.url);
 			const volunteer = await requireAuth(req);
 			if (!volunteer) return Response.redirect("/login", 302);
+
+			if (url.pathname === "/volunteers" && req.method === "POST") {
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				return volunteerRoutes.handleCreate(req);
+			}
+
+			const volEditMatch = url.pathname.match(/^\/volunteers\/([^/]+)\/edit$/);
+			if (volEditMatch?.[1] && req.method === "GET") {
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				return volunteerRoutes.edit(volEditMatch[1], volunteer.id);
+			}
+
+			const volIdMatch = url.pathname.match(/^\/volunteers\/([^/]+)$/);
+			if (volIdMatch?.[1]) {
+				const id = volIdMatch[1];
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				if (req.method === "GET")
+					return volunteerRoutes.detail(id, volunteer.id);
+				if (req.method === "PUT")
+					return volunteerRoutes.handleUpdate(id, req, volunteer.id);
+				if (req.method === "DELETE")
+					return volunteerRoutes.handleDelete(id, volunteer.id);
+			}
 
 			if (url.pathname === "/recipients" && req.method === "POST") {
 				return recipientRoutes.handleCreate(req, volunteer.id);
