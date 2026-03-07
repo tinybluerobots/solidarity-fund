@@ -33,7 +33,7 @@ flowchart TD
     end
 
     subgraph "🎲 LOTTERY PHASE · Month End"
-        TIMER([⏰ Month-end<br/>scheduler fires]) --> CLOSE[Close application<br/>window]
+        TIMER([⏰ Month-end<br/>reminder fires]) --> CLOSE[Volunteer closes<br/>application window]
         CLOSE --> BALANCE[Volunteer enters<br/>fund balance]
         BALANCE --> CALC["Calculate slots:<br/>floor((balance − reserve) ÷ £40)"]
         CALC --> DRAW[🎲 Draw lottery<br/>with auditable RNG seed]
@@ -133,7 +133,8 @@ flowchart TD
 
 ### Volunteer Actions (implemented)
 - Resolve identity mismatches (review flagged applications)
-- Trigger lottery draw (manual, after checking OC balance)
+- Close application window (manual, ends acceptance for the month)
+- Trigger lottery draw (manual, after entering OC balance)
 - Verify proof of address uploads (approve/reject)
 - Assign volunteer to grant
 - Record payment (bank transfer or cash handover)
@@ -175,9 +176,18 @@ flowchart TD
 
 ### Lottery Aggregate (implemented)
 
+#### Commands
+
+| Command | Who | Allowed States | What Happens |
+|---------|-----|----------------|--------------|
+| `CloseApplicationWindow` | Volunteer | initial | Closes the application window for this month's cycle |
+| `DrawLottery` | Volunteer | windowClosed | Volunteer provides fund balance, reserve, and grant amount; seeded RNG selects winners |
+
+#### Events
+
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
-| `ApplicationWindowClosed` | Scheduler (month end) | Stop accepting new applications for this month |
+| `ApplicationWindowClosed` | Volunteer closes window | Stop accepting new applications for this month |
 | `LotteryDrawn` | Volunteer triggers draw | Seeded RNG selects winners; process manager fans out selection commands |
 
 ### Application Selection (implemented)
