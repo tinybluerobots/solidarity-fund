@@ -3,13 +3,20 @@ import type {
 	SQLiteConnectionPool,
 	SQLiteEventStore,
 } from "@event-driven-io/emmett-sqlite";
-import { createVolunteer } from "../../src/domain/volunteer/commandHandlers.ts";
+import {
+	changePassword,
+	createVolunteer,
+} from "../../src/domain/volunteer/commandHandlers.ts";
 import type { VolunteerRepository } from "../../src/domain/volunteer/repository.ts";
 import { createEventStore } from "../../src/infrastructure/eventStore.ts";
 import type { SessionStore } from "../../src/infrastructure/session/sqliteSessionStore.ts";
 import { SQLiteSessionStore } from "../../src/infrastructure/session/sqliteSessionStore.ts";
 import { SQLiteVolunteerRepository } from "../../src/infrastructure/volunteer/sqliteVolunteerRepository.ts";
-import { handleLogin, handleLogout } from "../../src/web/routes/auth.ts";
+import {
+	handleChangePassword,
+	handleLogin,
+	handleLogout,
+} from "../../src/web/routes/auth.ts";
 
 describe("auth routes", () => {
 	let pool: ReturnType<typeof SQLiteConnectionPool>;
@@ -23,26 +30,27 @@ describe("auth routes", () => {
 		eventStore = es.store;
 		sessionStore = await SQLiteSessionStore(pool);
 		volunteerRepo = await SQLiteVolunteerRepository(pool);
-		await createVolunteer(
+		const { id } = await createVolunteer(
 			{ name: "Alice", password: "correct-password" },
 			eventStore,
 		);
+		await changePassword(id, "correct-password", eventStore);
 	});
 
 	afterEach(async () => {
 		await pool.close();
 	});
 
-	describe("POST /login", () => {
-		function loginRequest(name: string, password: string): Request {
-			const body = new URLSearchParams({ name, password });
-			return new Request("http://localhost/login", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: body.toString(),
-			});
-		}
+	function loginRequest(name: string, password: string): Request {
+		const body = new URLSearchParams({ name, password });
+		return new Request("http://localhost/login", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: body.toString(),
+		});
+	}
 
+	describe("POST /login", () => {
 		test("redirects with cookie on valid credentials", async () => {
 			const login = handleLogin(sessionStore, volunteerRepo);
 			const res = await login(loginRequest("Alice", "correct-password"));
@@ -72,6 +80,89 @@ describe("auth routes", () => {
 			const res = await login(loginRequest("alice", "correct-password"));
 			expect(res.status).toBe(302);
 			expect(res.headers.get("set-cookie")).toContain("session=");
+		});
+	});
+
+	test("redirects to /change-password when requiresPasswordReset is true", async () => {
+		await createVolunteer({ name: "NewVol", password: "temp-pw" }, eventStore);
+		const login = handleLogin(sessionStore, volunteerRepo);
+		const res = await login(loginRequest("NewVol", "temp-pw"));
+		expect(res.status).toBe(302);
+		expect(res.headers.get("location")).toBe("/change-password");
+	});
+
+	describe("POST /change-password", () => {
+		test("changes password and redirects to /", async () => {
+			const { id } = await createVolunteer(
+				{ name: "Bob", password: "old-pw" },
+				eventStore,
+			);
+			const handler = handleChangePassword(volunteerRepo, eventStore);
+			const form = new URLSearchParams({
+				currentPassword: "old-pw",
+				newPassword: "new-pw",
+				confirmPassword: "new-pw",
+			});
+			const req = new Request("http://localhost/change-password", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: form.toString(),
+			});
+			const res = await handler(req, id);
+			expect(res.status).toBe(302);
+			expect(res.headers.get("location")).toBe("/");
+			const valid = await volunteerRepo.verifyPassword(id, "new-pw");
+			expect(valid).toBe(true);
+		});
+
+		test("rejects when current password is wrong", async () => {
+			const { id } = await createVolunteer(
+				{ name: "Bob2", password: "old-pw" },
+				eventStore,
+			);
+			const handler = handleChangePassword(volunteerRepo, eventStore);
+			const form = new URLSearchParams({
+				currentPassword: "wrong",
+				newPassword: "new-pw",
+				confirmPassword: "new-pw",
+			});
+			const req = new Request("http://localhost/change-password", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: form.toString(),
+			});
+			const res = await handler(req, id);
+			expect(res.status).toBe(400);
+			const body = await res.text();
+			expect(body).toContain("Current password is incorrect");
+		});
+
+		test("rejects when passwords don't match", async () => {
+			const { id } = await createVolunteer(
+				{ name: "Bob3", password: "old-pw" },
+				eventStore,
+			);
+			const handler = handleChangePassword(volunteerRepo, eventStore);
+			const form = new URLSearchParams({
+				currentPassword: "old-pw",
+				newPassword: "new-pw",
+				confirmPassword: "different",
+			});
+			const req = new Request("http://localhost/change-password", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: form.toString(),
+			});
+			const res = await handler(req, id);
+			expect(res.status).toBe(400);
+			const body = await res.text();
+			expect(body).toContain("do not match");
 		});
 	});
 
