@@ -1,12 +1,20 @@
 import type { SQLiteEventStore } from "@event-driven-io/emmett-sqlite";
 import {
 	createVolunteer,
-	deleteVolunteer,
+	disableVolunteer,
+	enableVolunteer,
 	updateVolunteer,
 } from "../../domain/volunteer/commandHandlers.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
-import type { Volunteer } from "../../domain/volunteer/types.ts";
-import { createPanel, editPanel, viewPanel } from "../pages/volunteerPanel.ts";
+import type {
+	Volunteer,
+	VolunteerEvent,
+} from "../../domain/volunteer/types.ts";
+import {
+	type VolunteerHistoryEntry,
+	volunteerHistoryPanel,
+} from "../pages/volunteerHistoryPanel.ts";
+import { createPanel, editPanel } from "../pages/volunteerPanel.ts";
 import { volunteerRow, volunteersPage } from "../pages/volunteers.ts";
 import {
 	patchElements,
@@ -24,14 +32,6 @@ export function createVolunteerRoutes(
 			return new Response(volunteersPage(volunteers), {
 				headers: { "Content-Type": "text/html" },
 			});
-		},
-
-		async detail(id: string, currentVolunteerId: string): Promise<Response> {
-			const volunteer = await volunteerRepo.getById(id);
-			if (!volunteer) return new Response("Not found", { status: 404 });
-			return sseResponse(
-				patchElements(viewPanel(volunteer, currentVolunteerId)),
-			);
 		},
 
 		async edit(id: string, currentVolunteerId: string): Promise<Response> {
@@ -70,7 +70,7 @@ export function createVolunteerRoutes(
 			if (!volunteer) return new Response("Not found", { status: 404 });
 			return sseResponse(
 				patchElements(volunteersTableBody(volunteers)),
-				patchElements(viewPanel(volunteer, currentVolunteerId)),
+				patchElements(editPanel(volunteer, currentVolunteerId)),
 			);
 		},
 
@@ -92,22 +92,62 @@ export function createVolunteerRoutes(
 			if (!volunteer) return new Response("Not found", { status: 404 });
 			const volunteers = await volunteerRepo.list();
 			return sseResponse(
-				patchElements(viewPanel(volunteer, currentVolunteerId)),
+				patchElements(editPanel(volunteer, currentVolunteerId)),
 				patchElements(volunteersTableBody(volunteers)),
 			);
 		},
 
-		async handleDelete(
+		async handleDisable(
 			id: string,
 			currentVolunteerId: string,
 		): Promise<Response> {
 			if (id === currentVolunteerId) {
-				return new Response("Cannot delete yourself", { status: 400 });
+				return new Response("Cannot disable yourself", { status: 400 });
 			}
-			await deleteVolunteer(id, eventStore);
+			await disableVolunteer(id, eventStore);
+			const volunteer = await volunteerRepo.getById(id);
+			if (!volunteer) return new Response("Not found", { status: 404 });
 			const volunteers = await volunteerRepo.list();
 			return sseResponse(
-				patchElements('<div id="panel"></div>'),
+				patchElements(editPanel(volunteer, currentVolunteerId)),
+				patchElements(volunteersTableBody(volunteers)),
+			);
+		},
+
+		async history(id: string): Promise<Response> {
+			const { events } = await eventStore.readStream<VolunteerEvent>(
+				`volunteer-${id}`,
+			);
+			if (events.length === 0)
+				return sseResponse(patchElements(volunteerHistoryPanel([])));
+
+			const entries: VolunteerHistoryEntry[] = events.map((e) => {
+				const timestamp =
+					e.type === "VolunteerCreated"
+						? e.data.createdAt
+						: e.type === "VolunteerUpdated"
+							? e.data.updatedAt
+							: e.type === "VolunteerDisabled"
+								? e.data.disabledAt
+								: e.type === "VolunteerEnabled"
+									? e.data.enabledAt
+									: e.data.changedAt;
+				return { type: e.type, timestamp };
+			});
+
+			return sseResponse(patchElements(volunteerHistoryPanel(entries)));
+		},
+
+		async handleEnable(
+			id: string,
+			currentVolunteerId: string,
+		): Promise<Response> {
+			await enableVolunteer(id, eventStore);
+			const volunteer = await volunteerRepo.getById(id);
+			if (!volunteer) return new Response("Not found", { status: 404 });
+			const volunteers = await volunteerRepo.list();
+			return sseResponse(
+				patchElements(editPanel(volunteer, currentVolunteerId)),
 				patchElements(volunteersTableBody(volunteers)),
 			);
 		},
@@ -125,9 +165,12 @@ function signalsToVolunteerCreateData(signals: Record<string, unknown>): {
 	const password = String(signals.password ?? "").trim();
 	if (!name || !password) return null;
 
+	const phone = String(signals.phone ?? "").trim();
+	if (phone && !/^\d+$/.test(phone)) return null;
+
 	return {
 		name,
-		phone: String(signals.phone ?? "").trim() || undefined,
+		phone: phone || undefined,
 		email: String(signals.email ?? "").trim() || undefined,
 		password,
 		isAdmin: signals.isAdmin === true,
@@ -145,6 +188,7 @@ function signalsToVolunteerUpdateData(signals: Record<string, unknown>): {
 
 	const password = String(signals.password ?? "").trim() || undefined;
 	const phone = String(signals.phone ?? "").trim();
+	if (phone && !/^\d+$/.test(phone)) return null;
 	const email = String(signals.email ?? "").trim();
 
 	return {

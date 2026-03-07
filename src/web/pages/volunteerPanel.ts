@@ -1,13 +1,5 @@
 import type { Volunteer } from "../../domain/volunteer/types.ts";
 
-function escapeHtml(s: string): string {
-	return s
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function escapeSignalValue(s: string): string {
 	return s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
 }
@@ -19,50 +11,12 @@ function panelWrapper(content: string): string {
 </div>`;
 }
 
-function field(label: string, value: string): string {
-	return `<div class="mb-4">
-    <dt class="text-xs font-heading font-semibold text-bark-muted uppercase tracking-wide mb-1">${label}</dt>
-    <dd class="font-body text-bark">${escapeHtml(value)}</dd>
-  </div>`;
-}
-
 const inputClass =
 	"w-full px-3 py-2.5 border border-cream-300 rounded-md font-body text-bark bg-cream-50 transition-all focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/15";
 const btnAmber =
 	"px-4 py-2 bg-amber text-cream-50 rounded-md font-heading font-semibold text-sm cursor-pointer transition-colors hover:bg-amber-dark border-none";
 const btnSecondary =
 	"px-4 py-2 rounded-md font-heading font-semibold text-sm border border-cream-200 text-bark hover:bg-cream-100 cursor-pointer transition-colors bg-transparent";
-
-export function viewPanel(v: Volunteer, currentVolunteerId: string): string {
-	const phoneField = v.phone ? field("Phone", v.phone) : "";
-	const emailField = v.email ? field("Email", v.email) : "";
-	const isSelf = v.id === currentVolunteerId;
-
-	const deleteButton = isSelf
-		? ""
-		: `<button class="${btnSecondary}" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
-      <span data-show="$confirmDelete" class="flex items-center gap-2" style="display:none">
-        <span class="font-body text-bark-muted text-sm">Are you sure?</span>
-        <button class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="@delete('/volunteers/${v.id}')">Confirm</button>
-        <button class="${btnSecondary}" data-on-click="$confirmDelete = false">Cancel</button>
-      </span>`;
-
-	return panelWrapper(`
-    <div class="flex items-center justify-between mb-6" data-signals="{confirmDelete: false}">
-      <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(v.name)}</h2>
-      <button class="${btnSecondary}" data-on-click="@get('/volunteers/close')">Close</button>
-    </div>
-    <dl>
-      ${phoneField}
-      ${emailField}
-      ${field("Role", v.isAdmin ? "Admin" : "Volunteer")}
-    </dl>
-    <div class="flex gap-3 mt-6">
-      <button class="${btnAmber}" data-on-click="@get('/volunteers/${v.id}/edit')">Edit</button>
-      ${deleteButton}
-    </div>
-  `);
-}
 
 function volunteerForm(opts: {
 	action: string;
@@ -91,7 +45,7 @@ function volunteerForm(opts: {
         </div>
         <div class="mb-4">
           <label class="block text-xs font-heading font-semibold text-bark-muted uppercase tracking-wide mb-1">Phone</label>
-          <input class="${inputClass}" type="tel" data-bind-phone />
+          <input class="${inputClass}" type="tel" data-bind-phone pattern="[0-9]*" inputmode="numeric" />
         </div>
         <div class="mb-4">
           <label class="block text-xs font-heading font-semibold text-bark-muted uppercase tracking-wide mb-1">Email</label>
@@ -123,12 +77,43 @@ function volunteerForm(opts: {
   `;
 }
 
-export function editPanel(v: Volunteer, _currentVolunteerId: string): string {
+export function editPanel(v: Volunteer, currentVolunteerId: string): string {
+	const isSelf = v.id === currentVolunteerId;
+
+	const disableToggle = isSelf
+		? ""
+		: v.isDisabled
+			? `<div class="mt-6 pt-4 border-t border-cream-200">
+        <button class="${btnSecondary}" data-on-click="@post('/volunteers/${v.id}/enable')">Enable Account</button>
+      </div>`
+			: `<div class="mt-6 pt-4 border-t border-cream-200" data-signals="{confirmDisable: false}">
+        <button class="${btnSecondary}" data-show="!$confirmDisable" data-on-click="$confirmDisable = true">Disable Account</button>
+        <span data-show="$confirmDisable" class="flex items-center gap-2" style="display:none">
+          <span class="font-body text-bark-muted text-sm">Are you sure?</span>
+          <button class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="@post('/volunteers/${v.id}/disable')">Confirm</button>
+          <button class="${btnSecondary}" data-on-click="$confirmDisable = false">Cancel</button>
+        </span>
+      </div>`;
+
 	return panelWrapper(`
+    <div data-signals="{activeTab: 'details', historyLoaded: false}">
     <div class="flex items-center justify-between mb-6">
       <h2 class="font-heading font-bold text-xl text-bark">Edit Volunteer</h2>
       <button class="${btnSecondary}" data-on-click="@get('/volunteers/close')">Close</button>
     </div>
+    <div class="flex gap-1 mb-4 border-b border-cream-200">
+      <button type="button"
+        class="px-3 py-1.5 text-sm font-heading font-semibold cursor-pointer transition-colors border-b-2 border-transparent text-bark-muted hover:text-bark"
+        data-class-border-amber="$activeTab==='details'"
+        data-class-text-amber="$activeTab==='details'"
+        data-on-click="$activeTab='details'">Details</button>
+      <button type="button"
+        class="px-3 py-1.5 text-sm font-heading font-semibold cursor-pointer transition-colors border-b-2 border-transparent text-bark-muted hover:text-bark"
+        data-class-border-amber="$activeTab==='history'"
+        data-class-text-amber="$activeTab==='history'"
+        data-on-click="$activeTab='history'; if(!$historyLoaded){$historyLoaded=true; @get('/volunteers/${v.id}/history')}">History</button>
+    </div>
+    <div data-show="$activeTab==='details'">
     ${volunteerForm({
 			action: `/volunteers/${v.id}`,
 			method: "@put",
@@ -141,8 +126,14 @@ export function editPanel(v: Volunteer, _currentVolunteerId: string): string {
 			passwordRequired: false,
 			passwordHint: "Leave blank to keep current",
 			showAdminCheckbox: false,
-			cancelAction: `@get('/volunteers/${v.id}')`,
+			cancelAction: "@get('/volunteers/close')",
 		})}
+    ${disableToggle}
+    </div>
+    <div data-show="$activeTab==='history'" style="display:none">
+      <div id="history-content" class="py-8 text-center text-bark-muted text-sm">Loading...</div>
+    </div>
+    </div>
   `);
 }
 

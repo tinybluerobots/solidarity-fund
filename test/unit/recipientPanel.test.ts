@@ -45,7 +45,7 @@ describe("editPanel", () => {
 		const html = editPanel(alice);
 		expect(html).toContain("Delete");
 		expect(html).toContain("confirmDelete");
-		expect(html).toContain("Are you sure?");
+		expect(html).toContain("Sure?");
 		expect(html).toContain("Confirm");
 	});
 

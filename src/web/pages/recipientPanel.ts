@@ -31,6 +31,7 @@ function recipientForm(opts: {
 	meetingPlace: string;
 	notes: string;
 	cancelAction: string;
+	deleteAction?: string;
 }): string {
 	const bankChecked = opts.paymentPreference === "bank" ? "checked" : "";
 	const cashChecked = opts.paymentPreference === "cash" ? "checked" : "";
@@ -83,9 +84,19 @@ function recipientForm(opts: {
           <label class="block text-xs font-heading font-semibold text-bark-muted uppercase tracking-wide mb-1">Notes</label>
           <textarea class="${inputClass}" data-bind-notes rows="3"></textarea>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3" data-signals="{confirmDelete: false}">
           <button type="submit" class="${btnAmber}">${opts.submitLabel}</button>
           <button type="button" class="${btnSecondary}" data-on-click="${opts.cancelAction}">Cancel</button>
+          ${
+						opts.deleteAction
+							? `<button type="button" class="${btnSecondary} ml-auto" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
+          <span data-show="$confirmDelete" class="flex items-center gap-2 ml-auto" style="display:none">
+            <span class="font-body text-bark-muted text-sm">Sure?</span>
+            <button type="button" class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="${opts.deleteAction}">Confirm</button>
+            <button type="button" class="${btnSecondary}" data-on-click="$confirmDelete = false">No</button>
+          </span>`
+							: ""
+					}
         </div>
       </form>
     </div>
@@ -125,15 +136,8 @@ export function editPanel(r: Recipient): string {
 			meetingPlace: r.meetingPlace ?? "",
 			notes: r.notes ?? "",
 			cancelAction: "@get('/recipients/close')",
+			deleteAction: `@delete('/recipients/${r.id}')`,
 		})}
-    <div class="mt-6 pt-4 border-t border-cream-200" data-signals="{confirmDelete: false}">
-      <button class="${btnSecondary}" data-show="!$confirmDelete" data-on-click="$confirmDelete = true">Delete</button>
-      <span data-show="$confirmDelete" class="flex items-center gap-2" style="display:none">
-        <span class="font-body text-bark-muted text-sm">Are you sure?</span>
-        <button class="px-3 py-1 rounded-md text-sm font-semibold bg-red-600 text-white cursor-pointer border-none hover:bg-red-700 transition-colors" data-on-click="@delete('/recipients/${r.id}')">Confirm</button>
-        <button class="${btnSecondary}" data-on-click="$confirmDelete = false">Cancel</button>
-      </span>
-    </div>
     </div>
     <div data-show="$activeTab==='history'" style="display:none">
       <div id="history-content" class="py-8 text-center text-bark-muted text-sm">Loading...</div>

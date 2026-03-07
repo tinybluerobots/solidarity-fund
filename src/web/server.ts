@@ -191,6 +191,15 @@ export function startServer(
 				return volunteerRoutes.handleCreate(req, volunteer.id);
 			}
 
+			const volHistoryMatch = url.pathname.match(
+				/^\/volunteers\/([^/]+)\/history$/,
+			);
+			if (volHistoryMatch?.[1] && req.method === "GET") {
+				if (!volunteer.isAdmin)
+					return new Response("Forbidden", { status: 403 });
+				return volunteerRoutes.history(volHistoryMatch[1]);
+			}
+
 			const volEditMatch = url.pathname.match(/^\/volunteers\/([^/]+)\/edit$/);
 			if (volEditMatch?.[1] && req.method === "GET") {
 				if (!volunteer.isAdmin)

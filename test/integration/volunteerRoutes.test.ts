@@ -64,9 +64,9 @@ describe("volunteer routes", () => {
 		});
 	});
 
-	describe("detail", () => {
-		test("returns SSE with view panel", async () => {
-			const res = await routes.detail(adminId, adminId);
+	describe("edit", () => {
+		test("returns SSE with edit panel", async () => {
+			const res = await routes.edit(adminId, adminId);
 			expect(res.headers.get("Content-Type")).toBe("text/event-stream");
 			const body = await res.text();
 			expect(body).toContain("Admin");
@@ -74,7 +74,7 @@ describe("volunteer routes", () => {
 		});
 
 		test("returns 404 for unknown id", async () => {
-			const res = await routes.detail("nonexistent", adminId);
+			const res = await routes.edit("nonexistent", adminId);
 			expect(res.status).toBe(404);
 		});
 	});
@@ -108,6 +108,16 @@ describe("volunteer routes", () => {
 		test("returns 400 when password is missing", async () => {
 			const req = signalsRequest({
 				name: "Charlie",
+			});
+			const res = await routes.handleCreate(req, adminId);
+			expect(res.status).toBe(400);
+		});
+
+		test("returns 400 when phone contains non-numeric characters", async () => {
+			const req = signalsRequest({
+				name: "Charlie",
+				phone: "077-009-00099",
+				password: "secret123",
 			});
 			const res = await routes.handleCreate(req, adminId);
 			expect(res.status).toBe(400);
@@ -154,23 +164,56 @@ describe("volunteer routes", () => {
 		});
 	});
 
-	describe("handleDelete", () => {
-		test("deletes volunteer and returns SSE", async () => {
+	describe("handleDisable", () => {
+		test("disables volunteer and returns SSE", async () => {
 			const { id } = await createVolunteer(
-				{ name: "ToDelete", password: "pass123" },
+				{ name: "ToDisable", password: "pass123" },
 				eventStore,
 			);
 
-			const res = await routes.handleDelete(id, adminId);
+			const res = await routes.handleDisable(id, adminId);
 			expect(res.headers.get("Content-Type")).toBe("text/event-stream");
 
-			const deleted = await volunteerRepo.getById(id);
-			expect(deleted).toBeNull();
+			const disabled = await volunteerRepo.getById(id);
+			expect(disabled).not.toBeNull();
+			expect(disabled?.isDisabled).toBe(true);
 		});
 
-		test("returns 400 when trying to delete self", async () => {
-			const res = await routes.handleDelete(adminId, adminId);
+		test("returns 400 when trying to disable self", async () => {
+			const res = await routes.handleDisable(adminId, adminId);
 			expect(res.status).toBe(400);
+		});
+	});
+
+	describe("handleEnable", () => {
+		test("enables disabled volunteer and returns SSE", async () => {
+			const { id } = await createVolunteer(
+				{ name: "ToEnable", password: "pass123" },
+				eventStore,
+			);
+			await routes.handleDisable(id, adminId);
+
+			const res = await routes.handleEnable(id, adminId);
+			expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+
+			const enabled = await volunteerRepo.getById(id);
+			expect(enabled).not.toBeNull();
+			expect(enabled?.isDisabled).toBe(false);
+		});
+	});
+
+	describe("history", () => {
+		test("returns timeline with events", async () => {
+			const res = await routes.history(adminId);
+			const body = await res.text();
+			expect(body).toContain("datastar-patch-elements");
+			expect(body).toContain("Account created");
+		});
+
+		test("returns empty history for unknown volunteer", async () => {
+			const res = await routes.history("nonexistent");
+			const body = await res.text();
+			expect(body).toContain("No history");
 		});
 	});
 });

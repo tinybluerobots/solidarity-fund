@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Volunteer } from "../../src/domain/volunteer/types";
-import {
-	createPanel,
-	editPanel,
-	viewPanel,
-} from "../../src/web/pages/volunteerPanel";
+import { createPanel, editPanel } from "../../src/web/pages/volunteerPanel";
 
 const alice: Volunteer = {
 	id: "v-1",
@@ -12,6 +8,7 @@ const alice: Volunteer = {
 	phone: "07700900001",
 	email: "alice@example.com",
 	isAdmin: true,
+	isDisabled: false,
 	requiresPasswordReset: false,
 	createdAt: "2026-03-01T00:00:00.000Z",
 	updatedAt: "2026-03-01T00:00:00.000Z",
@@ -21,53 +18,16 @@ const bob: Volunteer = {
 	id: "v-2",
 	name: "Bob Jones",
 	isAdmin: false,
+	isDisabled: false,
 	requiresPasswordReset: false,
 	createdAt: "2026-03-02T00:00:00.000Z",
 	updatedAt: "2026-03-02T00:00:00.000Z",
 };
 
-describe("viewPanel", () => {
-	test("shows volunteer name as heading", () => {
-		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("Alice Smith");
-	});
-
-	test("shows all fields for volunteer with details", () => {
-		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("07700900001");
-		expect(html).toContain("alice@example.com");
-		expect(html).toContain("Admin");
-	});
-
-	test("has Edit and Delete buttons when not self", () => {
-		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("Edit");
-		expect(html).toContain("Delete");
-	});
-
-	test("has close button", () => {
-		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("Close");
-	});
-
-	test("hides delete button for self", () => {
-		const html = viewPanel(alice, "v-1");
-		expect(html).toContain("Edit");
-		expect(html).not.toContain(">Delete</button>");
-	});
-
-	test("uses signal-driven delete confirmation", () => {
-		const html = viewPanel(alice, "v-other");
-		expect(html).toContain("confirmDelete");
-		expect(html).toContain("Are you sure?");
-		expect(html).toContain("Confirm");
-	});
-
-	test("shows Volunteer role for non-admin", () => {
-		const html = viewPanel(bob, "v-other");
-		expect(html).toContain("Volunteer");
-	});
-});
+const disabledVol: Volunteer = {
+	...bob,
+	isDisabled: true,
+};
 
 describe("editPanel", () => {
 	test("renders form with data-bind inputs", () => {
@@ -107,6 +67,40 @@ describe("editPanel", () => {
 		expect(html).not.toContain("data-bind-is-admin");
 		expect(html).toContain("admin status can only be set at creation");
 	});
+
+	test("shows disable button for other volunteers", () => {
+		const html = editPanel(alice, "v-other");
+		expect(html).toContain("Disable Account");
+		expect(html).toContain("confirmDisable");
+	});
+
+	test("hides disable button for self", () => {
+		const html = editPanel(alice, "v-1");
+		expect(html).not.toContain("Disable Account");
+		expect(html).not.toContain("Enable Account");
+	});
+
+	test("shows enable button for disabled volunteers", () => {
+		const html = editPanel(disabledVol, "v-other");
+		expect(html).toContain("Enable Account");
+		expect(html).not.toContain("Disable Account");
+	});
+
+	test("renders Details and History tabs", () => {
+		const html = editPanel(alice, "v-other");
+		expect(html).toContain("Details");
+		expect(html).toContain("History");
+	});
+
+	test("defaults to Details tab active", () => {
+		const html = editPanel(alice, "v-other");
+		expect(html).toContain("activeTab: 'details'");
+	});
+
+	test("History tab triggers lazy load", () => {
+		const html = editPanel(alice, "v-other");
+		expect(html).toContain(`/volunteers/${alice.id}/history`);
+	});
 });
 
 describe("createPanel", () => {
@@ -137,5 +131,11 @@ describe("createPanel", () => {
 	test("has admin checkbox", () => {
 		const html = createPanel();
 		expect(html).toContain("data-bind-is-admin");
+	});
+
+	test("phone input has numeric pattern", () => {
+		const html = createPanel();
+		expect(html).toContain('pattern="[0-9]*"');
+		expect(html).toContain('inputmode="numeric"');
 	});
 });
