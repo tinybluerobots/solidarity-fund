@@ -8,6 +8,7 @@ const alice: Volunteer = {
 	phone: "07700900001",
 	email: "alice@example.com",
 	isAdmin: true,
+	isDisabled: false,
 	requiresPasswordReset: false,
 	createdAt: "2026-03-01T00:00:00.000Z",
 	updatedAt: "2026-03-01T00:00:00.000Z",
@@ -18,6 +19,7 @@ const bob: Volunteer = {
 	name: "Bob Jones",
 	phone: "07700900002",
 	isAdmin: false,
+	isDisabled: false,
 	requiresPasswordReset: false,
 	createdAt: "2026-03-02T00:00:00.000Z",
 	updatedAt: "2026-03-02T00:00:00.000Z",
@@ -61,6 +63,6 @@ describe("volunteersPage", () => {
 	test("table rows have data-on-click for SSE fetch", () => {
 		const html = volunteersPage([alice]);
 		expect(html).toContain("@get");
-		expect(html).toContain("/volunteers/v-1");
+		expect(html).toContain("/volunteers/v-1/edit");
 	});
 });

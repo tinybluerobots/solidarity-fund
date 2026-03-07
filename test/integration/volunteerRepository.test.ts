@@ -5,7 +5,8 @@ import type {
 } from "@event-driven-io/emmett-sqlite";
 import {
 	createVolunteer,
-	deleteVolunteer,
+	disableVolunteer,
+	enableVolunteer,
 	updateVolunteer,
 } from "../../src/domain/volunteer/commandHandlers.ts";
 import type { VolunteerRepository } from "../../src/domain/volunteer/repository.ts";
@@ -187,16 +188,30 @@ describe("Volunteer (event-sourced)", () => {
 		});
 	});
 
-	describe("delete", () => {
-		test("deletes a volunteer", async () => {
+	describe("disable/enable", () => {
+		test("disables a volunteer", async () => {
 			const { id } = await createVolunteer(
 				{ name: "Alice", password: "secret123" },
 				eventStore,
 			);
-			await deleteVolunteer(id, eventStore);
+			await disableVolunteer(id, eventStore);
 			const found = await repo.getById(id);
 
-			expect(found).toBeNull();
+			expect(found).not.toBeNull();
+			expect(found!.isDisabled).toBe(true);
+		});
+
+		test("enables a disabled volunteer", async () => {
+			const { id } = await createVolunteer(
+				{ name: "Alice", password: "secret123" },
+				eventStore,
+			);
+			await disableVolunteer(id, eventStore);
+			await enableVolunteer(id, eventStore);
+			const found = await repo.getById(id);
+
+			expect(found).not.toBeNull();
+			expect(found!.isDisabled).toBe(false);
 		});
 	});
 

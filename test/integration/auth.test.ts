@@ -6,6 +6,7 @@ import type {
 import {
 	changePassword,
 	createVolunteer,
+	disableVolunteer,
 } from "../../src/domain/volunteer/commandHandlers.ts";
 import type { VolunteerRepository } from "../../src/domain/volunteer/repository.ts";
 import { createEventStore } from "../../src/infrastructure/eventStore.ts";
@@ -80,6 +81,20 @@ describe("auth routes", () => {
 			const res = await login(loginRequest("alice", "correct-password"));
 			expect(res.status).toBe(302);
 			expect(res.headers.get("set-cookie")).toContain("session=");
+		});
+
+		test("returns error when volunteer is disabled", async () => {
+			const { id } = await createVolunteer(
+				{ name: "Disabled", password: "pw123" },
+				eventStore,
+			);
+			await changePassword(id, "pw123", eventStore);
+			await disableVolunteer(id, eventStore);
+			const login = handleLogin(sessionStore, volunteerRepo);
+			const res = await login(loginRequest("Disabled", "pw123"));
+			expect(res.status).toBe(401);
+			const body = await res.text();
+			expect(body).toContain("disabled");
 		});
 	});
 

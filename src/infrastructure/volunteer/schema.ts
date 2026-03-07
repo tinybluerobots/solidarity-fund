@@ -6,6 +6,7 @@ export const VOLUNTEERS_TABLE_DDL = `
 		email TEXT,
 		password_hash TEXT NOT NULL,
 		is_admin INTEGER NOT NULL DEFAULT 0,
+		is_disabled INTEGER NOT NULL DEFAULT 0,
 		requires_password_reset INTEGER NOT NULL DEFAULT 0,
 		created_at TEXT NOT NULL,
 		updated_at TEXT NOT NULL

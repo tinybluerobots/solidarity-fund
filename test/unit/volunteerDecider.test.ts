@@ -36,6 +36,11 @@ const activeState: VolunteerState = {
 	updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
+const disabledState: VolunteerState = {
+	...activeState,
+	status: "disabled",
+};
+
 describe("volunteer decider", () => {
 	describe("decide", () => {
 		test("CreateVolunteer emits VolunteerCreated from initial state", () => {
@@ -82,32 +87,48 @@ describe("volunteer decider", () => {
 			expect(() => decide(cmd, initialState())).toThrow(IllegalStateError);
 		});
 
-		test("DeleteVolunteer emits VolunteerDeleted from active state", () => {
+		test("DisableVolunteer emits VolunteerDisabled from active state", () => {
 			const cmd: VolunteerCommand = {
-				type: "DeleteVolunteer",
-				data: { id: "v-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				type: "DisableVolunteer",
+				data: { id: "v-1", disabledAt: "2026-01-03T00:00:00.000Z" },
 			};
 			const events = decide(cmd, activeState);
 			expect(events).toHaveLength(1);
-			expect(events[0]!.type).toBe("VolunteerDeleted");
+			expect(events[0]!.type).toBe("VolunteerDisabled");
 		});
 
-		test("DeleteVolunteer rejects from initial state", () => {
+		test("DisableVolunteer rejects from initial state", () => {
 			const cmd: VolunteerCommand = {
-				type: "DeleteVolunteer",
-				data: { id: "v-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				type: "DisableVolunteer",
+				data: { id: "v-1", disabledAt: "2026-01-03T00:00:00.000Z" },
 			};
 			expect(() => decide(cmd, initialState())).toThrow(IllegalStateError);
 		});
 
-		test("DeleteVolunteer rejects from deleted state", () => {
+		test("DisableVolunteer rejects from disabled state", () => {
 			const cmd: VolunteerCommand = {
-				type: "DeleteVolunteer",
-				data: { id: "v-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				type: "DisableVolunteer",
+				data: { id: "v-1", disabledAt: "2026-01-03T00:00:00.000Z" },
 			};
-			expect(() => decide(cmd, { status: "deleted" })).toThrow(
-				IllegalStateError,
-			);
+			expect(() => decide(cmd, disabledState)).toThrow(IllegalStateError);
+		});
+
+		test("EnableVolunteer emits VolunteerEnabled from disabled state", () => {
+			const cmd: VolunteerCommand = {
+				type: "EnableVolunteer",
+				data: { id: "v-1", enabledAt: "2026-01-04T00:00:00.000Z" },
+			};
+			const events = decide(cmd, disabledState);
+			expect(events).toHaveLength(1);
+			expect(events[0]!.type).toBe("VolunteerEnabled");
+		});
+
+		test("EnableVolunteer rejects from active state", () => {
+			const cmd: VolunteerCommand = {
+				type: "EnableVolunteer",
+				data: { id: "v-1", enabledAt: "2026-01-04T00:00:00.000Z" },
+			};
+			expect(() => decide(cmd, activeState)).toThrow(IllegalStateError);
 		});
 
 		test("ChangePassword emits PasswordChanged from active state", () => {
@@ -228,13 +249,30 @@ describe("volunteer decider", () => {
 			}
 		});
 
-		test("VolunteerDeleted transitions to deleted", () => {
+		test("VolunteerDisabled transitions to disabled", () => {
 			const event: VolunteerEvent = {
-				type: "VolunteerDeleted",
-				data: { id: "v-1", deletedAt: "2026-01-03T00:00:00.000Z" },
+				type: "VolunteerDisabled",
+				data: { id: "v-1", disabledAt: "2026-01-03T00:00:00.000Z" },
 			};
 			const state = evolve(activeState, event);
-			expect(state.status).toBe("deleted");
+			expect(state.status).toBe("disabled");
+			if (state.status === "disabled") {
+				expect(state.name).toBe("Alice");
+				expect(state.updatedAt).toBe("2026-01-03T00:00:00.000Z");
+			}
+		});
+
+		test("VolunteerEnabled transitions to active", () => {
+			const event: VolunteerEvent = {
+				type: "VolunteerEnabled",
+				data: { id: "v-1", enabledAt: "2026-01-04T00:00:00.000Z" },
+			};
+			const state = evolve(disabledState, event);
+			expect(state.status).toBe("active");
+			if (state.status === "active") {
+				expect(state.name).toBe("Alice");
+				expect(state.updatedAt).toBe("2026-01-04T00:00:00.000Z");
+			}
 		});
 	});
 });

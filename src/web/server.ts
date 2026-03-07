@@ -17,8 +17,8 @@ import {
 	handleLogin,
 	handleLogout,
 } from "./routes/auth.ts";
-import { createRecipientRoutes } from "./routes/recipients.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
+import { createRecipientRoutes } from "./routes/recipients.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 export async function getAuthenticatedVolunteer(

@@ -32,6 +32,10 @@ export function handleLogin(
 			return loginResponse("Invalid name or password");
 		}
 
+		if (volunteer.isDisabled) {
+			return loginResponse("This account has been disabled");
+		}
+
 		const valid = await volunteerRepo.verifyPassword(volunteer.id, password);
 		if (!valid) {
 			return loginResponse("Invalid name or password");

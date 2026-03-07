@@ -10,6 +10,7 @@ type VolunteerRow = {
 	email: string | null;
 	password_hash: string;
 	is_admin: number;
+	is_disabled: number;
 	requires_password_reset: number;
 	created_at: string;
 	updated_at: string;
@@ -22,6 +23,7 @@ function rowToVolunteer(row: VolunteerRow): Volunteer {
 		phone: row.phone ?? undefined,
 		email: row.email ?? undefined,
 		isAdmin: row.is_admin !== 0,
+		isDisabled: row.is_disabled !== 0,
 		requiresPasswordReset: row.requires_password_reset !== 0,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
