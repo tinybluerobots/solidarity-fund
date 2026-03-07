@@ -49,6 +49,19 @@ export function decide(
 				},
 			];
 		}
+		case "ChangePassword": {
+			if (state.status !== "active") {
+				throw new IllegalStateError(
+					`Cannot change password in ${state.status} state`,
+				);
+			}
+			return [
+				{
+					type: "PasswordChanged",
+					data: command.data,
+				},
+			];
+		}
 	}
 }
 
@@ -65,23 +78,31 @@ export function evolve(
 				phone: event.data.phone,
 				email: event.data.email,
 				passwordHash: event.data.passwordHash,
+				isAdmin: event.data.isAdmin ?? false,
+				requiresPasswordReset: event.data.requiresPasswordReset ?? false,
 				createdAt: event.data.createdAt,
 				updatedAt: event.data.createdAt,
 			};
 		case "VolunteerUpdated":
 			if (state.status !== "active") return state;
 			return {
-				status: "active",
-				id: event.data.id,
+				...state,
 				name: event.data.name,
 				phone: event.data.phone,
 				email: event.data.email,
 				passwordHash: event.data.passwordHash,
-				createdAt: state.createdAt,
 				updatedAt: event.data.updatedAt,
 			};
 		case "VolunteerDeleted":
 			return { status: "deleted" };
+		case "PasswordChanged":
+			if (state.status !== "active") return state;
+			return {
+				...state,
+				passwordHash: event.data.passwordHash,
+				requiresPasswordReset: false,
+				updatedAt: event.data.changedAt,
+			};
 		default: {
 			const _exhaustive: never = event;
 			return state;

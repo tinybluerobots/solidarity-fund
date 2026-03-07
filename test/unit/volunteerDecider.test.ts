@@ -30,6 +30,8 @@ const activeState: VolunteerState = {
 	phone: "07700900001",
 	email: "alice@example.com",
 	passwordHash: "$argon2id$hashed",
+	isAdmin: false,
+	requiresPasswordReset: false,
 	createdAt: "2026-01-01T00:00:00.000Z",
 	updatedAt: "2026-01-01T00:00:00.000Z",
 };
@@ -107,6 +109,33 @@ describe("volunteer decider", () => {
 				IllegalStateError,
 			);
 		});
+
+		test("ChangePassword emits PasswordChanged from active state", () => {
+			const cmd: VolunteerCommand = {
+				type: "ChangePassword",
+				data: {
+					id: "v-1",
+					passwordHash: "$argon2id$newpassword",
+					changedAt: "2026-01-04T00:00:00.000Z",
+				},
+			};
+			const events = decide(cmd, activeState);
+			expect(events).toHaveLength(1);
+			expect(events[0]!.type).toBe("PasswordChanged");
+			expect(events[0]!.data.passwordHash).toBe("$argon2id$newpassword");
+		});
+
+		test("ChangePassword rejects from initial state", () => {
+			const cmd: VolunteerCommand = {
+				type: "ChangePassword",
+				data: {
+					id: "v-1",
+					passwordHash: "$argon2id$newpassword",
+					changedAt: "2026-01-04T00:00:00.000Z",
+				},
+			};
+			expect(() => decide(cmd, initialState())).toThrow(IllegalStateError);
+		});
 	});
 
 	describe("evolve", () => {
@@ -143,6 +172,59 @@ describe("volunteer decider", () => {
 				expect(state.passwordHash).toBe("$argon2id$newhash");
 				expect(state.createdAt).toBe("2026-01-01T00:00:00.000Z");
 				expect(state.updatedAt).toBe("2026-01-02T00:00:00.000Z");
+			}
+		});
+
+		test("VolunteerCreated with isAdmin and requiresPasswordReset evolves correctly", () => {
+			const event: VolunteerEvent = {
+				type: "VolunteerCreated",
+				data: {
+					...createCommand.data,
+					isAdmin: true,
+					requiresPasswordReset: true,
+				},
+			};
+			const state = evolve(initialState(), event);
+			expect(state.status).toBe("active");
+			if (state.status === "active") {
+				expect(state.isAdmin).toBe(true);
+				expect(state.requiresPasswordReset).toBe(true);
+			}
+		});
+
+		test("VolunteerCreated defaults isAdmin=false and requiresPasswordReset=false", () => {
+			const event: VolunteerEvent = {
+				type: "VolunteerCreated",
+				data: createCommand.data,
+			};
+			const state = evolve(initialState(), event);
+			expect(state.status).toBe("active");
+			if (state.status === "active") {
+				expect(state.isAdmin).toBe(false);
+				expect(state.requiresPasswordReset).toBe(false);
+			}
+		});
+
+		test("PasswordChanged clears requiresPasswordReset", () => {
+			const stateWithReset: VolunteerState = {
+				...activeState,
+				status: "active",
+				requiresPasswordReset: true,
+			};
+			const event: VolunteerEvent = {
+				type: "PasswordChanged",
+				data: {
+					id: "v-1",
+					passwordHash: "$argon2id$newpassword",
+					changedAt: "2026-01-04T00:00:00.000Z",
+				},
+			};
+			const state = evolve(stateWithReset, event);
+			expect(state.status).toBe("active");
+			if (state.status === "active") {
+				expect(state.passwordHash).toBe("$argon2id$newpassword");
+				expect(state.requiresPasswordReset).toBe(false);
+				expect(state.updatedAt).toBe("2026-01-04T00:00:00.000Z");
 			}
 		});
 

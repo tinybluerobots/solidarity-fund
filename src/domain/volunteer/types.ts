@@ -3,6 +3,8 @@ export type Volunteer = {
 	name: string;
 	phone?: string;
 	email?: string;
+	isAdmin: boolean;
+	requiresPasswordReset: boolean;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -12,6 +14,7 @@ export type CreateVolunteer = {
 	phone?: string;
 	email?: string;
 	password: string;
+	isAdmin?: boolean;
 };
 
 export type UpdateVolunteer = {
@@ -33,6 +36,8 @@ export type CreateVolunteerCommand = Command<
 		phone?: string;
 		email?: string;
 		passwordHash: string;
+		isAdmin?: boolean;
+		requiresPasswordReset?: boolean;
 		createdAt: string;
 	}
 >;
@@ -57,10 +62,20 @@ export type DeleteVolunteerCommand = Command<
 	}
 >;
 
+export type ChangePasswordCommand = Command<
+	"ChangePassword",
+	{
+		id: string;
+		passwordHash: string;
+		changedAt: string;
+	}
+>;
+
 export type VolunteerCommand =
 	| CreateVolunteerCommand
 	| UpdateVolunteerCommand
-	| DeleteVolunteerCommand;
+	| DeleteVolunteerCommand
+	| ChangePasswordCommand;
 
 // Events
 
@@ -72,6 +87,8 @@ export type VolunteerCreated = Event<
 		phone?: string;
 		email?: string;
 		passwordHash: string;
+		isAdmin?: boolean;
+		requiresPasswordReset?: boolean;
 		createdAt: string;
 	}
 >;
@@ -96,10 +113,20 @@ export type VolunteerDeleted = Event<
 	}
 >;
 
+export type PasswordChanged = Event<
+	"PasswordChanged",
+	{
+		id: string;
+		passwordHash: string;
+		changedAt: string;
+	}
+>;
+
 export type VolunteerEvent =
 	| VolunteerCreated
 	| VolunteerUpdated
-	| VolunteerDeleted;
+	| VolunteerDeleted
+	| PasswordChanged;
 
 export type VolunteerEventType = VolunteerEvent["type"];
 
@@ -114,6 +141,8 @@ export type VolunteerState =
 			phone?: string;
 			email?: string;
 			passwordHash: string;
+			isAdmin: boolean;
+			requiresPasswordReset: boolean;
 			createdAt: string;
 			updatedAt: string;
 	  }
