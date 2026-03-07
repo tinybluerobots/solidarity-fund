@@ -4,11 +4,13 @@ import type {
 } from "@event-driven-io/emmett-sqlite";
 import type { RecipientRepository } from "../domain/recipient/repository.ts";
 import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
+import { SQLiteApplicationRepository } from "../infrastructure/application/sqliteApplicationRepository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
 import type { SessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
 import { changePasswordPage } from "./pages/changePassword.ts";
 import { dashboardPage } from "./pages/dashboard.ts";
 import { loginPage } from "./pages/login.ts";
+import { createApplicationRoutes } from "./routes/applications.ts";
 import { createApplyRoutes } from "./routes/apply.ts";
 import {
 	handleChangePassword,
@@ -44,6 +46,13 @@ export function startServer(
 	const applyRoutes = createApplyRoutes(eventStore, pool, recipientRepo);
 	const recipientRoutes = createRecipientRoutes(recipientRepo, eventStore);
 	const volunteerRoutes = createVolunteerRoutes(volunteerRepo, eventStore);
+	const appRepo = SQLiteApplicationRepository(pool);
+	const applicationRoutes = createApplicationRoutes(
+		appRepo,
+		recipientRepo,
+		eventStore,
+		pool,
+	);
 	const changePasswordHandler = handleChangePassword(volunteerRepo, eventStore);
 
 	async function requireAuth(req: Request) {
@@ -128,6 +137,23 @@ export function startServer(
 					return volunteerRoutes.closePanel();
 				},
 			},
+			"/applications": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					const url = new URL(req.url);
+					return applicationRoutes.list(
+						url.searchParams.get("month") ?? undefined,
+					);
+				},
+			},
+			"/applications/close": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					return applicationRoutes.closePanel();
+				},
+			},
 			"/recipients": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
@@ -179,6 +205,28 @@ export function startServer(
 					return volunteerRoutes.handleUpdate(id, req, volunteer.id);
 				if (req.method === "DELETE")
 					return volunteerRoutes.handleDelete(id, volunteer.id);
+			}
+
+			// Application review (must come before detail match)
+			const appReviewMatch = url.pathname.match(
+				/^\/applications\/([^/]+)\/review$/,
+			);
+			if (appReviewMatch?.[1] && req.method === "POST") {
+				const decision = new URL(req.url).searchParams.get("decision");
+				if (decision === "confirm" || decision === "reject") {
+					return applicationRoutes.handleReview(
+						appReviewMatch[1],
+						decision,
+						volunteer.id,
+					);
+				}
+				return new Response("Invalid decision", { status: 400 });
+			}
+
+			// Application detail
+			const appIdMatch = url.pathname.match(/^\/applications\/([^/]+)$/);
+			if (appIdMatch?.[1] && req.method === "GET") {
+				return applicationRoutes.detail(appIdMatch[1]);
 			}
 
 			if (url.pathname === "/recipients" && req.method === "POST") {
