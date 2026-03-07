@@ -1,0 +1,84 @@
+import { layout } from "./layout.ts";
+
+type LotteryStatus = "initial" | "open" | "windowClosed" | "drawn";
+
+function escapeHtml(s: string): string {
+	return s
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;");
+}
+
+function statusBadge(status: LotteryStatus): string {
+	const styles: Record<LotteryStatus, string> = {
+		initial: "bg-gray-50 text-gray-600 border-gray-200",
+		open: "bg-green-50 text-green-700 border-green-200",
+		windowClosed: "bg-amber-50 text-amber-700 border-amber-200",
+		drawn: "bg-blue-50 text-blue-700 border-blue-200",
+	};
+	const labels: Record<LotteryStatus, string> = {
+		initial: "No Window",
+		open: "Applications Open",
+		windowClosed: "Window Closed",
+		drawn: "Drawn",
+	};
+	return `<span class="badge ${styles[status]}">${labels[status]}</span>`;
+}
+
+function actionSection(month: string, status: LotteryStatus): string {
+	switch (status) {
+		case "initial":
+			return `<p class="text-bark-muted mb-4">No window open for ${escapeHtml(month)}.</p>
+				<button class="btn btn-primary" data-on-click="@post('/lottery/open')">Open Applications</button>`;
+		case "open":
+			return `<p class="text-bark-muted mb-4">Applications open for ${escapeHtml(month)}.</p>
+				<button class="btn btn-primary" data-on-click="@post('/lottery/close')">Close Applications</button>`;
+		case "windowClosed":
+			return `<p class="text-bark-muted mb-4">Window closed for ${escapeHtml(month)}. Ready to draw.</p>
+				<form data-on-submit="@post('/lottery/draw')" class="space-y-4 max-w-sm">
+					<div>
+						<label class="label" for="availableBalance">Available Balance</label>
+						<input id="availableBalance" name="availableBalance" type="number" step="0.01" min="0" required class="input" data-bind-availableBalance />
+					</div>
+					<div>
+						<label class="label" for="reserve">Reserve</label>
+						<input id="reserve" name="reserve" type="number" step="0.01" min="0" required class="input" data-bind-reserve />
+					</div>
+					<div>
+						<label class="label" for="grantAmount">Grant Amount</label>
+						<input id="grantAmount" name="grantAmount" type="number" step="0.01" min="0.01" required class="input" data-bind-grantAmount />
+					</div>
+					<button type="submit" class="btn btn-primary">Run Draw</button>
+				</form>`;
+		case "drawn":
+			return `<p class="text-bark-muted mb-4">Lottery drawn for ${escapeHtml(month)}.</p>
+				<a href="/applications?month=${encodeURIComponent(month)}" class="btn btn-primary no-underline">View Results</a>`;
+	}
+}
+
+export function lotteryPage(monthCycle: string, status: LotteryStatus): string {
+	const body = `<div class="max-w-2xl mx-auto px-4 py-8" data-signals='{"availableBalance": "", "reserve": "", "grantAmount": ""}'>
+	<div class="flex items-center justify-between mb-6">
+		<div class="flex items-center gap-3">
+			<a href="/" class="text-bark-muted hover:text-bark transition-colors text-sm">&larr; Back</a>
+			<h1 class="font-heading text-2xl font-semibold text-bark">Lottery</h1>
+		</div>
+		${statusBadge(status)}
+	</div>
+
+	<div id="lottery-content" class="card p-6">
+		<h2 class="font-heading font-semibold text-lg mb-4">${escapeHtml(monthCycle)}</h2>
+		${actionSection(monthCycle, status)}
+	</div>
+</div>`;
+
+	return layout("Lottery", body);
+}
+
+export function lotteryContent(monthCycle: string, status: LotteryStatus): string {
+	return `<div id="lottery-content" class="card p-6">
+		<h2 class="font-heading font-semibold text-lg mb-4">${escapeHtml(monthCycle)}</h2>
+		${actionSection(monthCycle, status)}
+	</div>`;
+}
