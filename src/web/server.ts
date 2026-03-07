@@ -18,6 +18,7 @@ import {
 	handleLogout,
 } from "./routes/auth.ts";
 import { createRecipientRoutes } from "./routes/recipients.ts";
+import { createLotteryRoutes } from "./routes/lottery.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 export async function getAuthenticatedVolunteer(
@@ -57,6 +58,7 @@ export function startServer(
 		eventStore,
 		pool,
 	);
+	const lotteryRoutes = createLotteryRoutes(appRepo, eventStore, pool);
 	const changePasswordHandler = handleChangePassword(volunteerRepo, eventStore);
 
 	async function requireAuth(req: Request) {
@@ -158,6 +160,13 @@ export function startServer(
 					return applicationRoutes.closePanel();
 				},
 			},
+			"/lottery": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					return lotteryRoutes.show();
+				},
+			},
 			"/recipients": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
@@ -254,6 +263,23 @@ export function startServer(
 			const appIdMatch = url.pathname.match(/^\/applications\/([^/]+)$/);
 			if (appIdMatch?.[1] && req.method === "GET") {
 				return applicationRoutes.detail(appIdMatch[1]);
+			}
+
+			if (url.pathname === "/lottery/open" && req.method === "POST") {
+				return lotteryRoutes.handleOpen();
+			}
+			if (url.pathname === "/lottery/close" && req.method === "POST") {
+				return lotteryRoutes.handleClose();
+			}
+			if (url.pathname === "/lottery/draw" && req.method === "POST") {
+				const signals = await req.json();
+				const balance = Number(signals.availableBalance);
+				const reserve = Number(signals.reserve);
+				const grant = Number(signals.grantAmount);
+				if ([balance, reserve, grant].some(Number.isNaN)) {
+					return new Response("Invalid input", { status: 400 });
+				}
+				return lotteryRoutes.handleDraw(volunteer.id, balance, reserve, grant);
 			}
 
 			if (url.pathname === "/recipients" && req.method === "POST") {
