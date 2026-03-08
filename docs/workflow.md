@@ -60,9 +60,9 @@ flowchart TD
     %% PAYMENT PHASE
     subgraph "💳 PAYMENT PHASE"
         WIN_NOTIFY -->|Chose bank transfer| BANK_FORM["📧 Auto-send secure form:<br/>• Upload proof of address<br/>• Enter bank details<br/>(sort code + account no.)"]
-        WIN_NOTIFY -->|Chose cash| CASH_MEET["Volunteer contacts<br/>recipient to arrange<br/>cash handover"]
+        WIN_NOTIFY -->|Chose cash| CASH_MEET["Volunteer contacts<br/>applicant to arrange<br/>cash handover"]
 
-        BANK_FORM --> UPLOAD([Recipient submits<br/>POA + bank details])
+        BANK_FORM --> UPLOAD([Applicant submits<br/>POA + bank details])
         UPLOAD --> VERIFY{Volunteer<br/>verifies POA}
         VERIFY -->|✅ Approved| CLEARED[Due diligence<br/>passed]
         VERIFY -->|❌ Rejected| RETRY{Attempts<br/>< 3?}
@@ -187,10 +187,12 @@ flowchart TD
 
 ### Applicant Aggregate (implemented)
 
+Applicant holds identity only (phone, name, email). Per-application choices (payment preference, meeting place, bank details) live on each Application. Deterministic composite key: `applicant-${phone}-${normalizedName}`. Multiple applicants can share a phone number with different names.
+
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
 | `ApplicantCreated` | New applicant submits form | Create applicant profile with phone, name, email |
-| `ApplicantUpdated` | Volunteer updates applicant details | Update profile fields |
+| `ApplicantUpdated` | Volunteer updates applicant details | Update identity fields |
 | `ApplicantDeleted` | Volunteer removes applicant | Soft-delete from read model |
 
 ### Volunteer Aggregate (implemented)
@@ -234,11 +236,11 @@ flowchart TD
 |---------|-----|---------------|--------------|
 | `CreateGrant` | System (process manager) | initial | Creates grant stream from ApplicationSelected; routes to bank or cash path |
 | `AssignVolunteer` | Volunteer | any non-terminal | Assigns a volunteer to handle this grant |
-| `SubmitBankDetails` | Recipient | awaiting_bank_details | Submits sort code, account number, and proof of address |
+| `SubmitBankDetails` | Applicant | awaiting_bank_details | Submits sort code, account number, and proof of address |
 | `ApproveProofOfAddress` | Volunteer | bank_details_submitted | Approves POA; grant ready for bank payment |
 | `RejectProofOfAddress` | Volunteer | bank_details_submitted | Rejects POA; back to awaiting (or offers cash after 3rd attempt) |
-| `AcceptCashAlternative` | Recipient | offered_cash_alternative | Accepts cash; routes to cash handover |
-| `DeclineCashAlternative` | Recipient | offered_cash_alternative | Declines cash; slot released |
+| `AcceptCashAlternative` | Applicant | offered_cash_alternative | Accepts cash; routes to cash handover |
+| `DeclineCashAlternative` | Applicant | offered_cash_alternative | Declines cash; slot released |
 | `RecordPayment` | Volunteer | poa_approved (bank only), awaiting_cash_handover (cash only) | Records payment; bank grants complete, cash grants await reimbursement |
 | `RecordReimbursement` | Volunteer | awaiting_reimbursement | Records OC expense reference; cash grant fully complete |
 | `ReleaseSlot` | Volunteer | any non-terminal | Manually releases slot (unresponsive, no-show, etc.) |
@@ -249,12 +251,12 @@ flowchart TD
 |-------|---------|--------------|
 | `GrantCreated` | Process manager reacts to ApplicationSelected | Create grant with payment preference (bank/cash) |
 | `VolunteerAssigned` | Volunteer claims a grant | Track which volunteer handles the grant |
-| `BankDetailsSubmitted` | Recipient submits POA + bank details | Add to volunteer verification queue |
+| `BankDetailsSubmitted` | Applicant submits POA + bank details | Add to volunteer verification queue |
 | `ProofOfAddressApproved` | Volunteer approves POA | Grant ready for bank payment |
-| `ProofOfAddressRejected` | Volunteer rejects POA (max 3 attempts) | Notify recipient; after 3rd rejection offer cash |
-| `CashAlternativeOffered` | 3rd POA rejection | Offer recipient cash instead of bank transfer |
-| `CashAlternativeAccepted` | Recipient accepts cash | Route to cash handover flow |
-| `CashAlternativeDeclined` | Recipient declines cash | Slot released |
+| `ProofOfAddressRejected` | Volunteer rejects POA (max 3 attempts) | Notify applicant; after 3rd rejection offer cash |
+| `CashAlternativeOffered` | 3rd POA rejection | Offer applicant cash instead of bank transfer |
+| `CashAlternativeAccepted` | Applicant accepts cash | Route to cash handover flow |
+| `CashAlternativeDeclined` | Applicant declines cash | Slot released |
 | `GrantPaid` | Transfer sent or cash handed over | Bank grants complete; cash grants move to awaiting_reimbursement |
 | `VolunteerReimbursed` | Volunteer records OC expense | Cash grant fully complete |
 | `SlotReleased` | Volunteer releases / cash declined | Release slot to waitlist |
