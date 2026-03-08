@@ -3,7 +3,6 @@ import type {
 	SQLiteEventStore,
 } from "@event-driven-io/emmett-sqlite";
 import type { ApplicantRepository } from "../domain/applicant/repository.ts";
-import type { RecipientRepository } from "../domain/recipient/repository.ts";
 import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
 import { SQLiteApplicationRepository } from "../infrastructure/application/sqliteApplicationRepository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
@@ -12,6 +11,7 @@ import { changePasswordPage } from "./pages/changePassword.ts";
 import { dashboardPage } from "./pages/dashboard.ts";
 import { loginPage } from "./pages/login.ts";
 import { createAltchaRoutes } from "./routes/altcha.ts";
+import { createApplicantRoutes } from "./routes/applicants-admin.ts";
 import { createApplicationRoutes } from "./routes/applications.ts";
 import { createApplyRoutes } from "./routes/apply.ts";
 import {
@@ -20,7 +20,6 @@ import {
 	handleLogout,
 } from "./routes/auth.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
-import { createRecipientRoutes } from "./routes/recipients.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 export async function getAuthenticatedVolunteer(
@@ -38,7 +37,6 @@ export async function getAuthenticatedVolunteer(
 export function startServer(
 	sessionStore: SessionStore,
 	volunteerRepo: VolunteerRepository,
-	recipientRepo: RecipientRepository,
 	applicantRepo: ApplicantRepository,
 	eventStore: SQLiteEventStore,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
@@ -54,8 +52,8 @@ export function startServer(
 		applicantRepo,
 		hmacKey,
 	);
-	const recipientRoutes = createRecipientRoutes(
-		recipientRepo,
+	const applicantRoutes = createApplicantRoutes(
+		applicantRepo,
 		volunteerRepo,
 		eventStore,
 	);
@@ -188,25 +186,25 @@ export function startServer(
 					return lotteryRoutes.show();
 				},
 			},
-			"/recipients": {
+			"/applicants": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
-					return recipientRoutes.list();
+					return applicantRoutes.list();
 				},
 			},
-			"/recipients/new": {
+			"/applicants/new": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
-					return recipientRoutes.create();
+					return applicantRoutes.create();
 				},
 			},
-			"/recipients/close": {
+			"/applicants/close": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
-					return recipientRoutes.closePanel();
+					return applicantRoutes.closePanel();
 				},
 			},
 		},
@@ -303,30 +301,30 @@ export function startServer(
 				return lotteryRoutes.handleDraw(volunteer.id, balance, reserve, grant);
 			}
 
-			if (url.pathname === "/recipients" && req.method === "POST") {
-				return recipientRoutes.handleCreate(req, volunteer.id);
+			if (url.pathname === "/applicants" && req.method === "POST") {
+				return applicantRoutes.handleCreate(req, volunteer.id);
 			}
 
 			const historyMatch = url.pathname.match(
-				/^\/recipients\/([^/]+)\/history$/,
+				/^\/applicants\/([^/]+)\/history$/,
 			);
 			if (historyMatch?.[1] && req.method === "GET") {
-				return recipientRoutes.history(historyMatch[1]);
+				return applicantRoutes.history(historyMatch[1]);
 			}
 
-			const editMatch = url.pathname.match(/^\/recipients\/([^/]+)\/edit$/);
+			const editMatch = url.pathname.match(/^\/applicants\/([^/]+)\/edit$/);
 			if (editMatch?.[1] && req.method === "GET") {
-				return recipientRoutes.edit(editMatch[1]);
+				return applicantRoutes.edit(editMatch[1]);
 			}
 
-			const idMatch = url.pathname.match(/^\/recipients\/([^/]+)$/);
+			const idMatch = url.pathname.match(/^\/applicants\/([^/]+)$/);
 			if (idMatch?.[1]) {
 				const id = idMatch[1];
 				if (req.method === "PUT") {
-					return recipientRoutes.handleUpdate(id, req, volunteer.id);
+					return applicantRoutes.handleUpdate(id, req, volunteer.id);
 				}
 				if (req.method === "DELETE") {
-					return recipientRoutes.handleDelete(id, volunteer.id);
+					return applicantRoutes.handleDelete(id, volunteer.id);
 				}
 			}
 

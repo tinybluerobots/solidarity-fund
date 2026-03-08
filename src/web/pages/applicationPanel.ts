@@ -65,10 +65,21 @@ function detailFields(app: ApplicationRow): string {
 	return fields.join("\n");
 }
 
-export function viewPanel(app: ApplicationRow): string {
+function applicantLink(applicantId: string | null): string {
+	if (!applicantId) return "";
+	return `<a href="/applicants/${encodeURIComponent(applicantId)}/edit" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</a>`;
+}
+
+export function viewPanel(
+	app: ApplicationRow,
+	applicantId: string | null = null,
+): string {
 	return panelWrapper(`
     <div class="flex items-center justify-between mb-6">
-      <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Application")}</h2>
+      <div class="flex items-center gap-3">
+        <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Application")}</h2>
+        ${applicantLink(applicantId)}
+      </div>
       <button class="btn btn-secondary" data-on-click="@get('/applications/close')">Close</button>
     </div>
     <dl>
@@ -77,10 +88,16 @@ export function viewPanel(app: ApplicationRow): string {
   `);
 }
 
-export function reviewPanel(app: ApplicationRow): string {
+export function reviewPanel(
+	app: ApplicationRow,
+	applicantId: string | null = null,
+): string {
 	return panelWrapper(`
     <div class="flex items-center justify-between mb-6">
-      <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Review Application")}</h2>
+      <div class="flex items-center gap-3">
+        <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Review Application")}</h2>
+        ${applicantLink(applicantId)}
+      </div>
       <button class="btn btn-secondary" data-on-click="@get('/applications/close')">Close</button>
     </div>
     <dl>

@@ -16,7 +16,7 @@ export function dashboardPage(volunteer: Volunteer): string {
 		<p class="text-bark-muted mb-8">Hello, ${escapeHtml(volunteer.name)}.</p>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-			${navCard("/recipients", "\u{1F465}", "Recipients", "View and manage grant recipients")}
+			${navCard("/applicants", "\u{1F465}", "Applicants", "View and manage applicants")}
 			${navCard("/applications", "\u{1F4CB}", "Applications", "Review incoming applications")}
 			${navCard("/grants", "\u{1F4B7}", "Grants", "Track grant payments")}
 			${navCard("/lottery", "\u{1F3B2}", "Lottery", "Run monthly draws")}
