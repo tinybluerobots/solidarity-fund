@@ -46,13 +46,13 @@ describe("viewPanel", () => {
 		expect(html).toContain("/applications/close");
 	});
 
-	test("shows recipient link when recipientId provided", () => {
+	test("shows applicant link when applicantId provided", () => {
 		const html = viewPanel(app, "rec-1");
 		expect(html).toContain("/applicants/rec-1/edit");
 		expect(html).toContain("View Applicant");
 	});
 
-	test("omits recipient link when recipientId is null", () => {
+	test("omits applicant link when applicantId is null", () => {
 		const html = viewPanel(app, null);
 		expect(html).not.toContain("View Applicant");
 	});
@@ -74,7 +74,7 @@ describe("reviewPanel", () => {
 		expect(html).toContain("07700900001");
 	});
 
-	test("shows recipient link when recipientId provided", () => {
+	test("shows applicant link when applicantId provided", () => {
 		const flagged = { ...app, status: "flagged" };
 		const html = reviewPanel(flagged, "rec-2");
 		expect(html).toContain("/applicants/rec-2/edit");
