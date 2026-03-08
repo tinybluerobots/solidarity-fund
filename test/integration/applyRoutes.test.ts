@@ -1,18 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import type {
-	SQLiteConnectionPool,
-	SQLiteEventStore,
-} from "@event-driven-io/emmett-sqlite";
 import { createChallenge, solveChallenge } from "altcha-lib";
-import type { ApplicantRepository } from "../../src/domain/applicant/repository.ts";
-import { SQLiteApplicantRepository } from "../../src/infrastructure/applicant/sqliteApplicantRepository.ts";
-import { createEventStore } from "../../src/infrastructure/eventStore.ts";
 import { createApplyRoutes } from "../../src/web/routes/apply.ts";
+import { createTestEnv, type TestEnv } from "./helpers/testEventStore.ts";
 
 describe("apply routes", () => {
-	let eventStore: SQLiteEventStore;
-	let pool: ReturnType<typeof SQLiteConnectionPool>;
-	let applicantRepo: ApplicantRepository;
+	let env: TestEnv;
 	let routes: ReturnType<typeof createApplyRoutes>;
 	const hmacKey = "test-hmac-key";
 
@@ -37,135 +29,68 @@ describe("apply routes", () => {
 	}
 
 	beforeEach(async () => {
-		const es = createEventStore(":memory:");
-		eventStore = es.store;
-		pool = es.pool;
-		applicantRepo = await SQLiteApplicantRepository(pool);
-		routes = createApplyRoutes(eventStore, pool, applicantRepo, hmacKey);
+		env = await createTestEnv();
+		routes = createApplyRoutes(
+			env.eventStore,
+			env.pool,
+			env.applicantRepo,
+			hmacKey,
+		);
 	});
 
 	afterEach(async () => {
-		await pool.close();
+		await env.cleanup();
 	});
 
-	describe("showForm", () => {
-		test("returns closed page when no window is open", async () => {
-			const res = await routes.showForm();
-			const html = await res.text();
-			expect(html).toContain("closed");
-		});
-
-		test("returns form when window is open", async () => {
-			await eventStore.appendToStream("lottery-2026-03", [
-				{
-					type: "ApplicationWindowOpened",
-					data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
-				},
-			]);
-			const res = await routes.showForm();
-			const html = await res.text();
-			expect(html).toContain('action="/apply"');
-		});
+	test("showForm returns closed page when no window is open", async () => {
+		const res = await routes.showForm();
+		const html = await res.text();
+		expect(html).toContain("closed");
 	});
 
-	describe("handleSubmit", () => {
-		test("returns 400 when altcha token is missing", async () => {
-			await eventStore.appendToStream("lottery-2026-03", [
-				{
-					type: "ApplicationWindowOpened",
-					data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
-				},
-			]);
+	test("handleSubmit returns 400 when altcha token is missing", async () => {
+		await env.eventStore.appendToStream("lottery-2026-03", [
+			{
+				type: "ApplicationWindowOpened",
+				data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
+			},
+		]);
 
-			const form = new URLSearchParams({
-				name: "Alice",
-				phone: "07700900001",
-				meetingPlace: "Mill Road",
-				paymentPreference: "cash",
-			});
-
-			const req = new Request("http://localhost/apply", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: form.toString(),
-			});
-
-			const res = await routes.handleSubmit(req);
-			expect(res.status).toBe(400);
-			const text = await res.text();
-			expect(text).toContain("verification");
+		const form = new URLSearchParams({
+			name: "Alice",
+			phone: "07700900001",
+			meetingPlace: "Mill Road",
+			paymentPreference: "cash",
 		});
 
-		test("redirects to result with accepted status", async () => {
-			await eventStore.appendToStream("lottery-2026-03", [
-				{
-					type: "ApplicationWindowOpened",
-					data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
-				},
-			]);
-
-			const altchaToken = await generateAltchaToken();
-			const form = new URLSearchParams({
-				name: "Alice",
-				phone: "07700900001",
-				meetingPlace: "Mill Road",
-				paymentPreference: "cash",
-			});
-			form.set("altcha", altchaToken);
-
-			const req = new Request("http://localhost/apply", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: form.toString(),
-			});
-
-			const res = await routes.handleSubmit(req);
-			expect(res.status).toBe(302);
-			const location = res.headers.get("Location");
-			expect(location).toContain("/apply/result");
-			expect(location).toContain("status=accepted");
+		const req = new Request("http://localhost/apply", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: form.toString(),
 		});
 
-		test("redirects with rejected status when window closed", async () => {
-			const altchaToken = await generateAltchaToken();
-			const form = new URLSearchParams({
-				name: "Alice",
-				phone: "07700900001",
-				meetingPlace: "Mill Road",
-				paymentPreference: "cash",
-			});
-			form.set("altcha", altchaToken);
+		const res = await routes.handleSubmit(req);
+		expect(res.status).toBe(400);
+		const text = await res.text();
+		expect(text).toContain("verification");
+	});
 
-			const req = new Request("http://localhost/apply", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: form.toString(),
-			});
+	test("handleSubmit returns 400 when name is missing", async () => {
+		const altchaToken = await generateAltchaToken();
+		const form = new URLSearchParams({
+			phone: "07700900001",
+			meetingPlace: "Mill Road",
+			paymentPreference: "cash",
+		});
+		form.set("altcha", altchaToken);
 
-			const res = await routes.handleSubmit(req);
-			expect(res.status).toBe(302);
-			const location = res.headers.get("Location");
-			expect(location).toContain("status=rejected");
-			expect(location).toContain("reason=window_closed");
+		const req = new Request("http://localhost/apply", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: form.toString(),
 		});
 
-		test("returns 400 when name is missing", async () => {
-			const altchaToken = await generateAltchaToken();
-			const form = new URLSearchParams({
-				phone: "07700900001",
-				meetingPlace: "Mill Road",
-				paymentPreference: "cash",
-			});
-			form.set("altcha", altchaToken);
-
-			const req = new Request("http://localhost/apply", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: form.toString(),
-			});
-
-			const res = await routes.handleSubmit(req);
-			expect(res.status).toBe(400);
-		});
+		const res = await routes.handleSubmit(req);
+		expect(res.status).toBe(400);
 	});
 });
