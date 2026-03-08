@@ -22,6 +22,12 @@ describe("applyPage", () => {
 		expect(html).not.toContain("datastar");
 	});
 
+	test("includes altcha widget", () => {
+		const html = applyPage();
+		expect(html).toContain("altcha-widget");
+		expect(html).toContain("/api/altcha/challenge");
+	});
+
 	test("includes data retention notice", () => {
 		const html = applyPage();
 		expect(html).toContain("6 months");
