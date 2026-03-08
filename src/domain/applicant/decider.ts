@@ -72,12 +72,9 @@ export function evolve(
 			return {
 				status: "active",
 				id: event.data.id,
-				phone: event.data.phone ?? state.phone,
-				name: event.data.name ?? state.name,
-				email:
-					event.data.email === null
-						? undefined
-						: (event.data.email ?? state.email),
+				phone: event.data.phone,
+				name: event.data.name,
+				email: event.data.email,
 				createdAt: state.createdAt,
 				updatedAt: event.data.updatedAt,
 			};

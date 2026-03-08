@@ -8,7 +8,6 @@ import { applicantProjection } from "./projections/applicant.ts";
 import { applicationsProjection } from "./projections/applications.ts";
 import { grantProjection } from "./projections/grant.ts";
 import { lotteryWindowProjection } from "./projections/lotteryWindow.ts";
-import { recipientProjection } from "./projections/recipient.ts";
 import { volunteerProjection } from "./projections/volunteer.ts";
 
 export type EventStoreWithPool = {
@@ -26,7 +25,6 @@ export function createEventStore(fileName: string): EventStoreWithPool {
 			applicantProjection,
 			applicationsProjection,
 			grantProjection,
-			recipientProjection,
 			volunteerProjection,
 			lotteryWindowProjection,
 		]),

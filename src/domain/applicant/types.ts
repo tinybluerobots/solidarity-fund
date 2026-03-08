@@ -8,6 +8,7 @@ export type Applicant = {
 };
 
 export type CreateApplicant = {
+	volunteerId?: string;
 	phone: string;
 	name: string;
 	email?: string;
@@ -27,6 +28,7 @@ export type CreateApplicantCommand = Command<
 	"CreateApplicant",
 	{
 		id: string;
+		volunteerId?: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -38,9 +40,10 @@ export type UpdateApplicantCommand = Command<
 	"UpdateApplicant",
 	{
 		id: string;
-		phone?: string;
-		name?: string;
-		email?: string | null;
+		volunteerId: string;
+		phone: string;
+		name: string;
+		email?: string;
 		updatedAt: string;
 	}
 >;
@@ -49,6 +52,7 @@ export type DeleteApplicantCommand = Command<
 	"DeleteApplicant",
 	{
 		id: string;
+		volunteerId: string;
 		deletedAt: string;
 	}
 >;
@@ -64,6 +68,7 @@ export type ApplicantCreated = Event<
 	"ApplicantCreated",
 	{
 		id: string;
+		volunteerId?: string;
 		phone: string;
 		name: string;
 		email?: string;
@@ -75,9 +80,10 @@ export type ApplicantUpdated = Event<
 	"ApplicantUpdated",
 	{
 		id: string;
-		phone?: string;
-		name?: string;
-		email?: string | null;
+		volunteerId: string;
+		phone: string;
+		name: string;
+		email?: string;
 		updatedAt: string;
 	}
 >;
@@ -86,6 +92,7 @@ export type ApplicantDeleted = Event<
 	"ApplicantDeleted",
 	{
 		id: string;
+		volunteerId: string;
 		deletedAt: string;
 	}
 >;
