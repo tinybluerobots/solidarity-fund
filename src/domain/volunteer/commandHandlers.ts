@@ -33,7 +33,7 @@ function streamId(id: string): string {
 }
 
 export async function createVolunteer(
-	data: CreateVolunteer,
+	data: CreateVolunteer & { requiresPasswordReset?: boolean },
 	eventStore: SQLiteEventStore,
 ): Promise<{ id: string }> {
 	const id = crypto.randomUUID();
@@ -51,7 +51,7 @@ export async function createVolunteer(
 					email: data.email,
 					passwordHash,
 					isAdmin: data.isAdmin,
-					requiresPasswordReset: true,
+					requiresPasswordReset: data.requiresPasswordReset ?? true,
 					createdAt: now,
 				},
 			},

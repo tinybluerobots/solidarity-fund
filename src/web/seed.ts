@@ -11,11 +11,11 @@ if (existing) {
 	console.log("Test user already exists");
 } else {
 	await createVolunteer(
-		{ name: "Test", password: "test", isAdmin: true },
+		{ name: "Test", password: "test", isAdmin: true, requiresPasswordReset: false },
 		store,
 	);
 	console.log(
-		"Created test user — name: Test, password: test (admin, requires password reset)",
+		"Created test user — name: Test, password: test (admin)",
 	);
 }
 
