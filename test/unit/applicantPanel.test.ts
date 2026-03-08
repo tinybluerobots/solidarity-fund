@@ -1,0 +1,104 @@
+import { describe, expect, test } from "bun:test";
+import type { Applicant } from "../../src/domain/applicant/types";
+import { createPanel, editPanel } from "../../src/web/pages/applicantPanel";
+
+const alice: Applicant = {
+	id: "a-1",
+	phone: "07700900001",
+	name: "Alice Smith",
+	email: "alice@example.com",
+	createdAt: "2026-03-01T00:00:00.000Z",
+	updatedAt: "2026-03-01T00:00:00.000Z",
+};
+
+describe("editPanel", () => {
+	test("renders form with data-bind inputs", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("data-bind-name");
+		expect(html).toContain("data-bind-phone");
+		expect(html).toContain("data-bind-email");
+	});
+
+	test("pre-fills signal values", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("Alice Smith");
+		expect(html).toContain("07700900001");
+		expect(html).toContain("alice@example.com");
+	});
+
+	test("has Save button", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("Save");
+	});
+
+	test("uses @put for existing applicant", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("@put");
+		expect(html).toContain("/applicants/a-1");
+	});
+
+	test("has delete button with confirmation", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("Delete");
+		expect(html).toContain("confirmDelete");
+		expect(html).toContain("Sure?");
+		expect(html).toContain("Confirm");
+	});
+
+	test("renders Details and History tabs", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("Details");
+		expect(html).toContain("History");
+	});
+
+	test("defaults to Details tab active", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("activeTab: 'details'");
+	});
+
+	test("History tab triggers lazy load", () => {
+		const html = editPanel(alice);
+		expect(html).toContain(`/applicants/${alice.id}/history`);
+	});
+
+	test("Details content shown when details tab active", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("data-show=\"$activeTab==='details'\"");
+	});
+
+	test("History content shown when history tab active", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("data-show=\"$activeTab==='history'\"");
+	});
+});
+
+describe("createPanel", () => {
+	test("renders form with data-bind inputs", () => {
+		const html = createPanel();
+		expect(html).toContain("data-bind-name");
+		expect(html).toContain("data-bind-phone");
+	});
+
+	test("initializes signals with empty values", () => {
+		const html = createPanel();
+		expect(html).toContain("name: ''");
+		expect(html).toContain("phone: ''");
+	});
+
+	test("has Create button", () => {
+		const html = createPanel();
+		expect(html).toContain("Create");
+	});
+
+	test("uses @post for new applicant", () => {
+		const html = createPanel();
+		expect(html).toContain("@post");
+		expect(html).toContain("/applicants");
+	});
+
+	test("phone input has numeric pattern", () => {
+		const html = createPanel();
+		expect(html).toContain('pattern="[0-9]*"');
+		expect(html).toContain('inputmode="numeric"');
+	});
+});
