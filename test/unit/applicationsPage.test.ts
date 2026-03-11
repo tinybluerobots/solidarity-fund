@@ -78,4 +78,10 @@ describe("applicationsPage", () => {
 		});
 		expect(html).toContain('"payment": "bank"');
 	});
+
+	test("includes link to applicant status page per row", () => {
+		const html = applicationsPage([app], ["2026-03"], "2026-03");
+		expect(html).toContain(`/status?ref=${app.id}`);
+		expect(html).toContain('target="_blank"');
+	});
 });

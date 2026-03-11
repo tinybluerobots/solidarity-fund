@@ -52,11 +52,20 @@ export function applicationRow(a: ApplicationRow): string {
 		<td class="px-4 py-3">${statusBadge(a.status)}</td>
 		<td class="px-4 py-3">${paymentBadge(a.paymentPreference)}</td>
 		<td class="px-4 py-3 text-bark-muted text-sm">${a.appliedAt ? formatDate(a.appliedAt) : ""}</td>
+		<td class="px-4 py-3">
+			<a
+				href="/status?ref=${encodeURIComponent(a.id)}"
+				target="_blank"
+				class="text-xs text-bark-muted underline hover:text-bark"
+				title="View applicant status page"
+				onclick="event.stopPropagation()"
+			>Status ↗</a>
+		</td>
 	</tr>`;
 }
 
 export function applicationsTableBody(applications: ApplicationRow[]): string {
-	const emptyRow = `<tr><td colspan="5" class="text-center py-12 text-bark-muted">No applications for this month</td></tr>`;
+	const emptyRow = `<tr><td colspan="6" class="text-center py-12 text-bark-muted">No applications for this month</td></tr>`;
 	const rows =
 		applications.length === 0
 			? emptyRow
@@ -148,6 +157,7 @@ export function applicationsPage(
 						<th class="th">Status</th>
 						<th class="th">Payment</th>
 						<th class="th">Applied</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-bark-muted uppercase tracking-wider">Status page</th>
 					</tr>
 				</thead>
 				${applicationsTableBody(applications)}
