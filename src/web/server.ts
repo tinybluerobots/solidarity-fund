@@ -23,6 +23,7 @@ import {
 } from "./routes/auth.ts";
 import { createGrantRoutes } from "./routes/grants.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
+import { createStatusRoutes } from "./routes/status.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 export async function getAuthenticatedVolunteer(
@@ -70,6 +71,7 @@ export async function startServer(
 	);
 	const lotteryRoutes = createLotteryRoutes(appRepo, eventStore, pool);
 	const grantRepo = SQLiteGrantRepository(pool);
+	const statusRoutes = createStatusRoutes(appRepo, grantRepo);
 	const docStore = GrantDocumentStore(pool);
 	await docStore.init();
 	const grantRoutes = createGrantRoutes(
@@ -94,6 +96,9 @@ export async function startServer(
 			},
 			"/apply/result": {
 				GET: (req) => applyRoutes.showResult(req),
+			},
+			"/status": {
+				GET: (req) => statusRoutes.show(req),
 			},
 			"/api/altcha/challenge": {
 				GET: () => altchaRoutes.challenge(),
