@@ -117,7 +117,7 @@ export function applyClosedPage(): string {
 	);
 }
 
-export function applyResultPage(status: string, reason?: string): string {
+export function applyResultPage(status: string, reason?: string, ref?: string): string {
 	let heading: string;
 	let message: string;
 
@@ -157,6 +157,11 @@ export function applyResultPage(status: string, reason?: string): string {
 	<div class="card p-8 text-center">
 		<h1 class="font-heading text-2xl font-bold text-bark mb-4">${escapeHtml(heading)}</h1>
 		<p class="text-bark-muted font-body">${escapeHtml(message)}</p>
+${ref ? `		<div class="mt-6 pt-4 border-t border-bark-muted/20 text-left">
+			<p class="text-xs text-bark-muted font-body mb-1">Your reference number</p>
+			<p class="font-mono text-sm text-bark break-all">${escapeHtml(ref)}</p>
+			<p class="text-xs text-bark-muted font-body mt-2">Save this to check your application status at <a href="/status?ref=${encodeURIComponent(ref)}" class="underline">/status</a></p>
+		</div>` : ""}
 	</div>
 </div>`,
 	);

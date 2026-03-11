@@ -130,7 +130,7 @@ export function createApplyRoutes(
 				status = "flagged";
 			}
 
-			const params = new URLSearchParams({ status });
+			const params = new URLSearchParams({ status, ref: applicationId });
 			if (reason) params.set("reason", reason);
 
 			return Response.redirect(`/apply/result?${params}`, 302);
@@ -140,7 +140,8 @@ export function createApplyRoutes(
 			const url = new URL(req.url);
 			const status = url.searchParams.get("status") ?? "accepted";
 			const reason = url.searchParams.get("reason") ?? undefined;
-			return new Response(applyResultPage(status, reason), {
+			const ref = url.searchParams.get("ref") ?? undefined;
+			return new Response(applyResultPage(status, reason, ref), {
 				headers: { "Content-Type": "text/html" },
 			});
 		},

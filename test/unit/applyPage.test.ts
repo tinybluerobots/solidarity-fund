@@ -68,3 +68,16 @@ describe("applyResultPage", () => {
 		expect(html).toContain("already applied");
 	});
 });
+
+describe("applyResultPage — reference number", () => {
+	test("shows reference number when provided", () => {
+		const html = applyResultPage("accepted", undefined, "abc-123");
+		expect(html).toContain("abc-123");
+		expect(html).toContain("reference");
+	});
+
+	test("omits reference number block when not provided", () => {
+		const html = applyResultPage("accepted");
+		expect(html).not.toContain("reference number");
+	});
+});
