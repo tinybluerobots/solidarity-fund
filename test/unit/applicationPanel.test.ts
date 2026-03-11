@@ -19,6 +19,7 @@ const app: ApplicationRow = {
 	acceptedAt: "2026-03-01T10:00:00Z",
 	selectedAt: null,
 	rejectedAt: null,
+	poaRef: null,
 };
 
 describe("viewPanel", () => {
@@ -55,6 +56,18 @@ describe("viewPanel", () => {
 	test("omits applicant link when applicantId is null", () => {
 		const html = viewPanel(app, null);
 		expect(html).not.toContain("View Applicant");
+	});
+
+	test("shows POA link when poaRef is set", () => {
+		const withPoa = { ...app, poaRef: "poa-ref-1" };
+		const html = viewPanel(withPoa);
+		expect(html).toContain("/applications/app-1/documents/poa");
+		expect(html).toContain("View document");
+	});
+
+	test("omits POA link when poaRef is null", () => {
+		const html = viewPanel(app);
+		expect(html).not.toContain("/documents/poa");
 	});
 });
 

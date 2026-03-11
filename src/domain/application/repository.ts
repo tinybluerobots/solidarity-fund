@@ -12,6 +12,7 @@ export type ApplicationRow = {
 	acceptedAt: string | null;
 	selectedAt: string | null;
 	rejectedAt: string | null;
+	poaRef: string | null;
 };
 
 export type ApplicationFilters = {

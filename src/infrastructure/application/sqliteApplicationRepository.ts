@@ -19,6 +19,7 @@ type DbRow = {
 	accepted_at: string | null;
 	selected_at: string | null;
 	rejected_at: string | null;
+	poa_ref: string | null;
 };
 
 function isNoSuchTable(err: unknown): boolean {
@@ -40,6 +41,7 @@ function rowToApplication(row: DbRow): ApplicationRow {
 		acceptedAt: row.accepted_at,
 		selectedAt: row.selected_at,
 		rejectedAt: row.rejected_at,
+		poaRef: row.poa_ref,
 	};
 }
 

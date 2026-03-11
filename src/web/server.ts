@@ -302,6 +302,17 @@ export async function startServer(
 					return volunteerRoutes.handleUpdate(id, req, volunteer.id);
 			}
 
+			// Application document serving
+			const appDocMatch = url.pathname.match(
+				/^\/applications\/([^/]+)\/documents\/poa$/,
+			);
+			if (appDocMatch?.[1] && req.method === "GET") {
+				const docs = await docStore.getByEntityId(appDocMatch[1]);
+				const poa = docs.find((d) => d.type === "proof_of_address");
+				if (!poa) return new Response("Not found", { status: 404 });
+				return grantRoutes.serveDocument(poa.id);
+			}
+
 			// Grant document serving
 			const grantDocMatch = url.pathname.match(
 				/^\/grants\/([^/]+)\/documents\/poa$/,

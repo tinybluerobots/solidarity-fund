@@ -54,6 +54,15 @@ function detailFields(app: ApplicationRow): string {
 		field("Applied", formatDate(app.appliedAt)),
 	];
 
+	if (app.poaRef) {
+		fields.push(
+			`<div class="mb-4">
+    <dt class="label">Proof of Address</dt>
+    <dd><a href="/applications/${encodeURIComponent(app.id)}/documents/poa" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View document</a></dd>
+  </div>`,
+		);
+	}
+
 	if (app.rejectReason) {
 		fields.push(field("Reject Reason", app.rejectReason));
 	}
