@@ -1,4 +1,7 @@
-import type { ApplicationRepository } from "../../domain/application/repository.ts";
+import type {
+	ApplicationRepository,
+	ApplicationRow,
+} from "../../domain/application/repository.ts";
 import type { GrantRepository } from "../../domain/grant/repository.ts";
 import { statusLookupPage, statusTimelinePage } from "../pages/status.ts";
 
@@ -28,7 +31,7 @@ export function createStatusRoutes(
 			}
 
 			// Lookup application
-			let app;
+			let app: ApplicationRow | null;
 			try {
 				app = await appRepo.getById(ref);
 			} catch {
