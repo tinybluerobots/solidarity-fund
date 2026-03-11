@@ -13,6 +13,11 @@ export type CreateGrant = Command<
 		rank: number;
 		paymentPreference: PaymentPreference;
 		createdAt: string;
+		bankDetails?: {
+			sortCode: string;
+			accountNumber: string;
+			proofOfAddressRef: string;
+		};
 	}
 >;
 

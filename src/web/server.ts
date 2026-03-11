@@ -7,7 +7,7 @@ import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
 import { SQLiteApplicationRepository } from "../infrastructure/application/sqliteApplicationRepository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
 import { SQLiteGrantRepository } from "../infrastructure/grant/sqliteGrantRepository.ts";
-import { GrantDocumentStore } from "../infrastructure/projections/grantDocuments.ts";
+import { DocumentStore } from "../infrastructure/projections/documents.ts";
 import type { SessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
 import { changePasswordPage } from "./pages/changePassword.ts";
 import { dashboardPage } from "./pages/dashboard.ts";
@@ -50,11 +50,14 @@ export async function startServer(
 	const logout = handleLogout(sessionStore);
 	const loginHtml = loginPage();
 	const hmacKey = process.env.ALTCHA_HMAC_KEY ?? "change-me-in-production";
+	const docStore = DocumentStore(pool);
+	await docStore.init();
 	const applyRoutes = createApplyRoutes(
 		eventStore,
 		pool,
 		applicantRepo,
 		hmacKey,
+		docStore,
 	);
 	const applicantRoutes = createApplicantRoutes(
 		applicantRepo,
@@ -72,8 +75,6 @@ export async function startServer(
 	const lotteryRoutes = createLotteryRoutes(appRepo, eventStore, pool);
 	const grantRepo = SQLiteGrantRepository(pool);
 	const statusRoutes = createStatusRoutes(appRepo, grantRepo);
-	const docStore = GrantDocumentStore(pool);
-	await docStore.init();
 	const grantRoutes = createGrantRoutes(
 		grantRepo,
 		volunteerRepo,
@@ -306,7 +307,7 @@ export async function startServer(
 				/^\/grants\/([^/]+)\/documents\/poa$/,
 			);
 			if (grantDocMatch?.[1] && req.method === "GET") {
-				const docs = await docStore.getByGrantId(grantDocMatch[1]);
+				const docs = await docStore.getByEntityId(grantDocMatch[1]);
 				const poa = docs.find((d) => d.type === "proof_of_address");
 				if (!poa) return new Response("Not found", { status: 404 });
 				return grantRoutes.serveDocument(poa.id);

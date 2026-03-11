@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createChallenge, solveChallenge } from "altcha-lib";
+import { DocumentStore } from "../../src/infrastructure/projections/documents.ts";
 import { createApplyRoutes } from "../../src/web/routes/apply.ts";
 import { createTestEnv, type TestEnv } from "./helpers/testEventStore.ts";
 
@@ -30,11 +31,14 @@ describe("apply routes", () => {
 
 	beforeEach(async () => {
 		env = await createTestEnv();
+		const docStore = DocumentStore(env.pool);
+		await docStore.init();
 		routes = createApplyRoutes(
 			env.eventStore,
 			env.pool,
 			env.applicantRepo,
 			hmacKey,
+			docStore,
 		);
 	});
 
@@ -169,6 +173,65 @@ describe("apply routes", () => {
 				}),
 			);
 			expect(res.status).not.toBe(400);
+		});
+	});
+
+	describe("POA file upload", () => {
+		beforeEach(async () => {
+			await env.eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
+				},
+			]);
+		});
+
+		test("bank payment with POA file stores document and redirects to result", async () => {
+			const altchaToken = await generateAltchaToken();
+			const poaFile = new File([Buffer.from("fake-pdf-content")], "poa.pdf", {
+				type: "application/pdf",
+			});
+
+			const formData = new FormData();
+			formData.set("name", "Alice");
+			formData.set("phone", "07700900050");
+			formData.set("meetingPlace", "Mill Road");
+			formData.set("paymentPreference", "bank");
+			formData.set("sortCode", "12-34-56");
+			formData.set("accountNumber", "12345678");
+			formData.set("poa", poaFile);
+			formData.set("altcha", altchaToken);
+
+			const res = await routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					body: formData,
+				}),
+			);
+
+			expect(res.status).toBe(302);
+			expect(res.headers.get("location")).toContain("/apply/result");
+		});
+
+		test("bank payment without POA still succeeds and redirects", async () => {
+			const altchaToken = await generateAltchaToken();
+			const formData = new FormData();
+			formData.set("name", "Charlie");
+			formData.set("phone", "07700900051");
+			formData.set("meetingPlace", "Mill Road");
+			formData.set("paymentPreference", "bank");
+			formData.set("sortCode", "12-34-56");
+			formData.set("accountNumber", "12345678");
+			formData.set("altcha", altchaToken);
+
+			const res = await routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					body: formData,
+				}),
+			);
+
+			expect(res.status).toBe(302);
 		});
 	});
 });

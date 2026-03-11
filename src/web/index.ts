@@ -1,9 +1,9 @@
 import { setFundName } from "../config.ts";
+import { createVolunteer } from "../domain/volunteer/commandHandlers.ts";
 import { SQLiteApplicantRepository } from "../infrastructure/applicant/sqliteApplicantRepository.ts";
 import { createEventStore } from "../infrastructure/eventStore.ts";
 import { SQLiteSessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
 import { SQLiteVolunteerRepository } from "../infrastructure/volunteer/sqliteVolunteerRepository.ts";
-import { createVolunteer } from "../domain/volunteer/commandHandlers.ts";
 import { startServer } from "./server.ts";
 
 const dbPath = process.env.DB_PATH ?? "csf.db";

@@ -74,6 +74,7 @@ function decideSubmit(
 			meetingDetails: data.meetingDetails,
 			monthCycle: data.monthCycle,
 			submittedAt: now,
+			bankDetails: data.bankDetails,
 		},
 	};
 

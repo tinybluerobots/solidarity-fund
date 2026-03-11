@@ -17,6 +17,19 @@ describe("applyPage", () => {
 		expect(html).toContain('method="POST"');
 	});
 
+	test("form uses multipart/form-data encoding", () => {
+		const html = applyPage();
+		expect(html).toContain('enctype="multipart/form-data"');
+	});
+
+	test("bank fields include optional POA file input with helper text", () => {
+		const html = applyPage();
+		expect(html).toContain('name="poa"');
+		expect(html).toContain('type="file"');
+		expect(html).toContain('accept="image/*,.pdf"');
+		expect(html).toContain("speed up");
+	});
+
 	test("does not include Datastar script", () => {
 		const html = applyPage();
 		expect(html).not.toContain("datastar");

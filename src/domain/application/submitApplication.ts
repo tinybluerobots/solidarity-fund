@@ -20,6 +20,11 @@ export type ApplicationFormData = {
 	meetingPlace: string;
 	monthCycle: string;
 	eligibility: EligibilityResult;
+	bankDetails?: {
+		sortCode: string;
+		accountNumber: string;
+		proofOfAddressRef: string;
+	};
 };
 
 const handle = CommandHandler<
@@ -53,6 +58,7 @@ export async function submitApplication(
 			identityResolution,
 			eligibility: form.eligibility,
 			submittedAt: new Date().toISOString(),
+			bankDetails: form.bankDetails,
 		},
 	};
 

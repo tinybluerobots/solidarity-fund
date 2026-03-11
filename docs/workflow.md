@@ -16,7 +16,7 @@ flowchart TD
     subgraph "📥 APPLICATION PHASE · volunteer opens/closes the window"
         SMS([📱 Person texts or<br/>emails to apply]) --> LINK[Auto-reply with<br/>unique form link]
         WEB([🌐 Person visits<br/>website form]) --> FORM
-        LINK --> FORM["Complete Online Form<br/>(name, phone number (required),<br/>email (optional),<br/>meeting place or address,<br/>payment preference: bank or cash)"]
+        LINK --> FORM["Complete Online Form<br/>(name, phone number (required),<br/>email (optional),<br/>meeting place or address,<br/>payment preference: bank or cash;<br/>if bank: optionally upload POA +<br/>sort code + account no. now<br/>to speed up payment later)"]
 
         FORM --> WINDOW{Window<br/>open?}
         WINDOW -->|No| REJ_CLOSED[❌ Rejected<br/>Window closed — notify]
@@ -59,8 +59,11 @@ flowchart TD
 
     %% PAYMENT PHASE
     subgraph "💳 PAYMENT PHASE"
-        WIN_NOTIFY -->|Chose bank transfer| BANK_FORM["📧 Auto-send secure form:<br/>• Upload proof of address<br/>• Enter bank details<br/>(sort code + account no.)"]
+        WIN_NOTIFY -->|Chose bank transfer| BANK_CHECK{Bank details<br/>provided<br/>at apply time?}
         WIN_NOTIFY -->|Chose cash| CASH_MEET["Volunteer contacts<br/>applicant to arrange<br/>cash handover"]
+
+        BANK_CHECK -->|✅ All details present<br/>sort code + account no. + POA| CLEARED
+        BANK_CHECK -->|❌ Missing details| BANK_FORM["📧 Auto-send secure form:<br/>• Upload proof of address<br/>• Enter bank details<br/>(sort code + account no.)"]
 
         BANK_FORM --> UPLOAD([Applicant submits<br/>POA + bank details])
         UPLOAD --> VERIFY{Volunteer<br/>verifies POA}
@@ -179,7 +182,7 @@ flowchart TD
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
-| `ApplicationSubmitted` | Form completed | Resolve identity → Check eligibility |
+| `ApplicationSubmitted` | Form completed | Resolve identity → Check eligibility; optionally carries bank details (sort code, account no., POA ref) if provided at apply time |
 | `ApplicationFlaggedForReview` | Known phone, different name | Auto-notify applicant; add to volunteer queue |
 | `ApplicationConfirmed` | Volunteer confirms flagged applicant | Re-check eligibility → Accept or reject |
 | `ApplicationAccepted` | Eligibility passed | Add to lottery pool |
@@ -234,9 +237,9 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 | Command | Who | Allowed States | What Happens |
 |---------|-----|---------------|--------------|
-| `CreateGrant` | System (process manager) | initial | Creates grant stream from ApplicationSelected; routes to bank or cash path |
+| `CreateGrant` | System (process manager) | initial | Creates grant stream from ApplicationSelected; if bank payment and all details (sort code, account no., POA) were provided at apply time, transitions directly to `poa_approved`; otherwise routes to bank or cash path |
 | `AssignVolunteer` | Volunteer | any non-terminal | Assigns a volunteer to handle this grant |
-| `SubmitBankDetails` | Applicant | awaiting_bank_details | Submits sort code, account number, and proof of address |
+| `SubmitBankDetails` | Applicant | awaiting_bank_details | Submits sort code, account number, and proof of address (only needed if not fully provided at apply time) |
 | `ApproveProofOfAddress` | Volunteer | bank_details_submitted | Approves POA; grant ready for bank payment |
 | `RejectProofOfAddress` | Volunteer | bank_details_submitted | Rejects POA; back to awaiting (or offers cash after 3rd attempt) |
 | `AcceptCashAlternative` | Applicant | offered_cash_alternative | Accepts cash; routes to cash handover |
@@ -249,9 +252,9 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
-| `GrantCreated` | Process manager reacts to ApplicationSelected | Create grant with payment preference (bank/cash) |
+| `GrantCreated` | Process manager reacts to ApplicationSelected | Create grant with payment preference (bank/cash); if all bank details were provided at apply time, also emits `BankDetailsSubmitted` + `ProofOfAddressApproved` atomically, landing at `poa_approved` |
 | `VolunteerAssigned` | Volunteer claims a grant | Track which volunteer handles the grant |
-| `BankDetailsSubmitted` | Applicant submits POA + bank details | Add to volunteer verification queue |
+| `BankDetailsSubmitted` | Applicant submits POA + bank details (or system at grant creation if pre-supplied) | Add to volunteer verification queue (or skip straight to approved) |
 | `ProofOfAddressApproved` | Volunteer approves POA | Grant ready for bank payment |
 | `ProofOfAddressRejected` | Volunteer rejects POA (max 3 attempts) | Notify applicant; after 3rd rejection offer cash |
 | `CashAlternativeOffered` | 3rd POA rejection | Offer applicant cash instead of bank transfer |
@@ -265,8 +268,9 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 ```mermaid
 stateDiagram-v2
-    [*] --> awaiting_bank_details : GrantCreated (bank)
+    [*] --> awaiting_bank_details : GrantCreated (bank, incomplete details)
     [*] --> awaiting_cash_handover : GrantCreated (cash)
+    [*] --> poa_approved : GrantCreated (bank, all details provided at apply time)
 
     awaiting_bank_details --> bank_details_submitted : BankDetailsSubmitted
     bank_details_submitted --> poa_approved : ProofOfAddressApproved

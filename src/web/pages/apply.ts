@@ -36,7 +36,7 @@ export function applyPage(): string {
 		`<div class="w-full max-w-md">
 	<div class="card p-8">
 		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for Assistance</h1>
-		<form action="/apply" method="POST" class="space-y-4">
+		<form action="/apply" method="POST" enctype="multipart/form-data" class="space-y-4">
 			<div>
 				<label for="name" class="block text-sm font-body text-bark mb-1">Name</label>
 				<input type="text" id="name" name="name" required class="input" />
@@ -79,6 +79,11 @@ export function applyPage(): string {
 					<label for="accountNumber" class="block text-sm font-body text-bark mb-1">Account Number</label>
 					<input type="text" id="accountNumber" name="accountNumber" class="input" placeholder="12345678" pattern="\\d{8}" title="Account number must be 8 digits" />
 				</div>
+				<div>
+					<label for="poa" class="block text-sm font-body text-bark mb-1">Proof of Address</label>
+					<p class="text-xs text-bark-muted mb-1">Optional — uploading now will speed up your payment.</p>
+					<input type="file" id="poa" name="poa" accept="image/*,.pdf" class="input text-sm" />
+				</div>
 			</div>
 			<div>
 				<altcha-widget challengeurl="/api/altcha/challenge" hidefooter></altcha-widget>
@@ -117,7 +122,11 @@ export function applyClosedPage(): string {
 	);
 }
 
-export function applyResultPage(status: string, reason?: string, ref?: string): string {
+export function applyResultPage(
+	status: string,
+	reason?: string,
+	ref?: string,
+): string {
 	let heading: string;
 	let message: string;
 
@@ -157,11 +166,15 @@ export function applyResultPage(status: string, reason?: string, ref?: string): 
 	<div class="card p-8 text-center">
 		<h1 class="font-heading text-2xl font-bold text-bark mb-4">${escapeHtml(heading)}</h1>
 		<p class="text-bark-muted font-body">${escapeHtml(message)}</p>
-${ref ? `		<div class="mt-6 pt-4 border-t border-bark-muted/20 text-left">
+${
+	ref
+		? `		<div class="mt-6 pt-4 border-t border-bark-muted/20 text-left">
 			<p class="text-xs text-bark-muted font-body mb-1">Your reference number</p>
 			<p class="font-mono text-sm text-bark break-all">${escapeHtml(ref)}</p>
 			<p class="text-xs text-bark-muted font-body mt-2">Save this to check your application status at <a href="/status?ref=${encodeURIComponent(ref)}" class="underline">/status</a></p>
-		</div>` : ""}
+		</div>`
+		: ""
+}
 	</div>
 </div>`,
 	);

@@ -4,6 +4,12 @@ import type { Command, Event } from "@event-driven-io/emmett";
 
 export type PaymentPreference = "bank" | "cash";
 
+export type BankDetails = {
+	sortCode: string;
+	accountNumber: string;
+	proofOfAddressRef: string;
+};
+
 export type MeetingDetails = {
 	place: string;
 };
@@ -38,6 +44,7 @@ export type SubmitApplication = Command<
 		identityResolution: IdentityResolution;
 		eligibility: EligibilityResult;
 		submittedAt: string;
+		bankDetails?: BankDetails;
 	}
 >;
 
@@ -83,6 +90,7 @@ export type ApplicationSubmitted = Event<
 		meetingDetails: MeetingDetails;
 		monthCycle: string;
 		submittedAt: string;
+		bankDetails?: BankDetails;
 	}
 >;
 

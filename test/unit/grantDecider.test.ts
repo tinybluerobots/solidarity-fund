@@ -108,6 +108,58 @@ describe("CreateGrant", () => {
 		expect(events[0]!.data.paymentPreference).toBe("cash");
 	});
 
+	test("bank preference with bankDetails → GrantCreated + BankDetailsSubmitted + ProofOfAddressApproved", () => {
+		const events = decide(
+			{
+				type: "CreateGrant",
+				data: {
+					...core,
+					paymentPreference: "bank",
+					createdAt: "2026-03-01T00:00:00Z",
+					bankDetails: {
+						sortCode: "12-34-56",
+						accountNumber: "12345678",
+						proofOfAddressRef: "poa-ref-1",
+					},
+				},
+			},
+			initialState(),
+		);
+		expect(events).toHaveLength(3);
+		expect(events[0]!.type).toBe("GrantCreated");
+		expect(events[1]!.type).toBe("BankDetailsSubmitted");
+		expect(events[1]!.data.sortCode).toBe("12-34-56");
+		expect(events[1]!.data.proofOfAddressRef).toBe("poa-ref-1");
+		expect(events[1]!.data.submittedAt).toBe("2026-03-01T00:00:00Z");
+		expect(events[2]!.type).toBe("ProofOfAddressApproved");
+		expect(events[2]!.data.verifiedBy).toBe("system");
+		expect(events[2]!.data.verifiedAt).toBe("2026-03-01T00:00:00Z");
+	});
+
+	test("bank preference with bankDetails → final evolved state is poa_approved", () => {
+		const events = decide(
+			{
+				type: "CreateGrant",
+				data: {
+					...core,
+					paymentPreference: "bank",
+					createdAt: "2026-03-01T00:00:00Z",
+					bankDetails: {
+						sortCode: "12-34-56",
+						accountNumber: "12345678",
+						proofOfAddressRef: "poa-ref-1",
+					},
+				},
+			},
+			initialState(),
+		);
+		let state = initialState();
+		for (const event of events) {
+			state = evolve(state, event as Parameters<typeof evolve>[1]);
+		}
+		expect(state.status).toBe("poa_approved");
+	});
+
 	test("throws from non-initial state", () => {
 		expect(() =>
 			decide(

@@ -12,7 +12,7 @@ import {
 } from "../../domain/grant/commandHandlers.ts";
 import type { GrantRepository } from "../../domain/grant/repository.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
-import type { GrantDocumentStore } from "../../infrastructure/projections/grantDocuments.ts";
+import type { DocumentStore } from "../../infrastructure/projections/documents.ts";
 import { emptyPanel, grantPanel } from "../pages/grantPanel.ts";
 import { grantsBoard, grantsPage } from "../pages/grants.ts";
 import { patchElements, sseResponse } from "../sse.ts";
@@ -27,7 +27,7 @@ function currentMonthCycle(): string {
 export function createGrantRoutes(
 	grantRepo: GrantRepository,
 	volunteerRepo: VolunteerRepository,
-	docStore: ReturnType<typeof GrantDocumentStore>,
+	docStore: ReturnType<typeof DocumentStore>,
 	eventStore: SQLiteEventStore,
 ) {
 	async function refreshBoard(monthCycle: string) {
@@ -39,7 +39,7 @@ export function createGrantRoutes(
 		const grant = await grantRepo.getById(grantId);
 		if (!grant) return null;
 		const volunteers = await volunteerRepo.list();
-		const docs = await docStore.getByGrantId(grantId);
+		const docs = await docStore.getByEntityId(grantId);
 		const hasDocument = docs.some((d) => d.type === "proof_of_address");
 		return grantPanel(grant, volunteers, hasDocument);
 	}
@@ -96,7 +96,7 @@ export function createGrantRoutes(
 				const buffer = Buffer.from(await poaFile.arrayBuffer());
 				await docStore.store({
 					id: docId,
-					grantId,
+					entityId: grantId,
 					type: "proof_of_address",
 					data: buffer,
 					mimeType: poaFile.type,

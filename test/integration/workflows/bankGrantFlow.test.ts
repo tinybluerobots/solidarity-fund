@@ -116,6 +116,45 @@ describe("bank grant workflow", () => {
 		).rejects.toThrow(/cannot record reimbursement/i);
 	});
 
+	test("bank details provided at apply time → grant created at poa_approved", async () => {
+		const appId = "app-fast-path";
+		await selectWinner(env, {
+			applicationId: appId,
+			phone: "07700900099",
+			name: "FastPath",
+			paymentPreference: "bank",
+			bankDetails: {
+				sortCode: "12-34-56",
+				accountNumber: "12345678",
+				proofOfAddressRef: "poa-ref-fast",
+			},
+		});
+
+		// Grant should skip awaiting_bank_details entirely
+		const rows = await queryGrant(env, appId);
+		expect(rows[0]!.status).toBe("poa_approved");
+
+		// Payment can be recorded immediately
+		await recordPayment(
+			appId,
+			{ amount: 40, method: "bank", paidBy: "vol-1" },
+			env.eventStore,
+		);
+		const paidRows = await queryGrant(env, appId);
+		expect(paidRows[0]!.status).toBe("paid");
+
+		// Verify events: GrantCreated + BankDetailsSubmitted + ProofOfAddressApproved
+		const { events } = await env.eventStore.readStream<GrantEvent>(
+			`grant-${appId}`,
+		);
+		const types = events.map((e) => e.type);
+		expect(types).toContain("GrantCreated");
+		expect(types).toContain("BankDetailsSubmitted");
+		expect(types).toContain("ProofOfAddressApproved");
+		const poa = events.find((e) => e.type === "ProofOfAddressApproved");
+		expect(poa!.data.verifiedBy).toBe("system");
+	});
+
 	test("process manager idempotency — grant not duplicated", async () => {
 		const appId = "app-idem";
 		await selectWinner(env, {

@@ -48,12 +48,34 @@ function decideCreate(command: CreateGrant, state: GrantState): GrantEvent[] {
 			`Grant already created (status: ${state.status})`,
 		);
 	}
-	return [
-		{
-			type: "GrantCreated",
-			data: { ...command.data },
-		},
+
+	const { grantId, createdAt, bankDetails } = command.data;
+	const events: GrantEvent[] = [
+		{ type: "GrantCreated", data: { ...command.data } },
 	];
+
+	if (command.data.paymentPreference === "bank" && bankDetails) {
+		events.push({
+			type: "BankDetailsSubmitted",
+			data: {
+				grantId,
+				sortCode: bankDetails.sortCode,
+				accountNumber: bankDetails.accountNumber,
+				proofOfAddressRef: bankDetails.proofOfAddressRef,
+				submittedAt: createdAt,
+			},
+		});
+		events.push({
+			type: "ProofOfAddressApproved",
+			data: {
+				grantId,
+				verifiedBy: "system",
+				verifiedAt: createdAt,
+			},
+		});
+	}
+
+	return events;
 }
 
 function isNonTerminal(state: GrantState): state is GrantState & {

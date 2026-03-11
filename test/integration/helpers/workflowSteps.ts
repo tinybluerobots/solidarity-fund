@@ -22,6 +22,11 @@ export async function submitAcceptedApplication(
 		paymentPreference?: "bank" | "cash";
 		meetingPlace?: string;
 		monthCycle?: string;
+		bankDetails?: {
+			sortCode: string;
+			accountNumber: string;
+			proofOfAddressRef: string;
+		};
 	},
 ) {
 	return submitApplication(
@@ -33,6 +38,7 @@ export async function submitAcceptedApplication(
 			meetingPlace: opts.meetingPlace ?? "Mill Road",
 			monthCycle: opts.monthCycle ?? "2026-03",
 			eligibility: { status: "eligible" },
+			bankDetails: opts.bankDetails,
 		},
 		env.eventStore,
 		env.applicantRepo,
@@ -131,6 +137,11 @@ export async function selectWinner(
 		name: string;
 		paymentPreference?: "bank" | "cash";
 		monthCycle?: string;
+		bankDetails?: {
+			sortCode: string;
+			accountNumber: string;
+			proofOfAddressRef: string;
+		};
 	},
 ) {
 	const monthCycle = opts.monthCycle ?? "2026-03";
@@ -141,6 +152,7 @@ export async function selectWinner(
 		...opts,
 		paymentPreference,
 		monthCycle,
+		bankDetails: opts.bankDetails,
 	});
 
 	// Use a per-app lottery stream to avoid conflicts between tests
