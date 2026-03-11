@@ -19,6 +19,8 @@ const app: ApplicationRow = {
 	acceptedAt: "2026-03-01T10:00:00Z",
 	selectedAt: null,
 	rejectedAt: null,
+	sortCode: null,
+	accountNumber: null,
 	poaRef: null,
 };
 
@@ -56,6 +58,24 @@ describe("viewPanel", () => {
 	test("omits applicant link when applicantId is null", () => {
 		const html = viewPanel(app, null);
 		expect(html).not.toContain("View Applicant");
+	});
+
+	test("shows bank details when present", () => {
+		const withBank = { ...app, sortCode: "12-34-56", accountNumber: "12345678" };
+		const html = viewPanel(withBank);
+		expect(html).toContain("12-34-56");
+		expect(html).toContain("12345678");
+	});
+
+	test("shows accepted/selected/rejected dates when present", () => {
+		const full = {
+			...app,
+			acceptedAt: "2026-03-02T10:00:00Z",
+			selectedAt: "2026-03-05T10:00:00Z",
+		};
+		const html = viewPanel(full);
+		expect(html).toContain("Accepted");
+		expect(html).toContain("Selected");
 	});
 
 	test("shows POA link when poaRef is set", () => {

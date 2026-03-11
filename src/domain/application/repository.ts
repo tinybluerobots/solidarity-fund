@@ -12,6 +12,8 @@ export type ApplicationRow = {
 	acceptedAt: string | null;
 	selectedAt: string | null;
 	rejectedAt: string | null;
+	sortCode: string | null;
+	accountNumber: string | null;
 	poaRef: string | null;
 };
 

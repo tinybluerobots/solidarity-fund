@@ -19,6 +19,8 @@ type DbRow = {
 	accepted_at: string | null;
 	selected_at: string | null;
 	rejected_at: string | null;
+	sort_code: string | null;
+	account_number: string | null;
 	poa_ref: string | null;
 };
 
@@ -41,6 +43,8 @@ function rowToApplication(row: DbRow): ApplicationRow {
 		acceptedAt: row.accepted_at,
 		selectedAt: row.selected_at,
 		rejectedAt: row.rejected_at,
+		sortCode: row.sort_code,
+		accountNumber: row.account_number,
 		poaRef: row.poa_ref,
 	};
 }

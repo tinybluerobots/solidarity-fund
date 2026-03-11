@@ -54,6 +54,15 @@ function detailFields(app: ApplicationRow): string {
 		field("Applied", formatDate(app.appliedAt)),
 	];
 
+	if (app.acceptedAt) fields.push(field("Accepted", formatDate(app.acceptedAt)));
+	if (app.selectedAt) fields.push(field("Selected", formatDate(app.selectedAt)));
+	if (app.rejectedAt) fields.push(field("Rejected", formatDate(app.rejectedAt)));
+	if (app.rank != null) fields.push(field("Lottery Rank", String(app.rank)));
+	if (app.rejectReason) fields.push(field("Reject Reason", app.rejectReason));
+
+	if (app.sortCode) fields.push(field("Sort Code", app.sortCode));
+	if (app.accountNumber) fields.push(field("Account Number", app.accountNumber));
+
 	if (app.poaRef) {
 		fields.push(
 			`<div class="mb-4">
@@ -61,14 +70,6 @@ function detailFields(app: ApplicationRow): string {
     <dd><a href="/applications/${encodeURIComponent(app.id)}/documents/poa" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View document</a></dd>
   </div>`,
 		);
-	}
-
-	if (app.rejectReason) {
-		fields.push(field("Reject Reason", app.rejectReason));
-	}
-
-	if (app.rank != null) {
-		fields.push(field("Lottery Rank", String(app.rank)));
 	}
 
 	return fields.join("\n");
