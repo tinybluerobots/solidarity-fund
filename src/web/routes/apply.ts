@@ -73,6 +73,30 @@ export function createApplyRoutes(
 				});
 			}
 
+			if (paymentPref === "bank") {
+				const sortCode = String(formData.get("sortCode") ?? "").trim();
+				const accountNumber = String(
+					formData.get("accountNumber") ?? "",
+				).trim();
+				if (!sortCode || !accountNumber) {
+					return new Response(
+						"Sort code and account number are required for bank transfer",
+						{ status: 400 },
+					);
+				}
+				if (!/^\d{2}-?\d{2}-?\d{2}$/.test(sortCode)) {
+					return new Response(
+						"Sort code must be 6 digits, e.g. 12-34-56 or 123456",
+						{ status: 400 },
+					);
+				}
+				if (!/^\d{8}$/.test(accountNumber)) {
+					return new Response("Account number must be 8 digits", {
+						status: 400,
+					});
+				}
+			}
+
 			const paymentPreference: PaymentPreference =
 				paymentPref === "bank" ? "bank" : "cash";
 			const monthCycle = currentMonthCycle();

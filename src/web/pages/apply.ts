@@ -73,11 +73,11 @@ export function applyPage(): string {
 				</div>
 				<div>
 					<label for="sortCode" class="block text-sm font-body text-bark mb-1">Sort Code</label>
-					<input type="text" id="sortCode" name="sortCode" class="input" />
+					<input type="text" id="sortCode" name="sortCode" class="input" placeholder="12-34-56" pattern="\\d{2}-?\\d{2}-?\\d{2}" title="Sort code must be 6 digits, e.g. 12-34-56 or 123456" />
 				</div>
 				<div>
 					<label for="accountNumber" class="block text-sm font-body text-bark mb-1">Account Number</label>
-					<input type="text" id="accountNumber" name="accountNumber" class="input" />
+					<input type="text" id="accountNumber" name="accountNumber" class="input" placeholder="12345678" pattern="\\d{8}" title="Account number must be 8 digits" />
 				</div>
 			</div>
 			<div>
@@ -96,7 +96,10 @@ export function applyPage(): string {
 <script>
 function toggleBank() {
 	var bank = document.querySelector('input[name="paymentPreference"][value="bank"]');
-	document.getElementById('bankFields').style.display = bank.checked ? '' : 'none';
+	var isBank = bank.checked;
+	document.getElementById('bankFields').style.display = isBank ? '' : 'none';
+	document.getElementById('sortCode').required = isBank;
+	document.getElementById('accountNumber').required = isBank;
 }
 </script>`,
 	);

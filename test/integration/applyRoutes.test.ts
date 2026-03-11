@@ -93,4 +93,82 @@ describe("apply routes", () => {
 		const res = await routes.handleSubmit(req);
 		expect(res.status).toBe(400);
 	});
+
+	describe("bank payment validation", () => {
+		async function submitBankForm(
+			overrides: Record<string, string>,
+		): Promise<Response> {
+			const altchaToken = await generateAltchaToken();
+			const form = new URLSearchParams({
+				name: "Alice",
+				phone: "07700900001",
+				meetingPlace: "Mill Road",
+				paymentPreference: "bank",
+				sortCode: "12-34-56",
+				accountNumber: "12345678",
+				...overrides,
+			});
+			form.set("altcha", altchaToken);
+			return routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: form.toString(),
+				}),
+			);
+		}
+
+		test("returns 400 when sort code is missing", async () => {
+			const res = await submitBankForm({ sortCode: "" });
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("Sort code");
+		});
+
+		test("returns 400 when account number is missing", async () => {
+			const res = await submitBankForm({ accountNumber: "" });
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("account number");
+		});
+
+		test("returns 400 for invalid sort code format", async () => {
+			const res = await submitBankForm({ sortCode: "1234" });
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("Sort code");
+		});
+
+		test("returns 400 for invalid account number format", async () => {
+			const res = await submitBankForm({ accountNumber: "1234" });
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("Account number");
+		});
+
+		test("accepts sort code without dashes", async () => {
+			const res = await submitBankForm({ sortCode: "123456" });
+			expect(res.status).not.toBe(400);
+		});
+
+		test("accepts sort code with dashes", async () => {
+			const res = await submitBankForm({ sortCode: "12-34-56" });
+			expect(res.status).not.toBe(400);
+		});
+
+		test("cash payment does not require bank fields", async () => {
+			const altchaToken = await generateAltchaToken();
+			const form = new URLSearchParams({
+				name: "Bob",
+				phone: "07700900002",
+				meetingPlace: "Mill Road",
+				paymentPreference: "cash",
+			});
+			form.set("altcha", altchaToken);
+			const res = await routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: form.toString(),
+				}),
+			);
+			expect(res.status).not.toBe(400);
+		});
+	});
 });

@@ -1,10 +1,6 @@
 [tools]
 bun = "latest"
 
-[tasks.seed]
-run = "bun src/web/seed.ts"
-description = "Seed a test user (name: Test, password: test)"
-
 [tasks.css]
 run = "bunx @tailwindcss/cli -i src/web/styles/app.css -o src/web/styles/dist/app.css --watch"
 description = "Watch and rebuild Tailwind CSS"
@@ -18,5 +14,5 @@ run = "bun --hot src/web/index.ts"
 description = "Start the dev server with hot reload"
 
 [tasks.dev]
-run = "rm -f csf.db && mise run seed && mise run css ::: server"
-description = "Reset DB, seed, and start CSS watcher and dev server in parallel"
+depends = ["css", "server"]
+description = "Reset DB and start CSS watcher and dev server in parallel"
