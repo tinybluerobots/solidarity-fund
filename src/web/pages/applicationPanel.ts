@@ -83,7 +83,7 @@ function detailFields(app: ApplicationRow): string {
 
 function applicantLink(applicantId: string | null): string {
 	if (!applicantId) return "";
-	return `<a href="/applicants/${encodeURIComponent(applicantId)}/edit" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</a>`;
+	return `<button data-on-click="@get('/applicants/${encodeURIComponent(applicantId)}/edit')" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</button>`;
 }
 
 export function viewPanel(
