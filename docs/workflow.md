@@ -59,17 +59,13 @@ flowchart TD
 
     %% PAYMENT PHASE
     subgraph "💳 PAYMENT PHASE"
-        WIN_NOTIFY -->|Chose bank transfer| BANK_CHECK{Bank details<br/>provided<br/>at apply time?}
+        WIN_NOTIFY -->|Chose bank transfer| VERIFY{Volunteer<br/>verifies POA}
         WIN_NOTIFY -->|Chose cash| CASH_MEET["Volunteer contacts<br/>applicant to arrange<br/>cash handover"]
 
-        BANK_CHECK -->|✅ All details present<br/>sort code + account no. + POA| CLEARED
-        BANK_CHECK -->|❌ Missing details| BANK_FORM["📧 Auto-send secure form:<br/>• Upload proof of address<br/>• Enter bank details<br/>(sort code + account no.)"]
-
-        BANK_FORM --> UPLOAD([Applicant submits<br/>POA + bank details])
-        UPLOAD --> VERIFY{Volunteer<br/>verifies POA}
         VERIFY -->|✅ Approved| CLEARED[Due diligence<br/>passed]
         VERIFY -->|❌ Rejected| RETRY{Attempts<br/>< 3?}
-        RETRY -->|Yes| BANK_FORM
+        RETRY -->|Yes| EDIT["Volunteer contacts applicant,<br/>edits bank details if needed,<br/>re-reviews POA"]
+        EDIT --> VERIFY
         RETRY -->|No| OFFER_CASH{"Offer cash<br/>instead?"}
         OFFER_CASH -->|Accepts| CASH_MEET
         OFFER_CASH -->|Declines| RELEASE[Slot released<br/>to waitlist]
@@ -237,11 +233,11 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 | Command | Who | Allowed States | What Happens |
 |---------|-----|---------------|--------------|
-| `CreateGrant` | System (process manager) | initial | Creates grant stream from ApplicationSelected; if bank payment and all details (sort code, account no., POA) were provided at apply time, transitions directly to `poa_approved`; otherwise routes to bank or cash path |
+| `CreateGrant` | System (process manager) | initial | Creates grant stream from ApplicationSelected; bank grants start at `awaiting_review` with bank details (sort code, account no., POA ref) copied from the application; cash grants start at `awaiting_cash_handover` |
 | `AssignVolunteer` | Volunteer | any non-terminal | Assigns a volunteer to handle this grant |
-| `SubmitBankDetails` | Applicant | awaiting_bank_details | Submits sort code, account number, and proof of address (only needed if not fully provided at apply time) |
-| `ApproveProofOfAddress` | Volunteer | bank_details_submitted | Approves POA; grant ready for bank payment |
-| `RejectProofOfAddress` | Volunteer | bank_details_submitted | Rejects POA; back to awaiting (or offers cash after 3rd attempt) |
+| `UpdateBankDetails` | Volunteer | awaiting_review | Corrects sort code and/or account number after contacting applicant |
+| `ApproveProofOfAddress` | Volunteer | awaiting_review | Approves POA; grant ready for bank payment |
+| `RejectProofOfAddress` | Volunteer | awaiting_review | Rejects POA; grant stays in `awaiting_review`, `poaAttempts` incremented; after 3rd rejection, cash alternative is offered |
 | `AcceptCashAlternative` | Applicant | offered_cash_alternative | Accepts cash; routes to cash handover |
 | `DeclineCashAlternative` | Applicant | offered_cash_alternative | Declines cash; slot released |
 | `RecordPayment` | Volunteer | poa_approved (bank only), awaiting_cash_handover (cash only) | Records payment; bank grants complete, cash grants await reimbursement |
@@ -252,11 +248,11 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
-| `GrantCreated` | Process manager reacts to ApplicationSelected | Create grant with payment preference (bank/cash); if all bank details were provided at apply time, also emits `BankDetailsSubmitted` + `ProofOfAddressApproved` atomically, landing at `poa_approved` |
+| `GrantCreated` | Process manager reacts to ApplicationSelected | Create grant; bank grants start at `awaiting_review` with sort code, account number, and POA ref copied from the application; cash grants start at `awaiting_cash_handover` |
 | `VolunteerAssigned` | Volunteer claims a grant | Track which volunteer handles the grant |
-| `BankDetailsSubmitted` | Applicant submits POA + bank details (or system at grant creation if pre-supplied) | Add to volunteer verification queue (or skip straight to approved) |
-| `ProofOfAddressApproved` | Volunteer approves POA | Grant ready for bank payment |
-| `ProofOfAddressRejected` | Volunteer rejects POA (max 3 attempts) | Notify applicant; after 3rd rejection offer cash |
+| `BankDetailsUpdated` | Volunteer corrects bank details | Update sort code and/or account number on the grant |
+| `ProofOfAddressApproved` | Volunteer approves POA | Grant moves to `poa_approved`, ready for bank payment |
+| `ProofOfAddressRejected` | Volunteer rejects POA | `poaAttempts` incremented; grant stays in `awaiting_review`; after 3rd rejection, `CashAlternativeOffered` also emitted |
 | `CashAlternativeOffered` | 3rd POA rejection | Offer applicant cash instead of bank transfer |
 | `CashAlternativeAccepted` | Applicant accepts cash | Route to cash handover flow |
 | `CashAlternativeDeclined` | Applicant declines cash | Slot released |
@@ -268,14 +264,12 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 
 ```mermaid
 stateDiagram-v2
-    [*] --> awaiting_bank_details : GrantCreated (bank, incomplete details)
+    [*] --> awaiting_review : GrantCreated (bank)
     [*] --> awaiting_cash_handover : GrantCreated (cash)
-    [*] --> poa_approved : GrantCreated (bank, all details provided at apply time)
 
-    awaiting_bank_details --> bank_details_submitted : BankDetailsSubmitted
-    bank_details_submitted --> poa_approved : ProofOfAddressApproved
-    bank_details_submitted --> awaiting_bank_details : ProofOfAddressRejected (< 3)
-    bank_details_submitted --> offered_cash_alternative : ProofOfAddressRejected (3rd)
+    awaiting_review --> poa_approved : ProofOfAddressApproved
+    awaiting_review --> awaiting_review : ProofOfAddressRejected (< 3, poaAttempts++)
+    awaiting_review --> offered_cash_alternative : ProofOfAddressRejected (3rd)
 
     poa_approved --> paid : GrantPaid (bank)
 
@@ -285,8 +279,7 @@ stateDiagram-v2
     awaiting_cash_handover --> awaiting_reimbursement : GrantPaid (cash)
     awaiting_reimbursement --> reimbursed : VolunteerReimbursed
 
-    awaiting_bank_details --> released : SlotReleased
-    bank_details_submitted --> released : SlotReleased
+    awaiting_review --> released : SlotReleased
     poa_approved --> released : SlotReleased
     offered_cash_alternative --> released : SlotReleased
     awaiting_cash_handover --> released : SlotReleased
