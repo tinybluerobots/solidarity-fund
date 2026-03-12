@@ -39,6 +39,8 @@ export async function SQLiteApplicantRepository(
 				updated_at TEXT NOT NULL
 			)
 		`);
+		// Migration: add notes column to existing databases
+		// (CREATE TABLE above already includes it for fresh installs)
 		try {
 			await conn.command("ALTER TABLE applicants ADD COLUMN notes TEXT");
 		} catch (e) {
