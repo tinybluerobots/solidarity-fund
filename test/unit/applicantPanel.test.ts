@@ -70,6 +70,23 @@ describe("editPanel", () => {
 		const html = editPanel(alice);
 		expect(html).toContain("data-show=\"$activeTab==='history'\"");
 	});
+
+	test("renders notes textarea with data-bind-notes", () => {
+		const html = editPanel(alice);
+		expect(html).toContain("data-bind-notes");
+	});
+
+	test("pre-fills notes signal value", () => {
+		const withNotes: Applicant = { ...alice, notes: "Call Wednesday" };
+		const html = editPanel(withNotes);
+		expect(html).toContain("Call Wednesday");
+	});
+
+	test("notes auto-saves on blur", () => {
+		const html = editPanel(alice);
+		expect(html).toContain(`/applicants/${alice.id}/notes`);
+		expect(html).toContain("data-on-blur");
+	});
 });
 
 describe("createPanel", () => {
