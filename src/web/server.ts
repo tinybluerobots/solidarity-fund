@@ -121,6 +121,22 @@ export async function startServer(
 					});
 				},
 			},
+			"/solidarity.png": {
+				GET: async () => {
+					const file = Bun.file("src/web/static/solidarity.png");
+					return new Response(file, {
+						headers: { "Content-Type": "image/png" },
+					});
+				},
+			},
+			"/favicon.ico": {
+				GET: async () => {
+					const file = Bun.file("src/web/static/favicon.ico");
+					return new Response(file, {
+						headers: { "Content-Type": "image/x-icon" },
+					});
+				},
+			},
 			"/": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
@@ -428,6 +444,11 @@ export async function startServer(
 				);
 			}
 
+			const grantNotesMatch = url.pathname.match(/^\/grants\/([^/]+)\/notes$/);
+			if (grantNotesMatch?.[1] && req.method === "POST") {
+				return grantRoutes.handleUpdateNotes(grantNotesMatch[1], req);
+			}
+
 			// Grant detail
 			const grantIdMatch = url.pathname.match(/^\/grants\/([^/]+)$/);
 			if (grantIdMatch?.[1] && req.method === "GET") {
@@ -487,6 +508,13 @@ export async function startServer(
 			const editMatch = url.pathname.match(/^\/applicants\/([^/]+)\/edit$/);
 			if (editMatch?.[1] && req.method === "GET") {
 				return applicantRoutes.edit(editMatch[1]);
+			}
+
+			const applicantNotesMatch = url.pathname.match(
+				/^\/applicants\/([^/]+)\/notes$/,
+			);
+			if (applicantNotesMatch?.[1] && req.method === "POST") {
+				return applicantRoutes.handleUpdateNotes(applicantNotesMatch[1], req);
 			}
 
 			const idMatch = url.pathname.match(/^\/applicants\/([^/]+)$/);

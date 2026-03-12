@@ -103,6 +103,16 @@ export function createApplicantRoutes(
 			);
 		},
 
+		async handleUpdateNotes(id: string, req: Request): Promise<Response> {
+			const result = await ServerSentEventGenerator.readSignals(req);
+			if (!result.success) {
+				return new Response(result.error, { status: 400 });
+			}
+			const notes = String(result.signals.notes ?? "");
+			await applicantRepo.updateNotes(id, notes);
+			return sseResponse();
+		},
+
 		async history(id: string): Promise<Response> {
 			const { events } = await eventStore.readStream<ApplicantEvent>(
 				`applicant-${id}`,

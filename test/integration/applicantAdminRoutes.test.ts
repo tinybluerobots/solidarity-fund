@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { createApplicant } from "../../src/domain/applicant/commandHandlers.ts";
 import type { VolunteerRepository } from "../../src/domain/volunteer/repository.ts";
 import { SQLiteVolunteerRepository } from "../../src/infrastructure/volunteer/sqliteVolunteerRepository.ts";
 import { createApplicantRoutes } from "../../src/web/routes/applicants-admin.ts";
@@ -68,5 +69,37 @@ describe("applicant routes", () => {
 		const res = await routes.history("nonexistent");
 		const body = await res.text();
 		expect(body).toContain("No history");
+	});
+
+	describe("handleUpdateNotes", () => {
+		test("saves notes and returns SSE", async () => {
+			const { id } = await createApplicant(
+				{ phone: "07700900010", name: "Notes Test" },
+				env.eventStore,
+			);
+
+			const req = new Request(`http://localhost/applicants/${id}/notes`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ notes: "important" }),
+			});
+
+			const res = await routes.handleUpdateNotes(id, req);
+			expect(res.status).toBe(200);
+			expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+
+			const applicant = await env.applicantRepo.getById(id);
+			expect(applicant?.notes).toBe("important");
+		});
+
+		test("returns 400 for malformed request body", async () => {
+			const req = new Request("http://localhost/applicants/x/notes", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: "not-json",
+			});
+			const res = await routes.handleUpdateNotes("x", req);
+			expect(res.status).toBe(400);
+		});
 	});
 });
