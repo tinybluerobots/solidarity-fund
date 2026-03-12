@@ -2,15 +2,15 @@
 
 ## CRITICAL
 
-### C1 — CDN Script Without SRI
+### C1 — CDN Script Without SRI ✅ Fixed 2026-03-12
 - **File:** `src/web/pages/layout.ts:17`
 - **Description:** Datastar loads from jsDelivr with no `integrity` hash. A CDN compromise or MITM injects arbitrary JS into every authenticated page. TODO comment in code acknowledges this.
-- **Fix:** Compute `sha384-...` hash and add `integrity="sha384-..."` to the `<script>` tag.
+- **Fix:** Added `integrity="sha384-l31DqEvDq6UMs2jK/XNO8hHjWNkHvwcU4xr3h2Sq+w0zH0lvnL4WYwpPUXiKa1Z7"` to the script tag.
 
-### C2 — Password Hash Stored in Event Store
+### C2 — Password Hash Stored in Event Store ✅ Fixed 2026-03-12
 - **Files:** `src/domain/volunteer/types.ts:101,113,142`
 - **Description:** `passwordHash` is embedded in `VolunteerCreated`, `VolunteerUpdated`, and `PasswordChanged` events. Event stores are append-only — every historical hash is retained forever, multiplying breach impact.
-- **Fix:** Store password hashes in a separate mutable table. Remove `passwordHash` from event payloads entirely.
+- **Fix:** Introduced `volunteer_credentials` table as a separate mutable store. Command handlers write hashes directly as a side effect; `passwordHash` removed from all event and command types. Startup migration copies existing hashes from the projection table.
 
 ---
 
