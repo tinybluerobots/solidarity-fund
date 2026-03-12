@@ -262,7 +262,7 @@ export function grantPanel(
 
 		case "awaiting_cash_handover":
 			actions = [
-				recordPaymentForm(grant, "cash"),
+				grant.volunteerId ? recordPaymentForm(grant, "cash") : "",
 				assignVolunteerForm(grant, volunteers),
 				releaseSlotForm(grant),
 			].join("\n");
@@ -279,7 +279,7 @@ export function grantPanel(
 		case "poa_approved":
 			actions = [
 				bankDetailFields(grant),
-				recordPaymentForm(grant, "bank"),
+				grant.volunteerId ? recordPaymentForm(grant, "bank") : "",
 				assignVolunteerForm(grant, volunteers),
 				releaseSlotForm(grant),
 			].join("\n");

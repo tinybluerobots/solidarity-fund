@@ -121,22 +121,39 @@ describe("grantPanel", () => {
 		expect(html).toContain("Release Slot");
 	});
 
-	test("poa_approved shows bank details and record payment form", () => {
-		const grant = makeGrant({ status: "poa_approved" });
+	test("poa_approved with volunteer shows bank details and record payment form", () => {
+		const grant = makeGrant({ status: "poa_approved", volunteerId: "vol-1" });
 		const html = grantPanel(grant, volunteers, false);
 		expect(html).toContain("12-34-56");
 		expect(html).toContain("Record Payment");
 		expect(html).toContain("method=bank");
 	});
 
-	test("awaiting_cash_handover shows record payment form with cash method", () => {
+	test("poa_approved without volunteer hides record payment form", () => {
+		const grant = makeGrant({ status: "poa_approved", volunteerId: null });
+		const html = grantPanel(grant, volunteers, false);
+		expect(html).not.toContain("Record Payment");
+	});
+
+	test("awaiting_cash_handover with volunteer shows record payment form", () => {
 		const grant = makeGrant({
 			status: "awaiting_cash_handover",
 			paymentPreference: "cash",
+			volunteerId: "vol-1",
 		});
 		const html = grantPanel(grant, volunteers, false);
 		expect(html).toContain("Record Payment");
 		expect(html).toContain("method=cash");
+	});
+
+	test("awaiting_cash_handover without volunteer hides record payment form", () => {
+		const grant = makeGrant({
+			status: "awaiting_cash_handover",
+			paymentPreference: "cash",
+			volunteerId: null,
+		});
+		const html = grantPanel(grant, volunteers, false);
+		expect(html).not.toContain("Record Payment");
 	});
 
 	test("offered_cash_alternative shows accept/decline buttons", () => {

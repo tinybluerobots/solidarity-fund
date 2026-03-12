@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
 	acceptCashAlternative,
 	approveProofOfAddress,
+	assignVolunteer,
 	declineCashAlternative,
 	recordPayment,
 	recordReimbursement,
@@ -56,6 +57,7 @@ describe("POA rejection workflow", () => {
 		expect(rows[0]!.poa_attempts).toBe(3);
 
 		await acceptCashAlternative(appId, env.eventStore);
+		await assignVolunteer(appId, "vol-1", env.eventStore);
 
 		await recordPayment(
 			appId,

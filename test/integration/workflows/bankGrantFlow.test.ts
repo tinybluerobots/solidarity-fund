@@ -160,6 +160,7 @@ describe("bank grant workflow", () => {
 		});
 
 		await approveProofOfAddress(appId, "vol-1", env.eventStore);
+		await assignVolunteer(appId, "vol-1", env.eventStore);
 		await recordPayment(
 			appId,
 			{ amount: 40, method: "bank", paidBy: "vol-1" },

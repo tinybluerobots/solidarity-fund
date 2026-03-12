@@ -213,6 +213,11 @@ function decideRecordPayment(
 			`Cannot record payment in ${state.status} state`,
 		);
 	}
+	if (!state.volunteerId) {
+		throw new IllegalStateError(
+			"Cannot record payment without an assigned volunteer",
+		);
+	}
 	if (state.status === "poa_approved" && command.data.method !== "bank") {
 		throw new IllegalStateError(
 			"POA-approved grants must be paid by bank transfer",

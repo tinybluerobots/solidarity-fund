@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
+	assignVolunteer,
 	recordPayment,
 	recordReimbursement,
 	releaseSlot,
@@ -33,6 +34,7 @@ describe("cash grant workflow", () => {
 		expect(rows[0]!.status).toBe("awaiting_cash_handover");
 		expect(rows[0]!.payment_preference).toBe("cash");
 
+		await assignVolunteer(appId, "vol-1", env.eventStore);
 		await recordPayment(
 			appId,
 			{ amount: 40, method: "cash", paidBy: "vol-1" },

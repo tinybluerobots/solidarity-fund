@@ -27,7 +27,7 @@ function awaitingReview(poaAttempts = 0): GrantState {
 }
 
 function poaApproved(poaAttempts = 1): GrantState {
-	return { ...core, status: "poa_approved", poaAttempts };
+	return { ...core, status: "poa_approved", poaAttempts, volunteerId: "vol-1" };
 }
 
 function offeredCashAlt(): GrantState {
@@ -35,7 +35,7 @@ function offeredCashAlt(): GrantState {
 }
 
 function awaitingCashHandover(): GrantState {
-	return { ...core, status: "awaiting_cash_handover" };
+	return { ...core, status: "awaiting_cash_handover", volunteerId: "vol-1" };
 }
 
 function paidState(): GrantState {
@@ -423,6 +423,21 @@ describe("RecordPayment", () => {
 		expect(() => decide(payCmd, awaitingCashHandover())).toThrow(
 			IllegalStateError,
 		);
+	});
+
+	test("throws when no volunteer assigned", () => {
+		expect(() =>
+			decide(payCmd, { ...poaApproved(), volunteerId: undefined }),
+		).toThrow(IllegalStateError);
+	});
+
+	test("throws when no volunteer assigned (cash)", () => {
+		expect(() =>
+			decide(
+				{ ...payCmd, data: { ...payCmd.data, method: "cash" as const } },
+				{ ...awaitingCashHandover(), volunteerId: undefined },
+			),
+		).toThrow(IllegalStateError);
 	});
 });
 
