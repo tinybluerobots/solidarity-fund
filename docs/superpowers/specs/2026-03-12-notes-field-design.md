@@ -13,12 +13,21 @@ Add a freeform `notes` text field to both applicants and grants. Notes are infor
 
 Add `notes TEXT` (nullable) to both `applicants` and `grants` SQLite tables.
 
-Migration strategy: run `ALTER TABLE applicants ADD COLUMN notes TEXT` and `ALTER TABLE grants ADD COLUMN notes TEXT` at startup, suppressing the error if the column already exists (SQLite does not support `ADD COLUMN IF NOT EXISTS`). This runs in the repository `init` alongside the existing `CREATE TABLE IF NOT EXISTS`.
+**Migration strategy:**
+
+- **Applicants**: run `ALTER TABLE applicants ADD COLUMN notes TEXT` in `SQLiteApplicantRepository`'s async init block, immediately after the existing `CREATE TABLE IF NOT EXISTS`. Catch and suppress the error if the column already exists (error message contains `"duplicate column"`). SQLite does not support `ADD COLUMN IF NOT EXISTS`.
+
+- **Grants**: `SQLiteGrantRepository` has no init block — the grants table is created by the projection. Run `ALTER TABLE grants ADD COLUMN notes TEXT` (same error-suppression pattern) in `grantProjection`'s `init` function in `src/infrastructure/projections/grant.ts`, after the existing `CREATE TABLE IF NOT EXISTS`.
 
 ### Types
 
-- `Applicant` (domain type): add `notes?: string`
-- `GrantRow` (repository type): add `notes: string | null`
+- `Applicant` (domain type, `src/domain/applicant/types.ts`): add `notes?: string`
+- `GrantRow` (type in `src/domain/grant/repository.ts`): add `notes: string | null`
+
+### Repository Mapping
+
+- In `sqliteApplicantRepository.ts`: add `notes: string | null` to `ApplicantRow`, map it in `rowToApplicant` as `notes: row.notes ?? undefined`
+- In `sqliteGrantRepository.ts`: add `notes: string | null` to `DbRow`, map it in `rowToGrant` as `notes: row.notes`
 
 ### Repository Methods
 
@@ -28,33 +37,50 @@ Add `updateNotes(id: string, notes: string): Promise<void>` to:
 
 Both implementations execute a direct `UPDATE ... SET notes = ? WHERE id = ?`. No event store involvement.
 
-The existing `rowToApplicant` and `rowToGrant` mapping functions are updated to map the `notes` column.
-
 ## Routes
 
 | Method | Path | Handler |
 |--------|------|---------|
-| POST | `/applicants/:id/notes` | Reads `notes` signal from request body, calls `applicantRepo.updateNotes`, returns empty SSE response |
-| POST | `/grants/:id/notes` | Reads `notes` signal from request body, calls `grantRepo.updateNotes`, returns empty SSE response |
+| POST | `/applicants/:id/notes` | Reads `notes` signal from request body via `ServerSentEventGenerator.readSignals`, calls `applicantRepo.updateNotes`, returns `sseResponse()` with no actions |
+| POST | `/grants/:id/notes` | Same, calls `grantRepo.updateNotes`, returns `sseResponse()` with no actions |
 
-Signal reading uses `ServerSentEventGenerator.readSignals` (consistent with existing `handleCreate`/`handleUpdate` handlers).
+The silent `sseResponse()` (no actions) is intentional — the textarea already holds the correct value client-side; no patch is needed.
+
+**Route registration**: both routes are registered in `server.ts`'s `fetch` fallback alongside existing dynamic `:id` routes (using regex path matching, consistent with the existing pattern for routes like `/applicants/:id` and `/grants/:id/...`).
 
 ## UI
 
 ### Applicant Panel
 
-A `<textarea>` added to the Details tab below the email field. Bound to a `notes` Datastar signal initialised with the current notes value. Auto-saves on blur via `data-on-blur="@post('/applicants/${id}/notes')"`.
+A `<textarea>` added to the Details tab below the email field, wrapped in its own `data-signals` block:
+
+```html
+<div data-signals="{notes: '<escaped-current-value>'}">
+  <label class="label">Notes</label>
+  <textarea class="input" data-bind-notes
+    data-on-blur="@post('/applicants/${id}/notes')"></textarea>
+</div>
+```
+
+Datastar merges signal scopes, so nesting a `data-signals` block inside the existing `{name, phone, email}` scope is safe and intentional — the `notes` signal stays isolated.
+
+Use the existing `escapeSignalValue` function from `applicantPanel.ts` to escape the notes value.
 
 ### Grant Panel
 
-A notes `<textarea>` appended at the bottom of the grant panel, rendered for all grant statuses. Same auto-save-on-blur pattern: `data-on-blur="@post('/grants/${id}/notes')"`.
+A notes section appended at the bottom of `grantPanel`, rendered for all grant statuses (after the status-specific `actions` block):
 
-### Shared Pattern
+```html
+<div class="mt-4" data-signals="{grantnotes: '<escaped-current-value>'}">
+  <label class="label">Notes</label>
+  <textarea class="input" data-bind-grantnotes
+    data-on-blur="@post('/grants/${id}/notes')"></textarea>
+</div>
+```
 
-Both textareas use:
-- `data-signals="{notes: '<escaped-current-value>'}"` scoped to the notes section
-- `data-bind-notes` on the textarea
-- `data-on-blur="@post('...')"` to trigger save
+Use a distinct signal name (`grantnotes`) to avoid any collision with signals used in the existing action forms.
+
+Add an `escapeSignalValue` helper to `grantPanel.ts` (same implementation as in `applicantPanel.ts`).
 
 ## What Is Not Included
 
