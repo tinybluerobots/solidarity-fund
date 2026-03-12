@@ -14,9 +14,9 @@ const alice: Applicant = {
 describe("editPanel", () => {
 	test("renders form with data-bind inputs", () => {
 		const html = editPanel(alice);
-		expect(html).toContain("data-bind-name");
-		expect(html).toContain("data-bind-phone");
-		expect(html).toContain("data-bind-email");
+		expect(html).toContain("data-bind:name");
+		expect(html).toContain("data-bind:phone");
+		expect(html).toContain("data-bind:email");
 	});
 
 	test("pre-fills signal values", () => {
@@ -71,9 +71,9 @@ describe("editPanel", () => {
 		expect(html).toContain("data-show=\"$activeTab==='history'\"");
 	});
 
-	test("renders notes textarea with data-bind-notes", () => {
+	test("renders notes textarea with data-bind:notes", () => {
 		const html = editPanel(alice);
-		expect(html).toContain("data-bind-notes");
+		expect(html).toContain("data-bind:notes");
 	});
 
 	test("pre-fills notes signal value", () => {
@@ -85,15 +85,15 @@ describe("editPanel", () => {
 	test("notes auto-saves on blur", () => {
 		const html = editPanel(alice);
 		expect(html).toContain(`/applicants/${alice.id}/notes`);
-		expect(html).toContain("data-on-blur");
+		expect(html).toContain("data-on:blur");
 	});
 });
 
 describe("createPanel", () => {
 	test("renders form with data-bind inputs", () => {
 		const html = createPanel();
-		expect(html).toContain("data-bind-name");
-		expect(html).toContain("data-bind-phone");
+		expect(html).toContain("data-bind:name");
+		expect(html).toContain("data-bind:phone");
 	});
 
 	test("initializes signals with empty values", () => {

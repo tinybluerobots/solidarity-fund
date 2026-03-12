@@ -32,9 +32,9 @@ const disabledVol: Volunteer = {
 describe("editPanel", () => {
 	test("renders form with data-bind inputs", () => {
 		const html = editPanel(alice, "v-other");
-		expect(html).toContain("data-bind-name");
-		expect(html).toContain("data-bind-phone");
-		expect(html).toContain("data-bind-email");
+		expect(html).toContain("data-bind:name");
+		expect(html).toContain("data-bind:phone");
+		expect(html).toContain("data-bind:email");
 	});
 
 	test("pre-fills signal values", () => {
@@ -46,7 +46,7 @@ describe("editPanel", () => {
 
 	test("has password field with hint", () => {
 		const html = editPanel(alice, "v-other");
-		expect(html).toContain("data-bind-password");
+		expect(html).toContain("data-bind:password");
 		expect(html).toContain("Leave blank to keep current");
 	});
 
@@ -63,7 +63,7 @@ describe("editPanel", () => {
 
 	test("shows admin checkbox on edit", () => {
 		const html = editPanel(alice, "v-other");
-		expect(html).toContain("data-bind-is-admin");
+		expect(html).toContain("data-bind:is-admin");
 	});
 
 	test("shows disable button for other volunteers", () => {
@@ -104,13 +104,13 @@ describe("editPanel", () => {
 describe("createPanel", () => {
 	test("renders form with data-bind inputs", () => {
 		const html = createPanel();
-		expect(html).toContain("data-bind-name");
-		expect(html).toContain("data-bind-phone");
+		expect(html).toContain("data-bind:name");
+		expect(html).toContain("data-bind:phone");
 	});
 
 	test("has password field with required attribute", () => {
 		const html = createPanel();
-		expect(html).toContain("data-bind-password");
+		expect(html).toContain("data-bind:password");
 		expect(html).toContain("required");
 	});
 
@@ -127,7 +127,7 @@ describe("createPanel", () => {
 
 	test("has admin checkbox", () => {
 		const html = createPanel();
-		expect(html).toContain("data-bind-is-admin");
+		expect(html).toContain("data-bind:is-admin");
 	});
 
 	test("phone input has numeric pattern", () => {

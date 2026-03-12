@@ -52,7 +52,7 @@ describe("volunteersPage", () => {
 
 	test("includes search input with data-bind", () => {
 		const html = volunteersPage([alice]);
-		expect(html).toContain("data-bind-search");
+		expect(html).toContain("data-bind:search");
 	});
 
 	test("includes Add Volunteer button", () => {

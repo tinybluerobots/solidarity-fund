@@ -41,7 +41,7 @@ describe("applicantsPage", () => {
 
 	test("includes search input with data-bind", () => {
 		const html = applicantsPage([alice]);
-		expect(html).toContain("data-bind-search");
+		expect(html).toContain("data-bind:search");
 	});
 
 	test("includes Add Applicant button", () => {
