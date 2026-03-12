@@ -3,6 +3,7 @@ export type Applicant = {
 	phone: string;
 	name: string;
 	email?: string;
+	notes?: string;
 	createdAt: string;
 	updatedAt: string;
 };

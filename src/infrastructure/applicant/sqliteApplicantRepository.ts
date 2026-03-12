@@ -7,6 +7,7 @@ type ApplicantRow = {
 	phone: string;
 	name: string;
 	email: string | null;
+	notes: string | null;
 	created_at: string;
 	updated_at: string;
 };
@@ -17,6 +18,7 @@ function rowToApplicant(row: ApplicantRow): Applicant {
 		phone: row.phone,
 		name: row.name,
 		email: row.email ?? undefined,
+		notes: row.notes ?? undefined,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
 	};
@@ -32,10 +34,17 @@ export async function SQLiteApplicantRepository(
 				phone TEXT NOT NULL,
 				name TEXT NOT NULL,
 				email TEXT,
+				notes TEXT,
 				created_at TEXT NOT NULL,
 				updated_at TEXT NOT NULL
 			)
 		`);
+		try {
+			await conn.command("ALTER TABLE applicants ADD COLUMN notes TEXT");
+		} catch (e) {
+			if (!(e instanceof Error && e.message.includes("duplicate column")))
+				throw e;
+		}
 	});
 
 	return {
@@ -78,6 +87,15 @@ export async function SQLiteApplicantRepository(
 					"SELECT * FROM applicants ORDER BY created_at DESC",
 				);
 				return rows.map(rowToApplicant);
+			});
+		},
+
+		async updateNotes(id: string, notes: string): Promise<void> {
+			await pool.withConnection(async (conn) => {
+				await conn.command("UPDATE applicants SET notes = ? WHERE id = ?", [
+					notes || null,
+					id,
+				]);
 			});
 		},
 	};

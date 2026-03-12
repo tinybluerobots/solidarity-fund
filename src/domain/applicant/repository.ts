@@ -5,4 +5,5 @@ export interface ApplicantRepository {
 	getByPhone(phone: string): Promise<Applicant[]>;
 	getByPhoneAndName(phone: string, name: string): Promise<Applicant | null>;
 	list(): Promise<Applicant[]>;
+	updateNotes(id: string, notes: string): Promise<void>;
 }

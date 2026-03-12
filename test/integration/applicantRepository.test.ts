@@ -65,6 +65,34 @@ describe("Applicant repository queries", () => {
 		});
 	});
 
+	describe("updateNotes", () => {
+		test("persists notes on the applicant", async () => {
+			await createApplicant(
+				{ phone: "07700900001", name: "Alice" },
+				env.eventStore,
+			);
+			const applicant = await repo.getByPhoneAndName("07700900001", "Alice");
+			expect(applicant).not.toBeNull();
+
+			await repo.updateNotes(applicant!.id, "Needs follow-up");
+
+			const updated = await repo.getById(applicant!.id);
+			expect(updated?.notes).toBe("Needs follow-up");
+		});
+
+		test("clears notes when empty string provided", async () => {
+			await createApplicant(
+				{ phone: "07700900002", name: "Bob" },
+				env.eventStore,
+			);
+			const applicant = await repo.getByPhoneAndName("07700900002", "Bob");
+			await repo.updateNotes(applicant!.id, "Something");
+			await repo.updateNotes(applicant!.id, "");
+			const updated = await repo.getById(applicant!.id);
+			expect(updated?.notes).toBeFalsy();
+		});
+	});
+
 	describe("list", () => {
 		test("returns all applicants", async () => {
 			await createApplicant(
