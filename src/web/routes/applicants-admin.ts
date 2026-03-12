@@ -85,11 +85,9 @@ export function createApplicantRoutes(
 				return new Response("Name and phone are required", { status: 400 });
 			}
 			await updateApplicant(id, volunteerId, data, eventStore);
-			const applicant = await applicantRepo.getById(id);
-			if (!applicant) return new Response("Not found", { status: 404 });
 			const applicants = await applicantRepo.list();
 			return sseResponse(
-				patchElements(editPanel(applicant)),
+				patchElements('<div id="panel"></div>'),
 				patchElements(applicantsTableBody(applicants)),
 			);
 		},
