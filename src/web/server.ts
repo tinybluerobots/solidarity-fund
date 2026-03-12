@@ -177,7 +177,11 @@ export async function startServer(
 		routes: secureRoutes({
 			"/apply": {
 				GET: () => applyRoutes.showForm(),
-				POST: (req) => applyRoutes.handleSubmit(req),
+				POST: (req) => {
+					const limited = checkLoginRateLimit(req);
+					if (limited) return limited;
+					return applyRoutes.handleSubmit(req);
+				},
 			},
 			"/apply/result": {
 				GET: (req) => applyRoutes.showResult(req),

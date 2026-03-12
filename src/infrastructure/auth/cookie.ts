@@ -3,7 +3,7 @@ const MAX_AGE = 86400; // 24 hours
 
 export function setSessionCookie(sessionId: string): string {
 	const secure = process.env.NODE_ENV !== "development" ? "; Secure" : "";
-	return `${COOKIE_NAME}=${sessionId}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}${secure}`;
+	return `${COOKIE_NAME}=${sessionId}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${MAX_AGE}${secure}`;
 }
 
 export function getSessionId(request: Request): string | null {
@@ -14,5 +14,5 @@ export function getSessionId(request: Request): string | null {
 }
 
 export function clearSessionCookie(): string {
-	return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+	return `${COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`;
 }

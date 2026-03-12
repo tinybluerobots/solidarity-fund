@@ -21,25 +21,25 @@
 - **Description:** `withSecurityHeaders()` only runs in the `fetch()` fallback (lines 332, 592). Every route in `routes: {}` — including `/login`, `/apply`, `/change-password` — returns responses with no CSP, no `X-Frame-Options`, no `X-Content-Type-Options`.
 - **Fix:** Added `secureRoutes()` wrapper that applies `withSecurityHeaders()` to every handler in the routes object.
 
-### H2 — No CSRF Protection on State-Mutating POSTs
+### H2 — No CSRF Protection on State-Mutating POSTs ✅ Fixed 2026-03-12
 - **Files:** `src/web/server.ts:153,211,218,228`
 - **Description:** `SameSite=Lax` doesn't block form-submission CSRF. `/login` is vulnerable to login CSRF (attacker logs victim into attacker's account).
-- **Fix:** Add CSRF tokens to all mutating forms, or use `SameSite=Strict` for admin cookies.
+- **Fix:** Upgraded session cookie to `SameSite=Strict` in `src/infrastructure/auth/cookie.ts`.
 
 ### H3 — XSS via Unescaped `volunteerName` ✅ Fixed 2026-03-12
 - **File:** `src/web/pages/applicantHistoryPanel.ts:28-33`
 - **Description:** `volunteerName` interpolated raw into HTML. A volunteer named `<script>alert(1)</script>` executes in every history panel view.
 - **Fix:** Added `escapeHtml()` and wrapped all three `volunteerName` interpolations.
 
-### H4 — Bank Details in Query String
+### H4 — Bank Details in Query String ✅ Fixed 2026-03-12
 - **File:** `src/web/pages/grantPanel.ts:150`
 - **Description:** Sort codes and account numbers sent as URL query params — logged in server access logs, browser history, and proxy logs.
-- **Fix:** Move to request body.
+- **Fix:** Removed query params from Datastar `@post`; route handler now reads `editsortcode`/`editaccountnumber` from signals body via `readSignals()`.
 
-### H5 — No Rate Limiting on `/apply`
+### H5 — No Rate Limiting on `/apply` ✅ Fixed 2026-03-12
 - **File:** `src/web/server.ts:153-155`
 - **Description:** ALTCHA present but no IP-based rate limit — application flooding and ALTCHA challenge exhaustion are possible.
-- **Fix:** Apply a `checkLoginRateLimit()` equivalent to the `/apply` POST route.
+- **Fix:** Applied `checkLoginRateLimit()` to the `/apply` POST handler (10 req / 15 min per IP).
 
 ### H6 — Sequential Integer Refs Enable Enumeration ✅ Fixed 2026-03-12
 - **Files:** `src/web/routes/status.ts:53-54`, `src/web/pages/status.ts:337-358`

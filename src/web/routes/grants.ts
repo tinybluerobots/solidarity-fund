@@ -82,9 +82,10 @@ export function createGrantRoutes(
 			grantId: string,
 			req: Request,
 		): Promise<Response> {
-			const url = new URL(req.url);
-			const sortCode = url.searchParams.get("sortCode") ?? "";
-			const accountNumber = url.searchParams.get("accountNumber") ?? "";
+			const result = await ServerSentEventGenerator.readSignals(req);
+			if (!result.success) return new Response(result.error, { status: 400 });
+			const sortCode = String(result.signals.editsortcode ?? "");
+			const accountNumber = String(result.signals.editaccountnumber ?? "");
 			await updateBankDetails(grantId, { sortCode, accountNumber }, eventStore);
 			return refreshGrantResponse(grantId);
 		},

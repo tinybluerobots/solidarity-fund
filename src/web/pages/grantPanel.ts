@@ -147,7 +147,7 @@ function editBankDetailsForm(grant: GrantRow): string {
 				</div>
 			</div>
 			<button class="btn btn-primary text-sm w-full"
-				data-on:click="@post('/grants/${encodeURIComponent(grant.id)}/update-bank-details?sortCode=' + $editsortcode + '&accountNumber=' + $editaccountnumber)">
+				data-on:click="@post('/grants/${encodeURIComponent(grant.id)}/update-bank-details')">
 				Save
 			</button>
 		</div>
