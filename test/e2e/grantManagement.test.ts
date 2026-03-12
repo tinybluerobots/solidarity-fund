@@ -46,7 +46,7 @@ test.describe("grant management operations", () => {
 		});
 
 		// The seed user "Test" should be in the volunteer dropdown
-		const select = page.locator("select[data-bind-assignvolunteerid]");
+		const select = page.locator("select[data-bind\\:assignvolunteerid]");
 		await expect(select).toBeVisible({ timeout: 5000 });
 
 		// Select the "Test" volunteer and assign
@@ -76,7 +76,7 @@ test.describe("grant management operations", () => {
 
 		// Fill in release reason and release
 		await page
-			.locator("input[data-bind-releasereason]")
+			.locator("input[data-bind\\:releasereason]")
 			.fill("No longer needed");
 		await page.locator("#panel button", { hasText: "Release Slot" }).click();
 		await expect(page.locator("#panel")).toContainText("Released", {

@@ -46,7 +46,7 @@ function paymentBadge(pref: string): string {
 export function applicationRow(a: ApplicationRow): string {
 	return `<tr
 		class="table-row"
-		data-on-click="@get('/applications/${encodeURIComponent(a.id)}')">
+		data-on:click="@get('/applications/${encodeURIComponent(a.id)}')">
 		<td class="px-4 py-3 font-medium text-bark">${escapeHtml(a.name ?? "")}</td>
 		<td class="px-4 py-3 text-bark-muted">${escapeHtml(a.phone ?? "")}</td>
 		<td class="px-4 py-3">${statusBadge(a.status)}</td>
@@ -127,20 +127,20 @@ export function applicationsPage(
 		</div>
 		<div class="flex items-center gap-2">
 			<select
-				data-bind-month
-				data-on-change="@get(${filterUrl()})"
+				data-bind:month
+				data-on:change="@get(${filterUrl()})"
 				class="input max-w-48 bg-white text-sm">
 				${monthOptions}
 			</select>
 			<select
-				data-bind-status
-				data-on-change="@get(${filterUrl()})"
+				data-bind:status
+				data-on:change="@get(${filterUrl()})"
 				class="input max-w-48 bg-white text-sm">
 				${statusOptions}
 			</select>
 			<select
-				data-bind-payment
-				data-on-change="@get(${filterUrl()})"
+				data-bind:payment
+				data-on:change="@get(${filterUrl()})"
 				class="input max-w-48 bg-white text-sm">
 				${paymentOptions}
 			</select>

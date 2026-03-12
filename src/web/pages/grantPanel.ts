@@ -315,8 +315,8 @@ export function grantPanel(
 		${actions}
 		<div class="mt-6 border-t border-cream-200 pt-4" data-signals="{grantnotes: '${escapeSignalValue(grant.notes ?? "")}'}">
 			<label class="label">Notes</label>
-			<textarea class="input" rows="3" data-bind-grantnotes
-				data-on-blur="@post('/grants/${encodeURIComponent(grant.id)}/notes')"></textarea>
+			<textarea class="input" rows="3" data-bind:grantnotes
+				data-on:blur="@post('/grants/${encodeURIComponent(grant.id)}/notes')"></textarea>
 		</div>
 	`);
 }

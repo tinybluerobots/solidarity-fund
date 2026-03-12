@@ -44,7 +44,7 @@ export function volunteerRow(v: Volunteer): string {
 	const showExpr = `$search === '' || '${nameLower}'.includes($search.toLowerCase()) || '${phone}'.includes($search)`;
 	return `<tr
 		class="table-row"
-		data-on-click="@get('/volunteers/${encodeURIComponent(v.id)}/edit')"
+		data-on:click="@get('/volunteers/${encodeURIComponent(v.id)}/edit')"
 		data-show="${escapeHtml(showExpr)}">
 		<td class="px-4 py-3 font-medium text-bark">${escapeHtml(v.name)}</td>
 		<td class="px-4 py-3 text-bark-muted">${v.phone ? escapeHtml(v.phone) : ""}</td>
@@ -86,7 +86,7 @@ export function volunteersPage(volunteers: Volunteer[]): string {
 		</div>
 		<button
 			class="btn btn-primary"
-			data-on-click="@get('/volunteers/new')">
+			data-on:click="@get('/volunteers/new')">
 			Add Volunteer
 		</button>
 	</div>
@@ -95,7 +95,7 @@ export function volunteersPage(volunteers: Volunteer[]): string {
 		<input
 			type="text"
 			placeholder="Search by name or phone&hellip;"
-			data-bind-search
+			data-bind:search
 			class="input max-w-sm bg-white text-sm placeholder-bark-muted" />
 	</div>
 

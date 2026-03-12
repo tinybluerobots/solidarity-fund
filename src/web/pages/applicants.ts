@@ -31,7 +31,7 @@ export function applicantRow(r: Applicant): string {
 	const showExpr = `$search === '' || '${nameLower}'.includes($search.toLowerCase()) || '${phone}'.includes($search)`;
 	return `<tr
 		class="table-row"
-		data-on-click="@get('/applicants/${encodeURIComponent(r.id)}/edit')"
+		data-on:click="@get('/applicants/${encodeURIComponent(r.id)}/edit')"
 		data-show="${escapeHtml(showExpr)}">
 		<td class="px-4 py-3 font-medium text-bark">${escapeHtml(r.name)}</td>
 		<td class="px-4 py-3 text-bark-muted">${escapeHtml(r.phone)}</td>
@@ -71,7 +71,7 @@ export function applicantsPage(applicants: Applicant[]): string {
 		</div>
 		<button
 			class="btn btn-primary"
-			data-on-click="@get('/applicants/new')">
+			data-on:click="@get('/applicants/new')">
 			Add Applicant
 		</button>
 	</div>
@@ -80,7 +80,7 @@ export function applicantsPage(applicants: Applicant[]): string {
 		<input
 			type="text"
 			placeholder="Search by name or phone&hellip;"
-			data-bind-search
+			data-bind:search
 			class="input max-w-sm bg-white text-sm placeholder-bark-muted" />
 	</div>
 

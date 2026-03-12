@@ -47,7 +47,7 @@ function grantCard(grant: GrantRow): string {
 
 	return `<div
 		class="bg-white rounded-lg border border-cream-200 p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-		data-on-click="@get('/grants/${encodeURIComponent(grant.id)}')">
+		data-on:click="@get('/grants/${encodeURIComponent(grant.id)}')">
 		<div class="flex items-center justify-between mb-1.5">
 			<span class="font-heading font-semibold text-sm text-bark">${name}</span>
 			<span class="text-xs text-bark-muted font-mono">#${grant.rank}</span>
@@ -107,8 +107,8 @@ export function grantsPage(
 			<h1 class="font-heading text-2xl font-semibold text-bark">Grants</h1>
 		</div>
 		<select
-			data-bind-month
-			data-on-change="@get('/grants?month=' + $month)"
+			data-bind:month
+			data-on:change="@get('/grants?month=' + $month)"
 			class="input max-w-48 bg-white text-sm">
 			${monthOptions}
 		</select>

@@ -83,8 +83,8 @@ export function editPanel(r: Applicant): string {
 		})}
     <div class="mt-4" data-signals="{notes: '${escapeSignalValue(r.notes ?? "")}'}">
       <label class="label">Notes</label>
-      <textarea class="input" rows="3" data-bind-notes
-        data-on-blur="@post('/applicants/${r.id}/notes')"></textarea>
+      <textarea class="input" rows="3" data-bind:notes
+        data-on:blur="@post('/applicants/${r.id}/notes')"></textarea>
     </div>
     </div>
     <div data-show="$activeTab==='history'" style="display:none">

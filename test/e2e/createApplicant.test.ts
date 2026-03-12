@@ -10,8 +10,8 @@ test.describe("create applicant", () => {
 	});
 
 	test("creates applicant with name and phone", async ({ page }) => {
-		await page.locator("input[data-bind-name]").fill("Alice Smith");
-		await page.locator("input[data-bind-phone]").fill("07700900001");
+		await page.locator("input[data-bind\\:name]").fill("Alice Smith");
+		await page.locator("input[data-bind\\:phone]").fill("07700900001");
 
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
@@ -23,9 +23,9 @@ test.describe("create applicant", () => {
 	});
 
 	test("creates applicant with all fields", async ({ page }) => {
-		await page.locator("input[data-bind-name]").fill("Carol White");
-		await page.locator("input[data-bind-phone]").fill("07700900003");
-		await page.locator("input[data-bind-email]").fill("carol@example.com");
+		await page.locator("input[data-bind\\:name]").fill("Carol White");
+		await page.locator("input[data-bind\\:phone]").fill("07700900003");
+		await page.locator("input[data-bind\\:email]").fill("carol@example.com");
 
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
@@ -36,7 +36,7 @@ test.describe("create applicant", () => {
 	});
 
 	test("prevents submission with empty name", async ({ page }) => {
-		await page.locator("input[data-bind-phone]").fill("07700900010");
+		await page.locator("input[data-bind\\:phone]").fill("07700900010");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		// Form should still be open
@@ -51,7 +51,7 @@ test.describe("create applicant", () => {
 	});
 
 	test("prevents submission with empty phone", async ({ page }) => {
-		await page.locator("input[data-bind-name]").fill("No Phone Person");
+		await page.locator("input[data-bind\\:name]").fill("No Phone Person");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		// Form should still be open
@@ -67,8 +67,8 @@ test.describe("create applicant", () => {
 
 	test("rejects duplicate phone number", async ({ page }) => {
 		// Create first applicant
-		await page.locator("input[data-bind-name]").fill("First Person");
-		await page.locator("input[data-bind-phone]").fill("07700900099");
+		await page.locator("input[data-bind\\:name]").fill("First Person");
+		await page.locator("input[data-bind\\:phone]").fill("07700900099");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		await expect(
@@ -87,8 +87,8 @@ test.describe("create applicant", () => {
 		await page.locator("button", { hasText: "Add Applicant" }).click();
 		await page.locator("#panel h2", { hasText: "New Applicant" }).waitFor();
 
-		await page.locator("input[data-bind-name]").fill("Second Person");
-		await page.locator("input[data-bind-phone]").fill("07700900099");
+		await page.locator("input[data-bind\\:name]").fill("Second Person");
+		await page.locator("input[data-bind\\:phone]").fill("07700900099");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		// Wait for the server to process (it will fail with SQLITE_CONSTRAINT)

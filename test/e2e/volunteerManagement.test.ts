@@ -17,10 +17,10 @@ test.describe("volunteer management", () => {
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
 
-		await page.locator("input[data-bind-name]").fill("Alice Helper");
-		await page.locator("input[data-bind-phone]").fill("07700900001");
-		await page.locator("input[data-bind-email]").fill("alice@example.com");
-		await page.locator("input[data-bind-password]").fill("secret123");
+		await page.locator("input[data-bind\\:name]").fill("Alice Helper");
+		await page.locator("input[data-bind\\:phone]").fill("07700900001");
+		await page.locator("input[data-bind\\:email]").fill("alice@example.com");
+		await page.locator("input[data-bind\\:password]").fill("secret123");
 
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
@@ -34,9 +34,9 @@ test.describe("volunteer management", () => {
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
 
-		await page.locator("input[data-bind-name]").fill("Bob Admin");
-		await page.locator("input[data-bind-password]").fill("admin123");
-		await page.locator("input[data-bind-is-admin]").check();
+		await page.locator("input[data-bind\\:name]").fill("Bob Admin");
+		await page.locator("input[data-bind\\:password]").fill("admin123");
+		await page.locator("input[data-bind\\:is-admin]").check();
 
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
@@ -59,15 +59,15 @@ test.describe("volunteer management", () => {
 		// Create a volunteer to edit
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
-		await page.locator("input[data-bind-name]").fill("Edit Me");
-		await page.locator("input[data-bind-password]").fill("pass123");
+		await page.locator("input[data-bind\\:name]").fill("Edit Me");
+		await page.locator("input[data-bind\\:password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(
 			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
 		).toBeVisible({ timeout: 10000 });
 
 		// Update name
-		const nameInput = page.locator("input[data-bind-name]");
+		const nameInput = page.locator("input[data-bind\\:name]");
 		await nameInput.clear();
 		await nameInput.fill("Edited Name");
 
@@ -82,8 +82,8 @@ test.describe("volunteer management", () => {
 		// Create a volunteer to disable
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
-		await page.locator("input[data-bind-name]").fill("Disable Me");
-		await page.locator("input[data-bind-password]").fill("pass123");
+		await page.locator("input[data-bind\\:name]").fill("Disable Me");
+		await page.locator("input[data-bind\\:password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(
 			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
@@ -125,8 +125,8 @@ test.describe("volunteer management", () => {
 		// Create a second volunteer
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
-		await page.locator("input[data-bind-name]").fill("Searchable Person");
-		await page.locator("input[data-bind-password]").fill("pass123");
+		await page.locator("input[data-bind\\:name]").fill("Searchable Person");
+		await page.locator("input[data-bind\\:password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(
 			page.locator("#panel h2", { hasText: "Edit Volunteer" }),
@@ -134,7 +134,7 @@ test.describe("volunteer management", () => {
 
 		// Close panel and search
 		await page.locator("#panel button", { hasText: "Close" }).click();
-		await page.locator("input[data-bind-search]").fill("Searchable");
+		await page.locator("input[data-bind\\:search]").fill("Searchable");
 
 		await expect(page.locator("#volunteer-rows")).toContainText(
 			"Searchable Person",
@@ -148,7 +148,7 @@ test.describe("volunteer management", () => {
 		await page.locator("button", { hasText: "Add Volunteer" }).click();
 		await page.locator("#panel h2", { hasText: "New Volunteer" }).waitFor();
 
-		await page.locator("input[data-bind-password]").fill("pass123");
+		await page.locator("input[data-bind\\:password]").fill("pass123");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 
 		// Form should still be open (HTML validation prevents submit)

@@ -67,7 +67,7 @@ test.describe("cash delivery happy path", () => {
 
 		// ── Step 5: Assign volunteer, then record cash payment ───
 		await assignVolunteer(page);
-		await page.locator("input[data-bind-paymentamount]").fill("40");
+		await page.locator("input[data-bind\\:paymentamount]").fill("40");
 		await page.locator("button", { hasText: "Record Payment" }).click();
 		await expect(page.locator("#panel")).toContainText(
 			"Awaiting Reimbursement",
@@ -75,7 +75,7 @@ test.describe("cash delivery happy path", () => {
 		);
 
 		// ── Step 6: Record reimbursement ─────────────────────────
-		await page.locator("input[data-bind-expenseref]").fill("OC-12345");
+		await page.locator("input[data-bind\\:expenseref]").fill("OC-12345");
 		await page.locator("button", { hasText: "Record Reimbursement" }).click();
 		await expect(page.locator("#panel")).toContainText("Reimbursed", {
 			timeout: 10000,

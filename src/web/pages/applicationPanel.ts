@@ -83,7 +83,7 @@ function detailFields(app: ApplicationRow): string {
 
 function applicantLink(applicantId: string | null): string {
 	if (!applicantId) return "";
-	return `<button data-on-click="@get('/applicants/${encodeURIComponent(applicantId)}/edit')" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</button>`;
+	return `<button data-on:click="@get('/applicants/${encodeURIComponent(applicantId)}/edit')" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</button>`;
 }
 
 export function viewPanel(
@@ -96,7 +96,7 @@ export function viewPanel(
         <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Application")}</h2>
         ${applicantLink(applicantId)}
       </div>
-      <button class="btn btn-secondary" data-on-click="@get('/applications/close')">Close</button>
+      <button class="btn btn-secondary" data-on:click="@get('/applications/close')">Close</button>
     </div>
     <dl>
       ${detailFields(app)}
@@ -114,14 +114,14 @@ export function reviewPanel(
         <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Review Application")}</h2>
         ${applicantLink(applicantId)}
       </div>
-      <button class="btn btn-secondary" data-on-click="@get('/applications/close')">Close</button>
+      <button class="btn btn-secondary" data-on:click="@get('/applications/close')">Close</button>
     </div>
     <dl>
       ${detailFields(app)}
     </dl>
     <div class="flex gap-3 mt-6">
-      <button class="btn btn-primary" data-on-click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
-      <button class="btn btn-danger" data-on-click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
+      <button class="btn btn-primary" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
+      <button class="btn btn-danger" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
     </div>
   `);
 }

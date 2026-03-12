@@ -132,7 +132,7 @@ export async function submitApplication(
 
 /** Assign the "Test" volunteer to the currently open grant panel */
 export async function assignVolunteer(page: Page): Promise<void> {
-	const select = page.locator("select[data-bind-assignvolunteerid]");
+	const select = page.locator("select[data-bind\\:assignvolunteerid]");
 	await expect(select).toBeVisible({ timeout: 5000 });
 	await select.selectOption({ label: "Test" });
 	await page.locator("#panel button", { hasText: "Assign" }).click();
@@ -156,9 +156,9 @@ export async function runLotteryDraw(
 	page: Page,
 	opts: { balance: number; reserve?: number; grantAmount?: number },
 ): Promise<void> {
-	const balanceInput = page.locator("input[data-bind-availablebalance]");
-	const reserveInput = page.locator("input[data-bind-reserve]");
-	const grantInput = page.locator("input[data-bind-grantamount]");
+	const balanceInput = page.locator("input[data-bind\\:availablebalance]");
+	const reserveInput = page.locator("input[data-bind\\:reserve]");
+	const grantInput = page.locator("input[data-bind\\:grantamount]");
 	await balanceInput.fill(String(opts.balance));
 	await reserveInput.fill(String(opts.reserve ?? 0));
 	await grantInput.fill(String(opts.grantAmount ?? 40));

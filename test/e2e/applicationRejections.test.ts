@@ -124,8 +124,8 @@ test.describe("application rejections & edge cases", () => {
 		await page.goto("/applicants");
 		await page.locator("button", { hasText: "Add Applicant" }).click();
 		await page.locator("#panel h2", { hasText: "New Applicant" }).waitFor();
-		await page.locator("input[data-bind-name]").fill("Known Admin");
-		await page.locator("input[data-bind-phone]").fill("07700900005");
+		await page.locator("input[data-bind\\:name]").fill("Known Admin");
+		await page.locator("input[data-bind\\:phone]").fill("07700900005");
 		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
 		await expect(page.locator("#applicant-rows")).toContainText("Known Admin", {
 			timeout: 5000,

@@ -79,7 +79,7 @@ test.describe("bank transfer grant payment path", () => {
 		});
 
 		// Record bank payment
-		await page.locator("input[data-bind-paymentamount]").fill("40");
+		await page.locator("input[data-bind\\:paymentamount]").fill("40");
 		await page.locator("button", { hasText: "Record Payment" }).click();
 		await expect(page.locator("#panel")).toContainText("Paid", {
 			timeout: 10000,
@@ -115,7 +115,7 @@ test.describe("bank transfer grant payment path", () => {
 		});
 
 		// Record bank payment
-		await page.locator("input[data-bind-paymentamount]").fill("40");
+		await page.locator("input[data-bind\\:paymentamount]").fill("40");
 		await page.locator("button", { hasText: "Record Payment" }).click();
 		await expect(page.locator("#panel")).toContainText("Paid", {
 			timeout: 10000,
@@ -192,7 +192,7 @@ test.describe("bank transfer grant payment path", () => {
 
 		// Assign volunteer, then record cash payment
 		await assignVolunteer(page);
-		await page.locator("input[data-bind-paymentamount]").fill("40");
+		await page.locator("input[data-bind\\:paymentamount]").fill("40");
 		await page.locator("button", { hasText: "Record Payment" }).click();
 		await expect(page.locator("#panel")).toContainText(
 			"Awaiting Reimbursement",
@@ -200,7 +200,7 @@ test.describe("bank transfer grant payment path", () => {
 		);
 
 		// Record reimbursement
-		await page.locator("input[data-bind-expenseref]").fill("OC-CASH-ALT");
+		await page.locator("input[data-bind\\:expenseref]").fill("OC-CASH-ALT");
 		await page.locator("button", { hasText: "Record Reimbursement" }).click();
 		await expect(page.locator("#panel")).toContainText("Reimbursed", {
 			timeout: 10000,

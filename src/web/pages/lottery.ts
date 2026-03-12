@@ -30,24 +30,24 @@ function actionSection(month: string, status: LotteryStatus): string {
 	switch (status) {
 		case "initial":
 			return `<p class="text-bark-muted mb-4">No window open for ${escapeHtml(month)}.</p>
-				<button class="btn btn-primary" data-on-click="@post('/lottery/open')">Open Applications</button>`;
+				<button class="btn btn-primary" data-on:click="@post('/lottery/open')">Open Applications</button>`;
 		case "open":
 			return `<p class="text-bark-muted mb-4">Applications open for ${escapeHtml(month)}.</p>
-				<button class="btn btn-primary" data-on-click="@post('/lottery/close')">Close Applications</button>`;
+				<button class="btn btn-primary" data-on:click="@post('/lottery/close')">Close Applications</button>`;
 		case "windowClosed":
 			return `<p class="text-bark-muted mb-4">Window closed for ${escapeHtml(month)}. Ready to draw.</p>
-				<form data-on-submit="@post('/lottery/draw')" class="space-y-4 max-w-sm">
+				<form data-on:submit="@post('/lottery/draw')" class="space-y-4 max-w-sm">
 					<div>
 						<label class="label" for="availableBalance">Available Balance</label>
-						<input id="availableBalance" name="availableBalance" type="number" step="0.01" min="0" required class="input" data-bind-availablebalance />
+						<input id="availableBalance" name="availableBalance" type="number" step="0.01" min="0" required class="input" data-bind:availablebalance />
 					</div>
 					<div>
 						<label class="label" for="reserve">Reserve</label>
-						<input id="reserve" name="reserve" type="number" step="0.01" min="0" required class="input" data-bind-reserve />
+						<input id="reserve" name="reserve" type="number" step="0.01" min="0" required class="input" data-bind:reserve />
 					</div>
 					<div>
 						<label class="label" for="grantAmount">Grant Amount</label>
-						<input id="grantAmount" name="grantAmount" type="number" step="0.01" min="0.01" required class="input" data-bind-grantamount />
+						<input id="grantAmount" name="grantAmount" type="number" step="0.01" min="0.01" required class="input" data-bind:grantamount />
 					</div>
 					<button type="submit" class="btn btn-primary">Run Draw</button>
 				</form>`;
