@@ -198,6 +198,15 @@ describe("describeEvent", () => {
     expect(result).toContain("&lt;script&gt;");
   });
 
+  it("escapes HTML in reason field", () => {
+    const result = describeEvent("ApplicationRejected", {
+      applicationId: "abcdef1234567890",
+      reason: '<script>alert("xss")</script>',
+    });
+    expect(result).not.toContain("<script>");
+    expect(result).toContain("&lt;script&gt;");
+  });
+
   it("handles missing fields gracefully (no crash)", () => {
     expect(() => describeEvent("ApplicationSubmitted", {})).not.toThrow();
     expect(() => describeEvent("ApplicationRejected", {})).not.toThrow();
