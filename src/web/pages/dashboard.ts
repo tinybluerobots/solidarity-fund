@@ -21,7 +21,7 @@ export function dashboardPage(volunteer: Volunteer): string {
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			${navCard("/applicants", "\u{1F465}", "Applicants", "View and manage applicants")}
-			${navCard("/applications", "\u{1F4CB}", "Applications", "Review incoming applications")}
+			${navCard("/applications", "\u{1F4DD}", "Applications", "Review incoming applications")}
 			${navCard("/grants", "\u{1F4B7}", "Grants", "Track grant payments")}
 			${navCard("/lottery", "\u{1F3B2}", "Lottery", "Run monthly draws")}
 			${volunteer.isAdmin ? navCard("/volunteers", "\u{1F9D1}\u{200D}\u{1F91D}\u{200D}\u{1F9D1}", "Volunteers", "Manage volunteer accounts") : ""}
