@@ -26,9 +26,9 @@ import {
 	handleLogout,
 } from "./routes/auth.ts";
 import { createGrantRoutes } from "./routes/grants.ts";
+import { createLogsRoutes } from "./routes/logs.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
 import { createStatusRoutes } from "./routes/status.ts";
-import { createLogsRoutes } from "./routes/logs.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -263,6 +263,15 @@ export async function startServer(
 					return changePasswordHandler(req, volunteer.id);
 				},
 			},
+			"/logs": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return logsRoutes.list(req);
+				},
+			},
 			"/volunteers": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
@@ -364,12 +373,7 @@ export async function startServer(
 			if (!volunteer)
 				return withSecurityHeaders(Response.redirect("/login", 302));
 
-			if (url.pathname === "/logs" && req.method === "GET") {
-			if (!volunteer.isAdmin) return withSecurityHeaders(new Response("Forbidden", { status: 403 }));
-			return withSecurityHeaders(await logsRoutes.list(req));
-		}
-
-		if (url.pathname === "/volunteers" && req.method === "POST") {
+			if (url.pathname === "/volunteers" && req.method === "POST") {
 				if (!volunteer.isAdmin)
 					return new Response("Forbidden", { status: 403 });
 				return volunteerRoutes.handleCreate(req, volunteer.id);
