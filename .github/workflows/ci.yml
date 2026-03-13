@@ -27,6 +27,7 @@ jobs:
         run: bun src/web/index.ts &
         env:
           ALTCHA_HMAC_KEY: test-hmac-key
+          ADMIN_PASSWORD: test-admin-password
       - name: Wait for server
         run: |
           for i in $(seq 1 30); do
