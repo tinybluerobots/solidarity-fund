@@ -28,6 +28,7 @@ import {
 import { createGrantRoutes } from "./routes/grants.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
 import { createStatusRoutes } from "./routes/status.ts";
+import { createLogsRoutes } from "./routes/logs.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -145,6 +146,7 @@ export async function startServer(
 		eventStore,
 		credentialsStore,
 	);
+	const logsRoutes = createLogsRoutes(pool);
 	const applicationRoutes = createApplicationRoutes(
 		appRepo,
 		applicantRepo,
@@ -362,7 +364,12 @@ export async function startServer(
 			if (!volunteer)
 				return withSecurityHeaders(Response.redirect("/login", 302));
 
-			if (url.pathname === "/volunteers" && req.method === "POST") {
+			if (url.pathname === "/logs" && req.method === "GET") {
+			if (!volunteer.isAdmin) return withSecurityHeaders(new Response("Forbidden", { status: 403 }));
+			return withSecurityHeaders(await logsRoutes.list(req));
+		}
+
+		if (url.pathname === "/volunteers" && req.method === "POST") {
 				if (!volunteer.isAdmin)
 					return new Response("Forbidden", { status: 403 });
 				return volunteerRoutes.handleCreate(req, volunteer.id);
