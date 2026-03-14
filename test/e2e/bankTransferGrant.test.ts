@@ -137,13 +137,10 @@ test.describe("bank transfer grant payment path", () => {
 			await expect(page.locator("#panel")).toContainText("Awaiting Review", {
 				timeout: 10000,
 			});
-			await page.locator("#panel button", { hasText: "Reject POA" }).click();
-
-			if (attempt < 3) {
-				await expect(page.locator("#panel")).toContainText("Awaiting Review", {
-					timeout: 10000,
-				});
-			}
+			await Promise.all([
+				page.waitForResponse((resp) => resp.url().includes("reject-poa")),
+				page.locator("#panel button", { hasText: "Reject POA" }).click(),
+			]);
 		}
 
 		// After 3rd rejection, should offer cash alternative
@@ -168,12 +165,10 @@ test.describe("bank transfer grant payment path", () => {
 			await expect(page.locator("#panel")).toContainText("Awaiting Review", {
 				timeout: 10000,
 			});
-			await page.locator("#panel button", { hasText: "Reject POA" }).click();
-			if (attempt < 3) {
-				await expect(page.locator("#panel")).toContainText("Awaiting Review", {
-					timeout: 10000,
-				});
-			}
+			await Promise.all([
+				page.waitForResponse((resp) => resp.url().includes("reject-poa")),
+				page.locator("#panel button", { hasText: "Reject POA" }).click(),
+			]);
 		}
 
 		await expect(page.locator("#panel")).toContainText(
@@ -221,12 +216,10 @@ test.describe("bank transfer grant payment path", () => {
 			await expect(page.locator("#panel")).toContainText("Awaiting Review", {
 				timeout: 10000,
 			});
-			await page.locator("#panel button", { hasText: "Reject POA" }).click();
-			if (attempt < 3) {
-				await expect(page.locator("#panel")).toContainText("Awaiting Review", {
-					timeout: 10000,
-				});
-			}
+			await Promise.all([
+				page.waitForResponse((resp) => resp.url().includes("reject-poa")),
+				page.locator("#panel button", { hasText: "Reject POA" }).click(),
+			]);
 		}
 
 		await expect(page.locator("#panel")).toContainText(

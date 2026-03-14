@@ -142,7 +142,7 @@ function decideRejectPoA(
 		},
 	];
 
-	if (attempt >= 1) {
+	if (attempt >= 2) {
 		events.push({
 			type: "CashAlternativeOffered",
 			data: {

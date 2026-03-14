@@ -129,7 +129,7 @@ describe("grant decider", () => {
 			);
 		});
 
-		it("emits CashAlternativeOffered on second rejection (poaAttempts = 1)", () => {
+		it("does NOT emit CashAlternativeOffered on second rejection (poaAttempts = 1)", () => {
 			const stateWith1Attempt: GrantState = {
 				...awaitingReviewState,
 				poaAttempts: 1,
@@ -147,9 +147,11 @@ describe("grant decider", () => {
 				stateWith1Attempt,
 			);
 
-			expect(events).toHaveLength(2);
+			expect(events).toHaveLength(1);
 			expect(events[0]?.type).toBe("ProofOfAddressRejected");
-			expect(events[1]?.type).toBe("CashAlternativeOffered");
+			expect(events.some((e) => e.type === "CashAlternativeOffered")).toBe(
+				false,
+			);
 		});
 
 		it("emits CashAlternativeOffered on third rejection (poaAttempts = 2)", () => {

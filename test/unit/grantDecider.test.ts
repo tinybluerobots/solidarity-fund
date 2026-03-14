@@ -283,8 +283,14 @@ describe("RejectProofOfAddress", () => {
 		expect(events[0]!.type).toBe("ProofOfAddressRejected");
 	});
 
-	test("attempt 2 (poaAttempts=1) → ProofOfAddressRejected + CashAlternativeOffered", () => {
+	test("attempt 2 (poaAttempts=1) → ProofOfAddressRejected only", () => {
 		const events = decide(rejectCmd, awaitingReview(1));
+		expect(events).toHaveLength(1);
+		expect(events[0]!.type).toBe("ProofOfAddressRejected");
+	});
+
+	test("attempt 3 (poaAttempts=2) → ProofOfAddressRejected + CashAlternativeOffered", () => {
+		const events = decide(rejectCmd, awaitingReview(2));
 		expect(events).toHaveLength(2);
 		expect(events[0]!.type).toBe("ProofOfAddressRejected");
 		expect(events[1]!.type).toBe("CashAlternativeOffered");
