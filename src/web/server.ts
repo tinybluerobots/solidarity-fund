@@ -62,7 +62,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 	"X-Frame-Options": "SAMEORIGIN",
 	"Referrer-Policy": "strict-origin-when-cross-origin",
 	"Content-Security-Policy":
-		"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'",
+		"default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'",
 };
 
 function withSecurityHeaders(res: Response): Response {
