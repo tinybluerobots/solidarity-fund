@@ -3,6 +3,7 @@ import { createVolunteer } from "../domain/volunteer/commandHandlers.ts";
 import { SQLiteApplicantRepository } from "../infrastructure/applicant/sqliteApplicantRepository.ts";
 import { createEventStore } from "../infrastructure/eventStore.ts";
 import { SQLiteSessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
+import { SQLiteVolunteerCredentialsStore } from "../infrastructure/volunteer/sqliteVolunteerCredentialsStore.ts";
 import { SQLiteVolunteerRepository } from "../infrastructure/volunteer/sqliteVolunteerRepository.ts";
 import { startServer } from "./server.ts";
 
@@ -14,6 +15,7 @@ const { store: eventStore, pool } = createEventStore(dbPath);
 const sessionStore = await SQLiteSessionStore(pool);
 const volunteerRepo = await SQLiteVolunteerRepository(pool);
 const applicantRepo = await SQLiteApplicantRepository(pool);
+const credentialsStore = await SQLiteVolunteerCredentialsStore(pool);
 
 const admins = await volunteerRepo.getAdmins();
 if (admins.length === 0) {
@@ -26,6 +28,7 @@ if (admins.length === 0) {
 	await createVolunteer(
 		{ name: "admin", password: adminPassword, isAdmin: true },
 		eventStore,
+		credentialsStore,
 	);
 	console.log("No admin found — created default account (name: admin).");
 }
