@@ -1,5 +1,10 @@
 node_modules
 *.db
+*.db-wal
+*.db-shm
 test-results
 playwright-report
 .git
+docs
+.remember
+install.sh

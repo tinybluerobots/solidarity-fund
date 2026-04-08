@@ -1,0 +1,15 @@
+services:
+  csf:
+    image: ghcr.io/tinybluerobots/solidarity-fund:latest
+    container_name: csf
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:3000"
+    volumes:
+      - ${DATA_DIR:-/var/lib/csf}:/var/lib/csf
+    environment:
+      - DB_PATH=/var/lib/csf/csf.db
+      - FUND_NAME=${FUND_NAME:-Community Solidarity Fund}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      - ALTCHA_HMAC_KEY=${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
+      - NODE_ENV=production

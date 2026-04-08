@@ -74,6 +74,49 @@ bun install
 bun test
 ```
 
+## Deploying
+
+Requires a VPS with SSH access. Docker and dependencies are installed automatically.
+
+### First install
+
+```sh
+./install.sh root@your-server
+```
+
+Secrets (`ADMIN_PASSWORD`, `ALTCHA_HMAC_KEY`) are auto-generated and saved to `/var/lib/csf/.env` on the server. **Save them** — they're only printed once.
+
+### Upgrading
+
+Push to `main` — the CI pipeline builds and publishes a new Docker image to GHCR. Then:
+
+```sh
+./install.sh root@your-server
+```
+
+It pulls the latest image and restarts the container. Existing secrets and database are preserved.
+
+### Override defaults
+
+```sh
+PORT=443 FUND_NAME="Mutual Aid Fund" ./install.sh root@your-server
+```
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `APP_NAME` | `csf` | Container and directory name |
+| `DATA_DIR` | `/var/lib/$APP_NAME` | Persistent data (DB, .env) |
+| `PORT` | `80` | Host port (container listens on 3000) |
+| `FUND_NAME` | `Community Solidarity Fund` | Displayed in the UI |
+| `ADMIN_PASSWORD` | auto-generated | Only used on first boot if no admin exists |
+| `ALTCHA_HMAC_KEY` | auto-generated | Required every boot — preserved across upgrades |
+
+### What lives where
+
+- **`/var/lib/csf/csf.db`** — SQLite database (bind-mounted, survives upgrades)
+- **`/var/lib/csf/.env`** — Secrets and config (preserved across upgrades)
+- **`/var/lib/csf/docker-compose.yml`** — Compose file (overwritten each deploy)
+
 ## Docs
 
 - [Full workflow and state machines](docs/workflow.md)
