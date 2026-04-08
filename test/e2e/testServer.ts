@@ -30,6 +30,7 @@ const server = await startServer(
 	applicantRepo,
 	eventStore,
 	pool,
+	":memory:",
 	port,
 );
 
