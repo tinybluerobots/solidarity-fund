@@ -114,6 +114,7 @@ export async function startServer(
 	applicantRepo: ApplicantRepository,
 	eventStore: SQLiteEventStore,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
+	dbPath: string,
 	port = 3000,
 ) {
 	startCleanupTimer(sessionStore);

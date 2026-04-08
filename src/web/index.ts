@@ -33,12 +33,15 @@ if (admins.length === 0) {
 	console.log("No admin found — created default account (name: admin).");
 }
 
+const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 const server = await startServer(
 	sessionStore,
 	volunteerRepo,
 	applicantRepo,
 	eventStore,
 	pool,
+	dbPath,
+	port,
 );
 
 console.log(`${fundName} server running at http://localhost:${server.port}`);
