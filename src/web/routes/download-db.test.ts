@@ -1,28 +1,36 @@
-import { describe, expect, it } from "bun:test";
+import { Database } from "bun:sqlite";
+import { afterAll, describe, expect, it } from "bun:test";
 import { dbDownloadResponse } from "./download-db.ts";
 
-describe("dbDownloadResponse", () => {
-	it("returns response with correct headers", async () => {
-		const tmpPath = `/tmp/test-download-${Date.now()}.db`;
-		await Bun.write(tmpPath, "fake-sqlite-data");
+const testDbPath = `/tmp/test-download-${Date.now()}.db`;
+const db = new Database(testDbPath);
+db.run("CREATE TABLE test (id INTEGER)");
+db.run("INSERT INTO test VALUES (1)");
+db.close();
 
-		const response = await dbDownloadResponse(tmpPath);
+afterAll(async () => {
+	await Bun.$`rm -f ${testDbPath}`;
+});
+
+describe("dbDownloadResponse", () => {
+	it("returns response with correct headers and valid sqlite data", () => {
+		const response = dbDownloadResponse(testDbPath);
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get("Content-Type")).toBe("application/x-sqlite3");
 		expect(response.headers.get("Content-Disposition")).toMatch(
 			/^attachment; filename="solidarity-fund-\d{4}-\d{2}-\d{2}\.sqlite"$/,
 		);
-
-		const body = await response.text();
-		expect(body).toBe("fake-sqlite-data");
-
-		const { unlinkSync } = await import("node:fs");
-		unlinkSync(tmpPath);
 	});
 
-	it("returns 500 if file does not exist", async () => {
-		const response = await dbDownloadResponse("/tmp/nonexistent.db");
-		expect(response.status).toBe(500);
+	it("returns a valid sqlite file", async () => {
+		const response = dbDownloadResponse(testDbPath);
+		const body = await response.arrayBuffer();
+		const header = new TextDecoder().decode(new Uint8Array(body).slice(0, 15));
+		expect(header).toBe("SQLite format 3");
+	});
+
+	it("throws if file does not exist", () => {
+		expect(() => dbDownloadResponse("/tmp/nonexistent.db")).toThrow();
 	});
 });
