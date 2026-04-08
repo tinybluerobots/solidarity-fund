@@ -25,6 +25,7 @@ import {
 	handleLogin,
 	handleLogout,
 } from "./routes/auth.ts";
+import { dbDownloadResponse } from "./routes/download-db.ts";
 import { createGrantRoutes } from "./routes/grants.ts";
 import { createLogsRoutes } from "./routes/logs.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
@@ -271,6 +272,15 @@ export async function startServer(
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return logsRoutes.list(req);
+				},
+			},
+			"/download-db": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return dbDownloadResponse(dbPath);
 				},
 			},
 			"/volunteers": {
