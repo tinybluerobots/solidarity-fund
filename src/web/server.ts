@@ -4,6 +4,7 @@ import type {
 } from "@event-driven-io/emmett-sqlite";
 import type { ApplicantRepository } from "../domain/applicant/repository.ts";
 import type { VolunteerRepository } from "../domain/volunteer/repository.ts";
+import type { Volunteer } from "../domain/volunteer/types.ts";
 import { SQLiteApplicationRepository } from "../infrastructure/application/sqliteApplicationRepository.ts";
 import { getSessionId } from "../infrastructure/auth/cookie.ts";
 import { SQLiteGrantRepository } from "../infrastructure/grant/sqliteGrantRepository.ts";
@@ -107,6 +108,12 @@ export async function getAuthenticatedVolunteer(
 	const volunteerId = await sessionStore.get(sid);
 	if (!volunteerId) return null;
 	return volunteerRepo.getById(volunteerId);
+}
+
+export function requirePasswordChange(volunteer: Volunteer): Response | null {
+	if (volunteer.requiresPasswordReset)
+		return Response.redirect("/change-password", 302);
+	return null;
 }
 
 export async function startServer(
@@ -232,6 +239,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return new Response(dashboardPage(volunteer), {
 						headers: { "Content-Type": "text/html" },
 					});
@@ -269,6 +278,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return logsRoutes.list(req);
@@ -278,6 +289,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return dbDownloadResponse(dbPath);
@@ -287,6 +300,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return volunteerRoutes.list();
@@ -296,6 +311,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return volunteerRoutes.create();
@@ -305,6 +322,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return volunteerRoutes.closePanel();
@@ -314,6 +333,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					const url = new URL(req.url);
 					return grantRoutes.list(url.searchParams.get("month") ?? undefined);
 				},
@@ -322,6 +343,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return grantRoutes.closePanel();
 				},
 			},
@@ -329,6 +352,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					const url = new URL(req.url);
 					const status = url.searchParams.get("status") ?? undefined;
 					const payment = url.searchParams.get("payment") ?? undefined;
@@ -346,6 +371,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return applicationRoutes.closePanel();
 				},
 			},
@@ -353,6 +380,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return lotteryRoutes.show();
 				},
 			},
@@ -360,6 +389,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return applicantRoutes.list();
 				},
 			},
@@ -367,6 +398,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return applicantRoutes.create();
 				},
 			},
@@ -374,6 +407,8 @@ export async function startServer(
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);
 					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
 					return applicantRoutes.closePanel();
 				},
 			},
@@ -383,6 +418,9 @@ export async function startServer(
 			const volunteer = await requireAuth(req);
 			if (!volunteer)
 				return withSecurityHeaders(Response.redirect("/login", 302));
+
+			const pwRedirect = requirePasswordChange(volunteer);
+			if (pwRedirect) return withSecurityHeaders(pwRedirect);
 
 			if (url.pathname === "/volunteers" && req.method === "POST") {
 				if (!volunteer.isAdmin)
