@@ -1,9 +1,0 @@
-http://:80 {
-	redir https://{host}{uri} permanent
-}
-
-:443 {
-	tls internal
-
-	reverse_proxy csf:3000
-}

@@ -3,6 +3,9 @@ services:
     image: ghcr.io/tinybluerobots/solidarity-fund:latest
     container_name: csf
     restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${PORT:-443}:443"
     volumes:
       - ${DATA_DIR:-/var/lib/csf}:/var/lib/csf
     environment:
@@ -10,22 +13,6 @@ services:
       - FUND_NAME=${FUND_NAME:-Community Solidarity Fund}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       - ALTCHA_HMAC_KEY=${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
+      - TLS_CERT=/var/lib/csf/certs/cert.pem
+      - TLS_KEY=/var/lib/csf/certs/key.pem
       - NODE_ENV=production
-
-  caddy:
-    image: caddy:2
-    container_name: caddy
-    restart: unless-stopped
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${PORT:-443}:443"
-    volumes:
-      - ${DATA_DIR:-/var/lib/csf}/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - csf
-
-volumes:
-  caddy_data:
-  caddy_config:

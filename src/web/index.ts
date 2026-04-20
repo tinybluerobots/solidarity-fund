@@ -34,6 +34,9 @@ if (admins.length === 0) {
 }
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+const httpPort = process.env.HTTP_PORT ? Number(process.env.HTTP_PORT) : 80;
+const tlsCert = process.env.TLS_CERT;
+const tlsKey = process.env.TLS_KEY;
 const server = await startServer(
 	sessionStore,
 	volunteerRepo,
@@ -42,6 +45,24 @@ const server = await startServer(
 	pool,
 	dbPath,
 	port,
+	tlsCert,
+	tlsKey,
 );
 
-console.log(`${fundName} server running at http://localhost:${server.port}`);
+if (tlsCert && tlsKey && httpPort) {
+	Bun.serve({
+		port: httpPort,
+		fetch(req) {
+			const url = new URL(req.url);
+			url.protocol = "https:";
+			url.port = String(port);
+			return Response.redirect(url.toString(), 301);
+		},
+	});
+	console.log(`HTTP→HTTPS redirect on port ${httpPort}`);
+}
+
+const scheme = tlsCert && tlsKey ? "https" : "http";
+console.log(
+	`${fundName} server running at ${scheme}://localhost:${server.port}`,
+);

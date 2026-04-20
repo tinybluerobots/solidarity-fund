@@ -9,6 +9,7 @@ shift || true
 APP_NAME="${APP_NAME:-csf}"
 DATA_DIR="${DATA_DIR:-/var/lib/$APP_NAME}"
 PORT="${PORT:-443}"
+HTTP_PORT="${HTTP_PORT:-80}"
 
 # Optional config
 FUND_NAME="${FUND_NAME:-Community Solidarity Fund}"
@@ -19,7 +20,6 @@ IMAGE="ghcr.io/tinybluerobots/solidarity-fund:latest"
 # ── Preserve existing config from remote .env ─────────────────────
 EXISTING_ENV=$(ssh "$SSH_TARGET" "cat '$ENV_FILE' 2>/dev/null" || true)
 if [ -n "$EXISTING_ENV" ]; then
-	# Use existing values as defaults (can still be overridden via env)
 	ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(echo "$EXISTING_ENV" | grep '^ADMIN_PASSWORD=' | sed 's/^ADMIN_PASSWORD=//' | tr -d "'")}"
 	ALTCHA_HMAC_KEY="${ALTCHA_HMAC_KEY:-$(echo "$EXISTING_ENV" | grep '^ALTCHA_HMAC_KEY=' | sed 's/^ALTCHA_HMAC_KEY=//' | tr -d "'")}"
 	FUND_NAME="${FUND_NAME:-$(echo "$EXISTING_ENV" | grep '^FUND_NAME=' | sed 's/^FUND_NAME=//' | tr -d "'")}"
@@ -44,6 +44,7 @@ ssh "$SSH_TARGET" "cat > '$ENV_FILE' && chmod 600 '$ENV_FILE'" <<EOF
 APP_NAME='${APP_NAME//\'/\'\\\'\'}'
 DATA_DIR='${DATA_DIR//\'/\'\\\'\'}'
 PORT='${PORT//\'/\'\\\'\'}'
+HTTP_PORT='${HTTP_PORT//\'/\'\\\'\'}'
 FUND_NAME='${FUND_NAME//\'/\'\\\'\'}'
 ADMIN_PASSWORD='${ADMIN_PASSWORD//\'/\'\\\'\'}'
 ALTCHA_HMAC_KEY='${ALTCHA_HMAC_KEY//\'/\'\\\'\'}'
@@ -51,9 +52,8 @@ IMAGE='${IMAGE//\'/\'\\\'\'}'
 NODE_ENV=production
 EOF
 
-# ── Copy compose file and Caddyfile ───────────────────────────────
+# ── Copy compose file ──────────────────────────────────────────────
 scp "$SCRIPT_DIR/docker-compose.yml" "$SSH_TARGET:$DATA_DIR/docker-compose.yml"
-scp "$SCRIPT_DIR/Caddyfile" "$SSH_TARGET:$DATA_DIR/Caddyfile"
 
 # ── Remote setup (reads config from env file) ──────────────────────
 ssh "$SSH_TARGET" "ENV_FILE='$ENV_FILE' bash" <<'REMOTE'
@@ -68,6 +68,19 @@ if ! command -v docker &>/dev/null; then
   systemctl enable --now docker
 fi
 
+# ── Self-signed TLS cert ─────────────────────────────────────────────
+CERT_DIR="$DATA_DIR/certs"
+mkdir -p "$CERT_DIR"
+if [ ! -f "$CERT_DIR/cert.pem" ]; then
+  HOST_IP="$(hostname -I | awk '{print $1}')"
+  echo "==> Generating self-signed TLS certificate for $HOST_IP..."
+  openssl req -x509 -newkey rsa:2048 -days 3650 -nodes \
+    -keyout "$CERT_DIR/key.pem" \
+    -out "$CERT_DIR/cert.pem" \
+    -subj "/CN=solidarity-fund" \
+    -addext "subjectAltName=IP:$HOST_IP"
+fi
+
 # ── Pull image ──────────────────────────────────────────────────────
 echo "==> Pulling $IMAGE..."
 docker pull "$IMAGE"
@@ -78,7 +91,7 @@ docker compose down 2>/dev/null || true
 docker compose up -d
 
 echo ""
-echo "==> $APP_NAME is running on port $PORT"
+echo "==> $APP_NAME is running on port $PORT (HTTPS) with redirect from $HTTP_PORT (HTTP)"
 docker compose ps
 
 echo ""

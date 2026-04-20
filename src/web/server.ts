@@ -124,6 +124,8 @@ export async function startServer(
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 	dbPath: string,
 	port = 3000,
+	tlsCert?: string,
+	tlsKey?: string,
 ) {
 	startCleanupTimer(sessionStore);
 	const login = handleLogin(sessionStore, volunteerRepo);
@@ -185,6 +187,9 @@ export async function startServer(
 
 	return Bun.serve({
 		port,
+		...(tlsCert && tlsKey
+			? { tls: { cert: Bun.file(tlsCert), key: Bun.file(tlsKey) } }
+			: {}),
 		routes: secureRoutes({
 			"/apply": {
 				GET: () => applyRoutes.showForm(),
