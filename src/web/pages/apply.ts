@@ -35,7 +35,7 @@ export function applyPage(): string {
 		"Apply",
 		`<div class="w-full max-w-md">
 	<div class="card p-8">
-		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for Assistance</h1>
+		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for a grant of up to £40</h1>
 		<form action="/apply" method="POST" enctype="multipart/form-data" class="space-y-4">
 			<div>
 				<label for="name" class="block text-sm font-body text-bark mb-1">Name</label>
@@ -48,10 +48,6 @@ export function applyPage(): string {
 			<div>
 				<label for="email" class="block text-sm font-body text-bark mb-1">Email (optional)</label>
 				<input type="email" id="email" name="email" class="input" />
-			</div>
-			<div>
-				<label for="meetingPlace" class="block text-sm font-body text-bark mb-1">Meeting Place or Address</label>
-				<input type="text" id="meetingPlace" name="meetingPlace" required class="input" />
 			</div>
 			<fieldset>
 				<legend class="block text-sm font-body text-bark mb-2">Payment Preference</legend>
@@ -66,6 +62,12 @@ export function applyPage(): string {
 					</label>
 				</div>
 			</fieldset>
+			<div id="cashFields" class="space-y-4">
+				<div>
+					<label for="meetingPlace" class="block text-sm font-body text-bark mb-1">Meeting place or address</label>
+					<input type="text" id="meetingPlace" name="meetingPlace" class="input" />
+				</div>
+			</div>
 			<div id="bankFields" class="space-y-4" style="display:none;">
 				<div>
 					<label for="bankName" class="block text-sm font-body text-bark mb-1">Bank Name</label>
@@ -102,6 +104,8 @@ export function applyPage(): string {
 function toggleBank() {
 	var bank = document.querySelector('input[name="paymentPreference"][value="bank"]');
 	var isBank = bank.checked;
+	document.getElementById('cashFields').style.display = isBank ? 'none' : '';
+	document.getElementById('meetingPlace').required = !isBank;
 	document.getElementById('bankFields').style.display = isBank ? '' : 'none';
 	document.getElementById('sortCode').required = isBank;
 	document.getElementById('accountNumber').required = isBank;
