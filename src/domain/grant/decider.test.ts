@@ -201,9 +201,9 @@ describe("grant decider", () => {
 		});
 
 		it("transitions to offered_cash_alternative state after CashAlternativeOffered", () => {
-			const stateWith1Attempt: GrantState = {
+			const stateWith2Attempts: GrantState = {
 				...awaitingReviewState,
-				poaAttempts: 1,
+				poaAttempts: 2,
 			};
 			const events = decide(
 				{
@@ -215,12 +215,12 @@ describe("grant decider", () => {
 						rejectedAt: NOW,
 					},
 				},
-				stateWith1Attempt,
+				stateWith2Attempts,
 			);
 
 			const newState = events.reduce(
 				(s, e) => evolve(s, e),
-				stateWith1Attempt as GrantState,
+				stateWith2Attempts as GrantState,
 			);
 			expect(newState.status).toBe("offered_cash_alternative");
 		});
