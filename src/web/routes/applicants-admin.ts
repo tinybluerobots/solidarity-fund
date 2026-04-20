@@ -9,6 +9,10 @@ import type {
 	Applicant,
 	ApplicantEvent,
 } from "../../domain/applicant/types.ts";
+import {
+	isValidPhone,
+	normalizePhone,
+} from "../../domain/application/normalizePhone.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
 import {
 	type HistoryEntry,
@@ -160,11 +164,11 @@ function signalsToApplicantData(signals: Record<string, unknown>): {
 	const name = String(signals.name ?? "").trim();
 	const phone = String(signals.phone ?? "").trim();
 	if (!name || !phone) return null;
-	if (!/^\d+$/.test(phone)) return null;
+	if (!isValidPhone(phone)) return null;
 
 	return {
 		name,
-		phone,
+		phone: normalizePhone(phone),
 		email: String(signals.email ?? "").trim() || undefined,
 	};
 }

@@ -113,9 +113,9 @@ describe("createPanel", () => {
 		expect(html).toContain("/applicants");
 	});
 
-	test("phone input has numeric pattern", () => {
+	test("phone input allows flexible phone formats", () => {
 		const html = createPanel();
-		expect(html).toContain('pattern="[0-9]*"');
-		expect(html).toContain('inputmode="numeric"');
+		expect(html).toContain('type="tel"');
+		expect(html).toContain('inputmode="tel"');
 	});
 });

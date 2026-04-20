@@ -14,6 +14,10 @@ import type {
 	VolunteerEvent,
 } from "../../domain/volunteer/types.ts";
 import {
+	isValidPhone,
+	normalizePhone,
+} from "../../domain/application/normalizePhone.ts";
+import {
 	type VolunteerHistoryEntry,
 	volunteerHistoryPanel,
 } from "../pages/volunteerHistoryPanel.ts";
@@ -170,11 +174,11 @@ function signalsToVolunteerCreateData(signals: Record<string, unknown>): {
 	if (!name || !password) return null;
 
 	const phone = String(signals.phone ?? "").trim();
-	if (phone && !/^\d+$/.test(phone)) return null;
+	if (phone && !isValidPhone(phone)) return null;
 
 	return {
 		name,
-		phone: phone || undefined,
+		phone: phone ? normalizePhone(phone) : undefined,
 		email: String(signals.email ?? "").trim() || undefined,
 		password,
 		isAdmin: signals.isAdmin === true,
@@ -193,12 +197,12 @@ function signalsToVolunteerUpdateData(signals: Record<string, unknown>): {
 
 	const password = String(signals.password ?? "").trim() || undefined;
 	const phone = String(signals.phone ?? "").trim();
-	if (phone && !/^\d+$/.test(phone)) return null;
+	if (phone && !isValidPhone(phone)) return null;
 	const email = String(signals.email ?? "").trim();
 
 	return {
 		name,
-		phone: phone || null,
+		phone: phone ? normalizePhone(phone) : null,
 		email: email || null,
 		password,
 		isAdmin: signals.isAdmin === true,

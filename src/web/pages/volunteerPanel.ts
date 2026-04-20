@@ -43,7 +43,7 @@ function volunteerForm(opts: {
         </div>
         <div class="mb-4">
           <label class="label">Phone</label>
-          <input class="input" type="tel" data-bind:phone pattern="[0-9]*" inputmode="numeric" />
+          <input class="input" type="tel" data-bind:phone inputmode="tel" />
         </div>
         <div class="mb-4">
           <label class="label">Email</label>

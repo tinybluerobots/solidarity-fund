@@ -9,6 +9,10 @@ import { checkEligibility } from "../../domain/application/checkEligibility.ts";
 import type { ApplicationRepository } from "../../domain/application/repository.ts";
 import { submitApplication } from "../../domain/application/submitApplication.ts";
 import type { PaymentPreference } from "../../domain/application/types.ts";
+import {
+	isValidPhone,
+	normalizePhone,
+} from "../../domain/application/normalizePhone.ts";
 import type { DocumentStore } from "../../infrastructure/projections/documents.ts";
 import { applyClosedPage, applyPage, applyResultPage } from "../pages/apply.ts";
 
@@ -77,6 +81,14 @@ export function createApplyRoutes(
 				});
 			}
 
+			if (!isValidPhone(phone)) {
+				return new Response("Please enter a valid phone number", {
+					status: 400,
+				});
+			}
+
+			const normalizedPhone = normalizePhone(phone);
+
 			let sortCode = "";
 			let accountNumber = "";
 			if (paymentPref === "bank") {
@@ -143,13 +155,13 @@ export function createApplyRoutes(
 			const paymentPreference: PaymentPreference =
 				paymentPref === "bank" ? "bank" : "cash";
 			const monthCycle = currentMonthCycle();
-			const applicantId = toApplicantId(phone, name);
+			const applicantId = toApplicantId(normalizedPhone, name);
 			const eligibility = await checkEligibility(applicantId, monthCycle, pool);
 
 			const { events } = await submitApplication(
 				{
 					applicationId,
-					phone,
+					phone: normalizedPhone,
 					name,
 					email,
 					paymentPreference,

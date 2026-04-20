@@ -59,10 +59,10 @@ describe("applicant routes", () => {
 		expect(res.status).toBe(400);
 	});
 
-	test("handleCreate returns 400 when phone contains non-numeric characters", async () => {
+	test("handleCreate normalizes phone with dashes", async () => {
 		const req = signalsRequest({ name: "Charlie", phone: "077-009-00099" });
 		const res = await routes.handleCreate(req, "volunteer-1");
-		expect(res.status).toBe(400);
+		expect(res.status).toBe(200);
 	});
 
 	test("history returns empty for unknown applicant", async () => {
