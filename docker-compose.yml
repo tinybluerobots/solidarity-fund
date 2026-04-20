@@ -13,6 +13,8 @@ services:
       - FUND_NAME=${FUND_NAME:-Community Solidarity Fund}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       - ALTCHA_HMAC_KEY=${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
+      - PORT=443
+      - HTTP_PORT=80
       - TLS_CERT=/var/lib/csf/certs/cert.pem
       - TLS_KEY=/var/lib/csf/certs/key.pem
       - NODE_ENV=production
