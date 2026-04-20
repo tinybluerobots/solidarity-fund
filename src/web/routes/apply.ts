@@ -59,7 +59,8 @@ export function createApplyRoutes(
 			const name = String(formData.get("name") ?? "").trim();
 			const phone = String(formData.get("phone") ?? "").trim();
 			const email = String(formData.get("email") ?? "").trim() || undefined;
-			const meetingPlace = String(formData.get("meetingPlace") ?? "").trim();
+			const meetingPlace =
+				String(formData.get("meetingPlace") ?? "").trim() || undefined;
 			const paymentPref = String(formData.get("paymentPreference") ?? "cash");
 
 			const altcha = String(formData.get("altcha") ?? "");
@@ -71,8 +72,14 @@ export function createApplyRoutes(
 				return new Response("Bot verification failed", { status: 400 });
 			}
 
-			if (!name || !phone || !meetingPlace) {
-				return new Response("Name, phone, and meeting place are required", {
+			if (!name || !phone) {
+				return new Response("Name and phone are required", {
+					status: 400,
+				});
+			}
+
+			if (paymentPref === "cash" && !meetingPlace) {
+				return new Response("Meeting place is required for cash payments", {
 					status: 400,
 				});
 			}

@@ -17,7 +17,7 @@ export type ApplicationFormData = {
 	name: string;
 	email?: string;
 	paymentPreference: PaymentPreference;
-	meetingPlace: string;
+	meetingPlace?: string;
 	monthCycle: string;
 	eligibility: EligibilityResult;
 	bankDetails?: {
@@ -53,7 +53,9 @@ export async function submitApplication(
 				email: form.email,
 			},
 			paymentPreference: form.paymentPreference,
-			meetingDetails: { place: form.meetingPlace },
+			meetingDetails: form.meetingPlace
+				? { place: form.meetingPlace }
+				: undefined,
 			monthCycle: form.monthCycle,
 			identityResolution,
 			eligibility: form.eligibility,

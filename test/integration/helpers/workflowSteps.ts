@@ -35,7 +35,10 @@ export async function submitAcceptedApplication(
 			phone: opts.phone,
 			name: opts.name,
 			paymentPreference: opts.paymentPreference ?? "bank",
-			meetingPlace: opts.meetingPlace ?? "Mill Road",
+			meetingPlace:
+				opts.paymentPreference === "cash"
+					? (opts.meetingPlace ?? "Mill Road")
+					: opts.meetingPlace,
 			monthCycle: opts.monthCycle ?? "2026-03",
 			eligibility: { status: "eligible" },
 			bankDetails: opts.bankDetails,

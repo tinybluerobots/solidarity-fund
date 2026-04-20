@@ -44,8 +44,8 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 				case "ApplicationSubmitted":
 					await connection.command(
 						`INSERT OR IGNORE INTO applications
-						   (ref, id, applicant_id, month_cycle, status, payment_preference, name, phone, applied_at, sort_code, account_number, poa_ref)
-						 VALUES (?, ?, ?, ?, 'applied', ?, ?, ?, ?, ?, ?, ?)`,
+						   (ref, id, applicant_id, month_cycle, status, payment_preference, name, phone, applied_at, meeting_place, sort_code, account_number, poa_ref)
+						 VALUES (?, ?, ?, ?, 'applied', ?, ?, ?, ?, ?, ?, ?, ?)`,
 						[
 							data.applicationId.slice(0, 8),
 							data.applicationId,
@@ -55,6 +55,7 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 							data.identity.name,
 							data.identity.phone,
 							data.submittedAt,
+							data.meetingDetails?.place ?? null,
 							data.bankDetails?.sortCode ?? null,
 							data.bankDetails?.accountNumber ?? null,
 							data.bankDetails?.proofOfAddressRef ?? null,

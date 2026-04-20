@@ -1,4 +1,4 @@
-import { setFundName } from "../config.ts";
+import { setFundName, setGrantAmount } from "../config.ts";
 import { createVolunteer } from "../domain/volunteer/commandHandlers.ts";
 import { SQLiteApplicantRepository } from "../infrastructure/applicant/sqliteApplicantRepository.ts";
 import { createEventStore } from "../infrastructure/eventStore.ts";
@@ -10,6 +10,8 @@ import { startServer } from "./server.ts";
 const dbPath = process.env.DB_PATH ?? "csf.db";
 const fundName = process.env.FUND_NAME ?? "Community Solidarity Fund";
 setFundName(fundName);
+const grantAmount = process.env.GRANT_AMOUNT ?? "£40";
+setGrantAmount(grantAmount);
 
 const { store: eventStore, pool } = createEventStore(dbPath);
 const sessionStore = await SQLiteSessionStore(pool);

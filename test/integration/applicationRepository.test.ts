@@ -136,7 +136,6 @@ describe("SQLiteApplicationRepository", () => {
 					applicantId: "applicant-07700900002",
 					identity: { phone: "07700900002", name: "Bob" },
 					paymentPreference: "bank",
-					meetingDetails: { place: "Mill Road" },
 					monthCycle: "2026-03",
 					submittedAt: "2026-03-01T10:00:00Z",
 				},

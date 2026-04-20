@@ -1,4 +1,4 @@
-import { getFundName } from "../../config.ts";
+import { getFundName, getGrantAmount } from "../../config.ts";
 
 function publicLayout(title: string, body: string): string {
 	return `<!DOCTYPE html>
@@ -35,7 +35,7 @@ export function applyPage(): string {
 		"Apply",
 		`<div class="w-full max-w-md">
 	<div class="card p-8">
-		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for a grant of up to £40</h1>
+		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for a grant of up to ${escapeHtml(getGrantAmount())}</h1>
 		<form action="/apply" method="POST" enctype="multipart/form-data" class="space-y-4">
 			<div>
 				<label for="name" class="block text-sm font-body text-bark mb-1">Name</label>

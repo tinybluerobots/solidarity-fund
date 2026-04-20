@@ -114,7 +114,10 @@ export async function submitApplication(
 	> = {
 		name: opts.name,
 		phone: opts.phone,
-		meetingPlace: opts.meetingPlace ?? "Town Hall",
+		meetingPlace:
+			opts.paymentPreference === "bank"
+				? opts.meetingPlace
+				: (opts.meetingPlace ?? "Town Hall"),
 		paymentPreference: opts.paymentPreference ?? "cash",
 		altcha,
 	};

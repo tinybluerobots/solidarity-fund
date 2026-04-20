@@ -67,6 +67,11 @@ describe("viewPanel", () => {
 		expect(html).toContain("Mill Road");
 	});
 
+	test("omits meeting place when null", () => {
+		const html = viewPanel({ ...app, meetingPlace: null });
+		expect(html).not.toContain("Mill Road");
+	});
+
 	test("shows email when present", () => {
 		const html = viewPanel({ ...app, email: "alice@example.com" });
 		expect(html).toContain("alice@example.com");

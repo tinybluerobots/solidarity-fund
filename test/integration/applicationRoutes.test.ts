@@ -40,7 +40,6 @@ describe("application routes", () => {
 					applicantId: "applicant-1",
 					identity: { phone: "07700900001", name: "Alice" },
 					paymentPreference: "bank",
-					meetingDetails: { place: "Mill Road" },
 					monthCycle: "2026-03",
 					submittedAt: "2026-03-01T00:00:00Z",
 				},

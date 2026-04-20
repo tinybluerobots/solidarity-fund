@@ -39,7 +39,7 @@ export type SubmitApplication = Command<
 		applicationId: string;
 		identity: ApplicantIdentity;
 		paymentPreference: PaymentPreference;
-		meetingDetails: MeetingDetails;
+		meetingDetails?: MeetingDetails;
 		monthCycle: string;
 		identityResolution: IdentityResolution;
 		eligibility: EligibilityResult;
@@ -88,7 +88,7 @@ export type ApplicationSubmitted = Event<
 		applicantId: string;
 		identity: ApplicantIdentity;
 		paymentPreference: PaymentPreference;
-		meetingDetails: MeetingDetails;
+		meetingDetails?: MeetingDetails;
 		monthCycle: string;
 		submittedAt: string;
 		bankDetails?: BankDetails;

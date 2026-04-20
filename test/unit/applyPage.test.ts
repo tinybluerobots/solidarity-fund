@@ -17,6 +17,15 @@ describe("applyPage", () => {
 		expect(html).toContain('method="POST"');
 	});
 
+	test("meetingPlace input exists but is not required by default", () => {
+		const html = applyPage();
+		const meetingPlaceMatch = html.match(
+			/<input[^>]*name="meetingPlace"[^>]*>/,
+		);
+		expect(meetingPlaceMatch).not.toBeNull();
+		expect(meetingPlaceMatch![0]).not.toContain("required");
+	});
+
 	test("form uses multipart/form-data encoding", () => {
 		const html = applyPage();
 		expect(html).toContain('enctype="multipart/form-data"');

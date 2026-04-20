@@ -108,7 +108,6 @@ describe("apply routes", () => {
 			const form = new URLSearchParams({
 				name: "Alice",
 				phone: "07700900001",
-				meetingPlace: "Mill Road",
 				paymentPreference: "bank",
 				sortCode: "12-34-56",
 				accountNumber: "12345678",
@@ -158,6 +157,32 @@ describe("apply routes", () => {
 			expect(res.status).not.toBe(400);
 		});
 
+		test("bank payment does not require meeting place", async () => {
+			await env.eventStore.appendToStream("lottery-2026-03", [
+				{
+					type: "ApplicationWindowOpened",
+					data: { monthCycle: "2026-03", openedAt: "2026-03-01T00:00:00Z" },
+				},
+			]);
+			const altchaToken = await generateAltchaToken();
+			const form = new URLSearchParams({
+				name: "David",
+				phone: "07700900003",
+				paymentPreference: "bank",
+				sortCode: "12-34-56",
+				accountNumber: "12345678",
+			});
+			form.set("altcha", altchaToken);
+			const res = await routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: form.toString(),
+				}),
+			);
+			expect(res.status).not.toBe(400);
+		});
+
 		test("cash payment does not require bank fields", async () => {
 			const altchaToken = await generateAltchaToken();
 			const form = new URLSearchParams({
@@ -197,7 +222,6 @@ describe("apply routes", () => {
 			const formData = new FormData();
 			formData.set("name", "Alice");
 			formData.set("phone", "07700900050");
-			formData.set("meetingPlace", "Mill Road");
 			formData.set("paymentPreference", "bank");
 			formData.set("sortCode", "12-34-56");
 			formData.set("accountNumber", "12345678");
@@ -220,7 +244,6 @@ describe("apply routes", () => {
 			const formData = new FormData();
 			formData.set("name", "Charlie");
 			formData.set("phone", "07700900051");
-			formData.set("meetingPlace", "Mill Road");
 			formData.set("paymentPreference", "bank");
 			formData.set("sortCode", "12-34-56");
 			formData.set("accountNumber", "12345678");
