@@ -1,0 +1,5 @@
+:443 {
+	tls internal
+
+	reverse_proxy csf:3000
+}

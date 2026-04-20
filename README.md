@@ -106,7 +106,7 @@ PORT=443 FUND_NAME="Mutual Aid Fund" ./install.sh root@your-server
 |----------|---------|-------|
 | `APP_NAME` | `csf` | Container and directory name |
 | `DATA_DIR` | `/var/lib/$APP_NAME` | Persistent data (DB, .env) |
-| `PORT` | `80` | Host port (container listens on 3000) |
+| `PORT` | `443` | Host port (Caddy serves HTTPS) |
 | `FUND_NAME` | `Community Solidarity Fund` | Displayed in the UI |
 | `ADMIN_PASSWORD` | auto-generated | Only used on first boot if no admin exists |
 | `ALTCHA_HMAC_KEY` | auto-generated | Required every boot — preserved across upgrades |

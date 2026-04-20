@@ -8,7 +8,7 @@ shift || true
 # Defaults (override via env)
 APP_NAME="${APP_NAME:-csf}"
 DATA_DIR="${DATA_DIR:-/var/lib/$APP_NAME}"
-PORT="${PORT:-80}"
+PORT="${PORT:-443}"
 
 # Optional config
 FUND_NAME="${FUND_NAME:-Community Solidarity Fund}"
@@ -51,8 +51,9 @@ IMAGE='${IMAGE//\'/\'\\\'\'}'
 NODE_ENV=production
 EOF
 
-# ── Copy compose file ──────────────────────────────────────────────
+# ── Copy compose file and Caddyfile ───────────────────────────────
 scp "$SCRIPT_DIR/docker-compose.yml" "$SSH_TARGET:$DATA_DIR/docker-compose.yml"
+scp "$SCRIPT_DIR/Caddyfile" "$SSH_TARGET:$DATA_DIR/Caddyfile"
 
 # ── Remote setup (reads config from env file) ──────────────────────
 ssh "$SSH_TARGET" "ENV_FILE='$ENV_FILE' bash" <<'REMOTE'
