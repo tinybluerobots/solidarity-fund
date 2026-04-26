@@ -18,7 +18,7 @@ const volunteerRepo = await SQLiteVolunteerRepository(pool);
 const applicantRepo = await SQLiteApplicantRepository(pool);
 const credentialsStore = await SQLiteVolunteerCredentialsStore(pool);
 
-await startEventSubscriptions(eventStore, pool);
+startEventSubscriptions(eventStore, pool).catch(console.error);
 
 const admins = await volunteerRepo.getAdmins();
 if (admins.length === 0) {
