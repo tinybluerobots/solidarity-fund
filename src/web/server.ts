@@ -659,24 +659,27 @@ export async function startServer(
 				/^\/applicants\/([^/]+)\/history$/,
 			);
 			if (historyMatch?.[1] && req.method === "GET") {
-				return applicantRoutes.history(historyMatch[1]);
+				return applicantRoutes.history(decodeURIComponent(historyMatch[1]));
 			}
 
 			const editMatch = url.pathname.match(/^\/applicants\/([^/]+)\/edit$/);
 			if (editMatch?.[1] && req.method === "GET") {
-				return applicantRoutes.edit(editMatch[1]);
+				return applicantRoutes.edit(decodeURIComponent(editMatch[1]));
 			}
 
 			const applicantNotesMatch = url.pathname.match(
 				/^\/applicants\/([^/]+)\/notes$/,
 			);
 			if (applicantNotesMatch?.[1] && req.method === "POST") {
-				return applicantRoutes.handleUpdateNotes(applicantNotesMatch[1], req);
+				return applicantRoutes.handleUpdateNotes(
+					decodeURIComponent(applicantNotesMatch[1]),
+					req,
+				);
 			}
 
 			const idMatch = url.pathname.match(/^\/applicants\/([^/]+)$/);
 			if (idMatch?.[1]) {
-				const id = idMatch[1];
+				const id = decodeURIComponent(idMatch[1]);
 				if (req.method === "PUT") {
 					return applicantRoutes.handleUpdate(id, req, volunteer.id);
 				}

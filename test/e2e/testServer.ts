@@ -11,6 +11,8 @@ import { startServer } from "../../src/web/server.ts";
 
 const port = Number(process.env.TEST_PORT ?? 3001);
 
+process.env.ALTCHA_HMAC_KEY = process.env.ALTCHA_HMAC_KEY ?? "test-hmac-key";
+
 const { store: eventStore, pool } = createEventStore(":memory:");
 const sessionStore = await SQLiteSessionStore(pool);
 const volunteerRepo = await SQLiteVolunteerRepository(pool);
