@@ -5,6 +5,7 @@ import { createEventStore } from "../infrastructure/eventStore.ts";
 import { SQLiteSessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
 import { SQLiteVolunteerCredentialsStore } from "../infrastructure/volunteer/sqliteVolunteerCredentialsStore.ts";
 import { SQLiteVolunteerRepository } from "../infrastructure/volunteer/sqliteVolunteerRepository.ts";
+import { startEventSubscriptions } from "../subscriptions.ts";
 import { startServer } from "./server.ts";
 
 const dbPath = process.env.DB_PATH ?? "csf.db";
@@ -16,6 +17,8 @@ const sessionStore = await SQLiteSessionStore(pool);
 const volunteerRepo = await SQLiteVolunteerRepository(pool);
 const applicantRepo = await SQLiteApplicantRepository(pool);
 const credentialsStore = await SQLiteVolunteerCredentialsStore(pool);
+
+await startEventSubscriptions(eventStore, pool);
 
 const admins = await volunteerRepo.getAdmins();
 if (admins.length === 0) {

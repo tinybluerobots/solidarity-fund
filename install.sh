@@ -24,6 +24,11 @@ if [ -n "$EXISTING_ENV" ]; then
 	ALTCHA_HMAC_KEY="${ALTCHA_HMAC_KEY:-$(echo "$EXISTING_ENV" | grep '^ALTCHA_HMAC_KEY=' | sed 's/^ALTCHA_HMAC_KEY=//' | tr -d "'")}"
 	FUND_NAME="${FUND_NAME:-$(echo "$EXISTING_ENV" | grep '^FUND_NAME=' | sed 's/^FUND_NAME=//' | tr -d "'")}"
 	PORT="${PORT:-$(echo "$EXISTING_ENV" | grep '^PORT=' | sed 's/^PORT=//' | tr -d "'")}"
+	SMS_ENABLED="${SMS_ENABLED:-$(echo "$EXISTING_ENV" | grep '^SMS_ENABLED=' | sed 's/^SMS_ENABLED=//' | tr -d "'")}"
+	SMS_FROM_NAME="${SMS_FROM_NAME:-$(echo "$EXISTING_ENV" | grep '^SMS_FROM_NAME=' | sed 's/^SMS_FROM_NAME=//' | tr -d "'")}"
+	SMS_LOG_LEVEL="${SMS_LOG_LEVEL:-$(echo "$EXISTING_ENV" | grep '^SMS_LOG_LEVEL=' | sed 's/^SMS_LOG_LEVEL=//' | tr -d "'")}"
+	CLICKSEND_USERNAME="${CLICKSEND_USERNAME:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_USERNAME=' | sed 's/^CLICKSEND_USERNAME=//' | tr -d "'")}"
+	CLICKSEND_API_KEY="${CLICKSEND_API_KEY:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_API_KEY=' | sed 's/^CLICKSEND_API_KEY=//' | tr -d "'")}"
 fi
 
 # Auto-generate secrets if still not set (first install)
@@ -48,6 +53,11 @@ HTTP_PORT='${HTTP_PORT//\'/\'\\\'\'}'
 FUND_NAME='${FUND_NAME//\'/\'\\\'\'}'
 ADMIN_PASSWORD='${ADMIN_PASSWORD//\'/\'\\\'\'}'
 ALTCHA_HMAC_KEY='${ALTCHA_HMAC_KEY//\'/\'\\\'\'}'
+SMS_ENABLED='${SMS_ENABLED:-false//\'/\'\\\'\'}'
+SMS_FROM_NAME='${SMS_FROM_NAME:-CSF//\'/\'\\\'\'}'
+SMS_LOG_LEVEL='${SMS_LOG_LEVEL:-warn//\'/\'\\\'\'}'
+CLICKSEND_USERNAME='${CLICKSEND_USERNAME//\'/\'\\\'\'}'
+CLICKSEND_API_KEY='${CLICKSEND_API_KEY//\'/\'\\\'\'}'
 IMAGE='${IMAGE//\'/\'\\\'\'}'
 NODE_ENV=production
 EOF
