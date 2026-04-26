@@ -210,7 +210,7 @@ export async function startServer(
 			},
 			"/scripts/altcha.js": {
 				GET: async () => {
-					const file = Bun.file("node_modules/altcha/dist/altcha.js");
+					const file = Bun.file("node_modules/altcha/dist/main/altcha.js");
 					return new Response(file, {
 						headers: { "Content-Type": "application/javascript" },
 					});
