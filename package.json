@@ -8,20 +8,20 @@
 		"test:e2e": "bunx playwright test"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.6",
-		"@playwright/test": "^1.58.2",
-		"@types/bun": "latest"
+		"@biomejs/biome": "^2.4.13",
+		"@playwright/test": "^1.59.1",
+		"@types/bun": "^1.3.13"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"@event-driven-io/emmett": "^0.42.0",
 		"@event-driven-io/emmett-sqlite": "^0.42.0",
-		"@starfederation/datastar-sdk": "^1.0.0-RC.3",
-		"@tailwindcss/cli": "^4.2.1",
-		"altcha": "^2.3.0",
-		"altcha-lib": "^1.4.1",
-		"tailwindcss": "^4.2.1"
+		"@starfederation/datastar-sdk": "^1.0.0",
+		"@tailwindcss/cli": "^4.2.4",
+		"altcha": "^3.0.4",
+		"altcha-lib": "^2.0.3",
+		"tailwindcss": "^4.2.4"
 	}
 }
