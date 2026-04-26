@@ -30,9 +30,9 @@ describe("applyPage", () => {
 		expect(html).toContain("speed up");
 	});
 
-	test("does not include Datastar script", () => {
+	test("includes Datastar for payment preference toggle", () => {
 		const html = applyPage();
-		expect(html).not.toContain("datastar");
+		expect(html).toContain("datastar");
 	});
 
 	test("includes altcha widget", () => {

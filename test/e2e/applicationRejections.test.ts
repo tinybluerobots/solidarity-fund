@@ -284,4 +284,27 @@ test.describe("application rejections & edge cases", () => {
 		await expect(row).toContainText("Accepted", { timeout: 5000 });
 		await expect(row).toContainText("Bank", { timeout: 5000 });
 	});
+
+	test("form prevents cash submission without meetingPlace", async ({
+		serverInstance,
+		login,
+		page,
+	}) => {
+		void serverInstance;
+		await login(page);
+
+		await openLotteryWindow(page);
+		await page.goto("/apply");
+
+		await page.locator("#name").fill("NoPlace Person");
+		await page.locator("#phone").fill("07700900009");
+
+		const meetingPlace = page.locator("#meetingPlace");
+		await expect(meetingPlace).toHaveAttribute("required", "");
+
+		await page.locator('button[type="submit"]').click();
+
+		await expect(page).toHaveURL("/apply");
+		await expect(page.locator("text=Apply for Assistance")).toBeVisible();
+	});
 });
