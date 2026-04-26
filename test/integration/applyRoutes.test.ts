@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { createChallenge, solveChallenge } from "altcha-lib";
+import { createChallenge, solveChallenge } from "altcha-lib/v1";
 import { SQLiteApplicationRepository } from "../../src/infrastructure/application/sqliteApplicationRepository.ts";
 import { DocumentStore } from "../../src/infrastructure/projections/documents.ts";
 import { createApplyRoutes } from "../../src/web/routes/apply.ts";
@@ -175,6 +175,26 @@ describe("apply routes", () => {
 				}),
 			);
 			expect(res.status).not.toBe(400);
+		});
+
+		test("rejects cash payment without meetingPlace", async () => {
+			const altchaToken = await generateAltchaToken();
+			const form = new URLSearchParams({
+				name: "Alice",
+				phone: "07700900001",
+				paymentPreference: "cash",
+			});
+			form.set("altcha", altchaToken);
+
+			const res = await routes.handleSubmit(
+				new Request("http://localhost/apply", {
+					method: "POST",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: form.toString(),
+				}),
+			);
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("Meeting place");
 		});
 	});
 
