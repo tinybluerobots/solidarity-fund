@@ -1,4 +1,4 @@
-import { createChallenge } from "altcha-lib";
+import { createChallenge } from "altcha-lib/v1";
 
 export function createAltchaRoutes(hmacKey: string) {
 	return {

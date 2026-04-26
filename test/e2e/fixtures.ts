@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test as base, expect, type Page } from "@playwright/test";
-import { solveChallenge } from "altcha-lib";
+import { solveChallenge } from "altcha-lib/v1";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_URL = "http://localhost:3001";
