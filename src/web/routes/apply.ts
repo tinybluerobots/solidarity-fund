@@ -2,17 +2,17 @@ import type {
 	SQLiteConnectionPool,
 	SQLiteEventStore,
 } from "@event-driven-io/emmett-sqlite";
-import { verifySolution } from "altcha-lib";
+import { verifySolution } from "altcha-lib/v1";
 import type { ApplicantRepository } from "../../domain/applicant/repository.ts";
 import { toApplicantId } from "../../domain/application/applicantId.ts";
 import { checkEligibility } from "../../domain/application/checkEligibility.ts";
-import type { ApplicationRepository } from "../../domain/application/repository.ts";
-import { submitApplication } from "../../domain/application/submitApplication.ts";
-import type { PaymentPreference } from "../../domain/application/types.ts";
 import {
 	isValidPhone,
 	normalizePhone,
 } from "../../domain/application/normalizePhone.ts";
+import type { ApplicationRepository } from "../../domain/application/repository.ts";
+import { submitApplication } from "../../domain/application/submitApplication.ts";
+import type { PaymentPreference } from "../../domain/application/types.ts";
 import type { DocumentStore } from "../../infrastructure/projections/documents.ts";
 import { applyClosedPage, applyPage, applyResultPage } from "../pages/apply.ts";
 
@@ -63,7 +63,8 @@ export function createApplyRoutes(
 			const name = String(formData.get("name") ?? "").trim();
 			const phone = String(formData.get("phone") ?? "").trim();
 			const email = String(formData.get("email") ?? "").trim() || undefined;
-			const meetingPlace = String(formData.get("meetingPlace") ?? "").trim();
+			const meetingPlace =
+				String(formData.get("meetingPlace") ?? "").trim() || undefined;
 			const paymentPref = String(formData.get("paymentPreference") ?? "cash");
 
 			const altcha = String(formData.get("altcha") ?? "");
@@ -75,14 +76,20 @@ export function createApplyRoutes(
 				return new Response("Bot verification failed", { status: 400 });
 			}
 
-			if (!name || !phone || !meetingPlace) {
-				return new Response("Name, phone, and meeting place are required", {
+			if (!name || !phone) {
+				return new Response("Name and phone are required", {
 					status: 400,
 				});
 			}
 
 			if (!isValidPhone(phone)) {
 				return new Response("Please enter a valid phone number", {
+					status: 400,
+				});
+			}
+
+			if (paymentPref === "cash" && !meetingPlace) {
+				return new Response("Meeting place is required for cash applications", {
 					status: 400,
 				});
 			}
