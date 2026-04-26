@@ -305,6 +305,8 @@ test.describe("application rejections & edge cases", () => {
 		await page.locator('button[type="submit"]').click();
 
 		await expect(page).toHaveURL("/apply");
-		await expect(page.locator("text=Apply for a grant of up to £40")).toBeVisible();
+		await expect(
+			page.locator("text=Apply for a grant of up to £40"),
+		).toBeVisible();
 	});
 });

@@ -1,5 +1,9 @@
 import type { SQLiteEventStore } from "@event-driven-io/emmett-sqlite";
 import {
+	isValidPhone,
+	normalizePhone,
+} from "../../domain/application/normalizePhone.ts";
+import {
 	createVolunteer,
 	disableVolunteer,
 	enableVolunteer,
@@ -13,10 +17,6 @@ import type {
 	Volunteer,
 	VolunteerEvent,
 } from "../../domain/volunteer/types.ts";
-import {
-	isValidPhone,
-	normalizePhone,
-} from "../../domain/application/normalizePhone.ts";
 import {
 	type VolunteerHistoryEntry,
 	volunteerHistoryPanel,
