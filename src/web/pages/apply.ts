@@ -89,7 +89,7 @@ export function applyPage(): string {
 				</div>
 			</div>
 			<div>
-				<altcha-widget challengeurl="/api/altcha/challenge" hidefooter></altcha-widget>
+				<altcha-widget challenge="/api/altcha/challenge" hidefooter></altcha-widget>
 			</div>
 			<button type="submit" class="btn btn-primary w-full font-body">
 				Submit Application
