@@ -19,17 +19,17 @@ IMAGE="ghcr.io/tinybluerobots/solidarity-fund:latest"
 
 # ── Preserve existing config from remote .env ─────────────────────
 EXISTING_ENV=$(ssh "$SSH_TARGET" "cat '$ENV_FILE' 2>/dev/null" || true)
-if [ -n "$EXISTING_ENV" ]; then
-	ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(echo "$EXISTING_ENV" | grep '^ADMIN_PASSWORD=' | sed 's/^ADMIN_PASSWORD=//' | tr -d "'")}"
-	ALTCHA_HMAC_KEY="${ALTCHA_HMAC_KEY:-$(echo "$EXISTING_ENV" | grep '^ALTCHA_HMAC_KEY=' | sed 's/^ALTCHA_HMAC_KEY=//' | tr -d "'")}"
-	FUND_NAME="${FUND_NAME:-$(echo "$EXISTING_ENV" | grep '^FUND_NAME=' | sed 's/^FUND_NAME=//' | tr -d "'")}"
-	PORT="${PORT:-$(echo "$EXISTING_ENV" | grep '^PORT=' | sed 's/^PORT=//' | tr -d "'")}"
-	SMS_ENABLED="${SMS_ENABLED:-$(echo "$EXISTING_ENV" | grep '^SMS_ENABLED=' | sed 's/^SMS_ENABLED=//' | tr -d "'")}"
-	SMS_FROM_NAME="${SMS_FROM_NAME:-$(echo "$EXISTING_ENV" | grep '^SMS_FROM_NAME=' | sed 's/^SMS_FROM_NAME=//' | tr -d "'")}"
-	SMS_LOG_LEVEL="${SMS_LOG_LEVEL:-$(echo "$EXISTING_ENV" | grep '^SMS_LOG_LEVEL=' | sed 's/^SMS_LOG_LEVEL=//' | tr -d "'")}"
-	CLICKSEND_USERNAME="${CLICKSEND_USERNAME:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_USERNAME=' | sed 's/^CLICKSEND_USERNAME=//' | tr -d "'")}"
-	CLICKSEND_API_KEY="${CLICKSEND_API_KEY:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_API_KEY=' | sed 's/^CLICKSEND_API_KEY=//' | tr -d "'")}"
-fi
+	if [ -n "$EXISTING_ENV" ]; then
+		ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(echo "$EXISTING_ENV" | grep '^ADMIN_PASSWORD=' | sed 's/^ADMIN_PASSWORD=//' | tr -d "'" || true)}"
+		ALTCHA_HMAC_KEY="${ALTCHA_HMAC_KEY:-$(echo "$EXISTING_ENV" | grep '^ALTCHA_HMAC_KEY=' | sed 's/^ALTCHA_HMAC_KEY=//' | tr -d "'" || true)}"
+		FUND_NAME="${FUND_NAME:-$(echo "$EXISTING_ENV" | grep '^FUND_NAME=' | sed 's/^FUND_NAME=//' | tr -d "'" || true)}"
+		PORT="${PORT:-$(echo "$EXISTING_ENV" | grep '^PORT=' | sed 's/^PORT=//' | tr -d "'" || true)}"
+		SMS_ENABLED="${SMS_ENABLED:-$(echo "$EXISTING_ENV" | grep '^SMS_ENABLED=' | sed 's/^SMS_ENABLED=//' | tr -d "'" || true)}"
+		SMS_FROM_NAME="${SMS_FROM_NAME:-$(echo "$EXISTING_ENV" | grep '^SMS_FROM_NAME=' | sed 's/^SMS_FROM_NAME=//' | tr -d "'" || true)}"
+		SMS_LOG_LEVEL="${SMS_LOG_LEVEL:-$(echo "$EXISTING_ENV" | grep '^SMS_LOG_LEVEL=' | sed 's/^SMS_LOG_LEVEL=//' | tr -d "'" || true)}"
+		CLICKSEND_USERNAME="${CLICKSEND_USERNAME:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_USERNAME=' | sed 's/^CLICKSEND_USERNAME=//' | tr -d "'" || true)}"
+		CLICKSEND_API_KEY="${CLICKSEND_API_KEY:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_API_KEY=' | sed 's/^CLICKSEND_API_KEY=//' | tr -d "'" || true)}"
+	fi
 
 # Auto-generate secrets if still not set (first install)
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(openssl rand -base64 32)}"
@@ -44,6 +44,11 @@ else
 fi
 
 # ── Write env file to remote first ─────────────────────────────────
+# Set defaults for optional variables before escaping
+: "${SMS_ENABLED:=false}"
+: "${SMS_FROM_NAME:=CSF}"
+: "${SMS_LOG_LEVEL:=warn}"
+
 ssh "$SSH_TARGET" "mkdir -p '$DATA_DIR'"
 ssh "$SSH_TARGET" "cat > '$ENV_FILE' && chmod 600 '$ENV_FILE'" <<EOF
 APP_NAME='${APP_NAME//\'/\'\\\'\'}'
@@ -53,9 +58,9 @@ HTTP_PORT='${HTTP_PORT//\'/\'\\\'\'}'
 FUND_NAME='${FUND_NAME//\'/\'\\\'\'}'
 ADMIN_PASSWORD='${ADMIN_PASSWORD//\'/\'\\\'\'}'
 ALTCHA_HMAC_KEY='${ALTCHA_HMAC_KEY//\'/\'\\\'\'}'
-SMS_ENABLED='${SMS_ENABLED:-false//\'/\'\\\'\'}'
-SMS_FROM_NAME='${SMS_FROM_NAME:-CSF//\'/\'\\\'\'}'
-SMS_LOG_LEVEL='${SMS_LOG_LEVEL:-warn//\'/\'\\\'\'}'
+SMS_ENABLED='${SMS_ENABLED//\'/\'\\\'\'}'
+SMS_FROM_NAME='${SMS_FROM_NAME//\'/\'\\\'\'}'
+SMS_LOG_LEVEL='${SMS_LOG_LEVEL//\'/\'\\\'\'}'
 CLICKSEND_USERNAME='${CLICKSEND_USERNAME//\'/\'\\\'\'}'
 CLICKSEND_API_KEY='${CLICKSEND_API_KEY//\'/\'\\\'\'}'
 IMAGE='${IMAGE//\'/\'\\\'\'}'
