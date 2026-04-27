@@ -37,6 +37,13 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 				poa_ref TEXT
 			)
 		`);
+		try {
+			await connection.command(
+				"ALTER TABLE applications ADD COLUMN reviewed_by_volunteer_id TEXT",
+			);
+		} catch {
+			// Column already exists (added by CREATE TABLE IF NOT EXISTS above)
+		}
 	},
 
 	handle: async (events, { connection }) => {
