@@ -100,11 +100,7 @@ export function createApplicationRoutes(
 			const updated = await appRepo.getById(applicationId);
 			if (!updated) return new Response("Not found", { status: 404 });
 
-			const reviewedByName = await resolveReviewedBy(
-				updated,
-				eventStore,
-				volunteerRepo,
-			);
+			const reviewedByName = await resolveReviewedBy(updated, volunteerRepo);
 			const applications = await appRepo.listByMonth(app.monthCycle);
 			return sseResponse(
 				patchElements(viewPanel(updated, undefined, reviewedByName)),

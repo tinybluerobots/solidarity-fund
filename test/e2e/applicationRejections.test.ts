@@ -210,7 +210,7 @@ test.describe("application rejections & edge cases", () => {
 		await expect(
 			page.locator("#panel button", { hasText: "Confirm" }),
 		).not.toBeVisible({ timeout: 10000 });
-		await expect(page.locator("#panel")).toContainText("Accepted", {
+		await expect(page.locator("#panel")).toContainText("Confirmed", {
 			timeout: 5000,
 		});
 	});
