@@ -325,6 +325,33 @@ describe("application workflow", () => {
 			expect(confirmed!.applicant_id).toBe(submittedApplicantId);
 		});
 
+		test("volunteer confirms flagged with different name → creates new applicant record", async () => {
+			await submitFlagged();
+			await openWindow(env, "2026-06");
+
+			const submittedApplicantId = toApplicantId("07700900001", "Bob");
+			const eligibility = await checkEligibility(
+				submittedApplicantId,
+				"2026-06",
+				env.pool,
+			);
+
+			await reviewApplication(
+				"app-flagged",
+				"vol-1",
+				"confirm",
+				eligibility,
+				env.eventStore,
+				submittedApplicantId,
+			);
+
+			const applicants = await env.applicantRepo.list();
+			const bob = applicants.find((a) => a.id === submittedApplicantId);
+			expect(bob).toBeDefined();
+			expect(bob!.name).toBe("Bob");
+			expect(bob!.phone).toBe("07700900001");
+		});
+
 		test("volunteer confirms but cooldown → ApplicationRejected", async () => {
 			await submitFlagged();
 			await openWindow(env, "2026-03");
