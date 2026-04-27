@@ -100,6 +100,7 @@ export async function submitApplication(
 	opts: {
 		name: string;
 		phone: string;
+		email?: string;
 		paymentPreference?: "cash" | "bank";
 		meetingPlace?: string;
 		sortCode?: string;
@@ -118,6 +119,7 @@ export async function submitApplication(
 		paymentPreference: opts.paymentPreference ?? "cash",
 		altcha,
 	};
+	if (opts.email) multipart.email = opts.email;
 	if (opts.sortCode) multipart.sortCode = opts.sortCode;
 	if (opts.accountNumber) multipart.accountNumber = opts.accountNumber;
 	if (opts.poa)

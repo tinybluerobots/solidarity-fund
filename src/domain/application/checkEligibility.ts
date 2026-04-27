@@ -1,4 +1,5 @@
 import type { SQLiteConnectionPool } from "@event-driven-io/emmett-sqlite";
+import { normalizeName } from "./normalizeName.ts";
 import type { EligibilityResult } from "./types.ts";
 
 const COOLDOWN_MONTHS = 3;
@@ -13,6 +14,8 @@ function monthsAgo(monthCycle: string, n: number): string {
 
 export async function checkEligibility(
 	applicantId: string,
+	name: string,
+	email: string | undefined,
 	monthCycle: string,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 	options?: { skipWindowCheck?: boolean },
@@ -45,16 +48,48 @@ export async function checkEligibility(
 		}
 
 		// Check for duplicate: any application this month that isn't rejected or flagged
-		const dupes = await conn.query<{ id: string }>(
-			`SELECT id FROM applications
+		const dupes = await conn.query<{
+			id: string;
+			applied_at: string;
+			ref: string;
+		}>(
+			`SELECT id, applied_at, ref FROM applications
 			 WHERE applicant_id = ?
 			   AND month_cycle = ?
 			   AND status NOT IN ('rejected', 'flagged')
 			 LIMIT 1`,
 			[applicantId, monthCycle],
 		);
-		if (dupes.length > 0) {
-			return { status: "duplicate" } as const;
+		if (dupes.length > 0 && dupes[0]) {
+			return {
+				status: "duplicate",
+				appliedAt: dupes[0].applied_at,
+				ref: dupes[0].ref,
+			} as const;
+		}
+
+		// Check for duplicate by (name + email) if email is provided
+		if (email) {
+			const emailDupes = await conn.query<{
+				id: string;
+				applied_at: string;
+				ref: string;
+			}>(
+				`SELECT a.id, a.applied_at, a.ref FROM applications a
+				 WHERE LOWER(a.name) = ?
+				   AND LOWER(a.email) = ?
+				   AND a.month_cycle = ?
+				   AND a.status NOT IN ('rejected', 'flagged')
+				 LIMIT 1`,
+				[normalizeName(name), email.toLowerCase(), monthCycle],
+			);
+			if (emailDupes.length > 0 && emailDupes[0]) {
+				return {
+					status: "duplicate",
+					appliedAt: emailDupes[0].applied_at,
+					ref: emailDupes[0].ref,
+				} as const;
+			}
 		}
 
 		// Check cooldown: selected in last 3 months

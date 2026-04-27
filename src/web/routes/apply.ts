@@ -23,6 +23,14 @@ function currentMonthCycle(): string {
 	return `${y}-${m}`;
 }
 
+function drawDate(monthCycle: string): string {
+	const [year, month] = monthCycle.split("-").map(Number) as [number, number];
+	const lastDay = new Date(year, month, 0);
+	const d = String(lastDay.getDate()).padStart(2, "0");
+	const m = String(lastDay.getMonth() + 1).padStart(2, "0");
+	return `${d}/${m}/${lastDay.getFullYear()}`;
+}
+
 async function isWindowOpen(
 	monthCycle: string,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
@@ -163,7 +171,24 @@ export function createApplyRoutes(
 				paymentPref === "bank" ? "bank" : "cash";
 			const monthCycle = currentMonthCycle();
 			const applicantId = toApplicantId(normalizedPhone, name);
-			const eligibility = await checkEligibility(applicantId, monthCycle, pool);
+			const eligibility = await checkEligibility(
+				applicantId,
+				name,
+				email,
+				monthCycle,
+				pool,
+			);
+
+			if (eligibility.status === "duplicate") {
+				const params = new URLSearchParams({
+					status: "rejected",
+					reason: "duplicate",
+					existingAppliedAt: eligibility.appliedAt ?? "",
+					ref: eligibility.ref ?? "",
+					drawDate: drawDate(monthCycle),
+				});
+				return Response.redirect(`/apply/result?${params}`, 302);
+			}
 
 			const { events } = await submitApplication(
 				{
@@ -205,9 +230,15 @@ export function createApplyRoutes(
 			const status = url.searchParams.get("status") ?? "accepted";
 			const reason = url.searchParams.get("reason") ?? undefined;
 			const ref = url.searchParams.get("ref") ?? undefined;
-			return new Response(applyResultPage(status, reason, ref), {
-				headers: { "Content-Type": "text/html" },
-			});
+			const existingAppliedAt =
+				url.searchParams.get("existingAppliedAt") || undefined;
+			const drawDate = url.searchParams.get("drawDate") || undefined;
+			return new Response(
+				applyResultPage(status, reason, ref, existingAppliedAt, drawDate),
+				{
+					headers: { "Content-Type": "text/html" },
+				},
+			);
 		},
 	};
 }

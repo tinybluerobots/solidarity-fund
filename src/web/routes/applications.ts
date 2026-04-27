@@ -94,6 +94,8 @@ export function createApplicationRoutes(
 				decision === "confirm"
 					? await checkEligibility(
 							confirmedApplicantId ?? app.applicantId,
+							app.name ?? "",
+							app.email ?? undefined,
 							app.monthCycle,
 							pool,
 							{ skipWindowCheck: true },

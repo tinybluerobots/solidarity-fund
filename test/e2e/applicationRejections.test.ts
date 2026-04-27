@@ -24,6 +24,70 @@ test.describe("application rejections & edge cases", () => {
 		expect(url).toContain("reason=window_closed");
 	});
 
+	test("rejects duplicate application by name + email", async ({
+		serverInstance,
+		login,
+		page,
+	}) => {
+		void serverInstance;
+		await login(page);
+
+		await openLotteryWindow(page);
+
+		// First application with email — accepted
+		const first = await submitApplication(page, {
+			name: "Email Dupe",
+			phone: "07700900101",
+			email: "dupe@example.com",
+		});
+		expect(first.url).toContain("status=accepted");
+
+		// Different phone, same name + email → duplicate
+		const second = await submitApplication(page, {
+			name: "Email Dupe",
+			phone: "07700900102",
+			email: "dupe@example.com",
+		});
+		expect(second.url).toContain("status=rejected");
+		expect(second.url).toContain("reason=duplicate");
+
+		// Verify the result page shows the timestamp message
+		const resultPage = await page.goto(second.url);
+		if (resultPage) {
+			const text = await resultPage.text();
+			expect(text).toContain("Application Already Received");
+			expect(text).toContain("already received at");
+		}
+	});
+
+	test("rejects duplicate application by name + email with case insensitivity", async ({
+		serverInstance,
+		login,
+		page,
+	}) => {
+		void serverInstance;
+		await login(page);
+
+		await openLotteryWindow(page);
+
+		// First application
+		const first = await submitApplication(page, {
+			name: "Case Test",
+			phone: "07700900103",
+			email: "MIXED@Example.COM",
+		});
+		expect(first.url).toContain("status=accepted");
+
+		// Different phone, same name, different email case → duplicate
+		const second = await submitApplication(page, {
+			name: "Case Test",
+			phone: "07700900104",
+			email: "mixed@example.com",
+		});
+		expect(second.url).toContain("status=rejected");
+		expect(second.url).toContain("reason=duplicate");
+	});
+
 	test("rejects duplicate application in same month", async ({
 		serverInstance,
 		login,
@@ -76,10 +140,10 @@ test.describe("application rejections & edge cases", () => {
 		expect(second.url).toContain("status=rejected");
 		expect(second.url).toContain("reason=duplicate");
 
-		// Verify both show in the applications list
 		await page.goto("/applications");
 		const rows = page.locator("tr", { hasText: "Open Dupe" });
-		await expect(rows).toHaveCount(2, { timeout: 5000 });
+		await expect(rows).toHaveCount(1, { timeout: 5000 });
+		await expect(rows).toContainText("Accepted", { timeout: 5000 });
 	});
 
 	test("flags application when known phone has different name", async ({
@@ -174,9 +238,7 @@ test.describe("application rejections & edge cases", () => {
 		await expect(confirmedRow).toContainText("Confirmed", { timeout: 5000 });
 
 		// History tab shows the review event
-		await page
-			.locator("#panel button.tab", { hasText: "History" })
-			.click();
+		await page.locator("#panel button.tab", { hasText: "History" }).click();
 		await expect(page.locator("#history-content")).toContainText(
 			"Confirmed by Test",
 			{ timeout: 10000 },
@@ -233,9 +295,7 @@ test.describe("application rejections & edge cases", () => {
 		const confirmedRow = page.locator("tr", { hasText: "Different Person" });
 		await expect(confirmedRow).toContainText("Confirmed", { timeout: 5000 });
 
-		await page
-			.locator("#panel button.tab", { hasText: "History" })
-			.click();
+		await page.locator("#panel button.tab", { hasText: "History" }).click();
 		await expect(page.locator("#history-content")).toContainText(
 			"Confirmed by Test",
 			{ timeout: 10000 },
@@ -288,9 +348,7 @@ test.describe("application rejections & edge cases", () => {
 		});
 
 		// History tab shows the rejection event
-		await page
-			.locator("#panel button.tab", { hasText: "History" })
-			.click();
+		await page.locator("#panel button.tab", { hasText: "History" }).click();
 		await expect(page.locator("#history-content")).toContainText(
 			"Rejected by Test",
 			{ timeout: 10000 },

@@ -28,7 +28,7 @@ export type IdentityResolution =
 export type EligibilityResult =
 	| { status: "eligible" }
 	| { status: "cooldown"; lastGrantMonth: string }
-	| { status: "duplicate" }
+	| { status: "duplicate"; appliedAt?: string; ref?: string }
 	| { status: "window_closed" };
 
 // Commands

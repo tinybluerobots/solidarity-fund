@@ -241,6 +241,8 @@ describe("lottery workflow", () => {
 
 		const result = await checkEligibility(
 			toApplicantId("07700900001", "Alice"),
+			"Alice",
+			undefined,
 			"2026-04",
 			env.pool,
 		);

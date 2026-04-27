@@ -76,6 +76,24 @@ describe("applyResultPage", () => {
 		expect(html).toContain("recently");
 	});
 
+	test("rejected with duplicate reason shows timestamp when dates provided", () => {
+		const html = applyResultPage(
+			"rejected",
+			"duplicate",
+			undefined,
+			"2026-01-15T14:27:00.000Z",
+			"31/01/2026",
+		);
+		expect(html).toContain("Application Already Received");
+		expect(html).toContain("already received at 14:27 on 15/01/2026");
+		expect(html).toContain("on or soon after 31/01/2026");
+	});
+
+	test("rejected with duplicate reason falls back without timestamps", () => {
+		const html = applyResultPage("rejected", "duplicate");
+		expect(html).toContain("already applied during this application window");
+	});
+
 	test("rejected with duplicate reason", () => {
 		const html = applyResultPage("rejected", "duplicate");
 		expect(html).toContain("already applied");

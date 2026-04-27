@@ -31,6 +31,16 @@ function escapeHtml(s: string): string {
 		.replace(/"/g, "&quot;");
 }
 
+function formatAppliedAt(iso: string): string {
+	const d = new Date(iso);
+	const hh = String(d.getHours()).padStart(2, "0");
+	const mm = String(d.getMinutes()).padStart(2, "0");
+	const day = String(d.getDate()).padStart(2, "0");
+	const month = String(d.getMonth() + 1).padStart(2, "0");
+	const year = d.getFullYear();
+	return `${hh}:${mm} on ${day}/${month}/${year}`;
+}
+
 export function applyPage(): string {
 	return publicLayout(
 		"Apply",
@@ -120,6 +130,8 @@ export function applyResultPage(
 	status: string,
 	reason?: string,
 	ref?: string,
+	existingAppliedAt?: string,
+	drawDate?: string,
 ): string {
 	let heading: string;
 	let message: string;
@@ -142,8 +154,13 @@ export function applyResultPage(
 			message =
 				"You have applied recently. Please wait before submitting a new application.";
 		} else if (reason === "duplicate") {
-			heading = "Duplicate Application";
-			message = "You have already applied during this application window.";
+			heading = "Application Already Received";
+			if (existingAppliedAt && drawDate) {
+				const when = formatAppliedAt(existingAppliedAt);
+				message = `Your application was already received at ${when}. We'll let you know whether your name was drawn to receive a grant on or soon after ${drawDate}.`;
+			} else {
+				message = "You have already applied during this application window.";
+			}
 		} else {
 			heading = "Application Not Accepted";
 			message =

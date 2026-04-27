@@ -196,6 +196,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -245,6 +247,8 @@ describe("application workflow", () => {
 			const submittedApplicantId = toApplicantId("07700900001", "Bob");
 			const eligibility = await checkEligibility(
 				submittedApplicantId,
+				"Alice",
+				undefined,
 				"2026-06",
 				env.pool,
 			);
@@ -302,6 +306,8 @@ describe("application workflow", () => {
 			const submittedApplicantId = toApplicantId("07700900001", "Bob");
 			const eligibility = await checkEligibility(
 				submittedApplicantId,
+				"Alice",
+				undefined,
 				"2026-06",
 				env.pool,
 			);
@@ -332,6 +338,8 @@ describe("application workflow", () => {
 			const submittedApplicantId = toApplicantId("07700900001", "Bob");
 			const eligibility = await checkEligibility(
 				submittedApplicantId,
+				"Alice",
+				undefined,
 				"2026-06",
 				env.pool,
 			);
@@ -372,6 +380,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -433,6 +443,8 @@ describe("application workflow", () => {
 		test("window not opened → window_closed", async () => {
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -444,6 +456,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -469,6 +483,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -486,10 +502,13 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
-			expect(eligibility).toEqual({ status: "duplicate" });
+			expect(eligibility).toMatchObject({ status: "duplicate", ref: "app-1" });
+			expect(eligibility.appliedAt).toBeDefined();
 		});
 
 		test("accepted-only does not trigger cooldown", async () => {
@@ -503,6 +522,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -533,6 +554,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -566,6 +589,8 @@ describe("application workflow", () => {
 
 			const eligibility = await checkEligibility(
 				toApplicantId("07700900001", "Alice"),
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -611,6 +636,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-02",
 				env.pool,
 			);
@@ -664,6 +691,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -712,6 +741,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -721,6 +752,8 @@ describe("application workflow", () => {
 		test("skipWindowCheck allows eligibility when window is closed", async () => {
 			const closed = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 			);
@@ -728,6 +761,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 				{ skipWindowCheck: true },
@@ -772,6 +807,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-03",
 				env.pool,
 				{ skipWindowCheck: true },
@@ -820,6 +857,8 @@ describe("application workflow", () => {
 
 			const result = await checkEligibility(
 				"applicant-07700900001",
+				"Alice",
+				undefined,
 				"2026-04",
 				env.pool,
 			);
