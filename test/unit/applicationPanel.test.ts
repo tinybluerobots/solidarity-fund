@@ -24,6 +24,7 @@ const app: ApplicationRow = {
 	sortCode: null,
 	accountNumber: null,
 	poaRef: null,
+	reviewedByVolunteerId: null,
 };
 
 describe("viewPanel", () => {

@@ -15,6 +15,7 @@ describe("application routes", () => {
 		routes = createApplicationRoutes(
 			appRepo,
 			env.applicantRepo,
+			env.volunteerRepo,
 			env.eventStore,
 			env.pool,
 		);
