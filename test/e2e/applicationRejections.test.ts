@@ -164,10 +164,23 @@ test.describe("application rejections & edge cases", () => {
 		await expect(page.locator("#panel")).toContainText("Confirmed", {
 			timeout: 5000,
 		});
+		// Breadcrumb: shows who confirmed + datetime
+		await expect(page.locator("#panel")).toContainText("Confirmed by Test on", {
+			timeout: 5000,
+		});
 
 		// Table row should also reflect Confirmed
 		const confirmedRow = page.locator("tr", { hasText: "Alias Person" });
 		await expect(confirmedRow).toContainText("Confirmed", { timeout: 5000 });
+
+		// History tab shows the review event
+		await page
+			.locator("#panel button.tab", { hasText: "History" })
+			.click();
+		await expect(page.locator("#history-content")).toContainText(
+			"Confirmed by Test",
+			{ timeout: 10000 },
+		);
 	});
 
 	test("volunteer confirms flagged application when original applicant already applied this month → confirmed", async ({
@@ -213,8 +226,21 @@ test.describe("application rejections & edge cases", () => {
 		await expect(page.locator("#panel")).toContainText("Confirmed", {
 			timeout: 5000,
 		});
-	});
+		await expect(page.locator("#panel")).toContainText("Confirmed by Test on", {
+			timeout: 5000,
+		});
 
+		const confirmedRow = page.locator("tr", { hasText: "Different Person" });
+		await expect(confirmedRow).toContainText("Confirmed", { timeout: 5000 });
+
+		await page
+			.locator("#panel button.tab", { hasText: "History" })
+			.click();
+		await expect(page.locator("#history-content")).toContainText(
+			"Confirmed by Test",
+			{ timeout: 10000 },
+		);
+	});
 	test("volunteer rejects flagged application → identity_mismatch", async ({
 		serverInstance,
 		login,
@@ -256,6 +282,19 @@ test.describe("application rejections & edge cases", () => {
 		await expect(page.locator("#panel")).toContainText("identity_mismatch", {
 			timeout: 5000,
 		});
+		// Breadcrumb: shows who rejected + datetime
+		await expect(page.locator("#panel")).toContainText("Rejected by Test on", {
+			timeout: 5000,
+		});
+
+		// History tab shows the rejection event
+		await page
+			.locator("#panel button.tab", { hasText: "History" })
+			.click();
+		await expect(page.locator("#history-content")).toContainText(
+			"Rejected by Test",
+			{ timeout: 10000 },
+		);
 	});
 
 	test("bank preference application is accepted", async ({
