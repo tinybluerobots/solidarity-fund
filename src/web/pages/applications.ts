@@ -20,9 +20,10 @@ function formatDate(iso: string): string {
 	});
 }
 
-function statusBadge(status: string): string {
+export function statusBadge(status: string): string {
 	const colors: Record<string, string> = {
 		accepted: "bg-blue-50 text-blue-700 border-blue-200",
+		confirmed: "bg-blue-50 text-blue-700 border-blue-200",
 		flagged: "bg-amber-50 text-amber-700 border-amber-200",
 		rejected: "bg-red-50 text-red-700 border-red-200",
 		selected: "bg-green-50 text-green-700 border-green-200",
@@ -73,10 +74,11 @@ export function applicationsTableBody(applications: ApplicationRow[]): string {
 	return `<tbody id="application-rows">${rows}</tbody>`;
 }
 
-const STATUS_OPTIONS = [
+export const STATUS_OPTIONS = [
 	{ value: "all", label: "All Statuses" },
 	{ value: "applied", label: "Applied" },
 	{ value: "accepted", label: "Accepted" },
+	{ value: "confirmed", label: "Confirmed" },
 	{ value: "flagged", label: "Flagged" },
 	{ value: "rejected", label: "Rejected" },
 	{ value: "selected", label: "Selected" },
