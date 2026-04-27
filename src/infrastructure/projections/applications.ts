@@ -10,6 +10,7 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 		"ApplicationFlaggedForReview",
 		"ApplicationSelected",
 		"ApplicationNotSelected",
+		"ApplicationReviewReverted",
 	],
 
 	init: async ({ context: { connection } }) => {
@@ -113,6 +114,12 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 					await connection.command(
 						"UPDATE applications SET status = 'not_selected' WHERE id = ?",
 						[data.applicationId],
+					);
+					break;
+				case "ApplicationReviewReverted":
+					await connection.command(
+						"UPDATE applications SET status = 'flagged', reviewed_by_volunteer_id = ?, reject_reason = NULL, rejected_at = NULL, accepted_at = NULL WHERE id = ?",
+						[data.volunteerId, data.applicationId],
 					);
 					break;
 			}

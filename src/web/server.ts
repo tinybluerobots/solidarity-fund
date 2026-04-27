@@ -629,6 +629,17 @@ export async function startServer(
 				return new Response("Invalid decision", { status: 400 });
 			}
 
+			// Application revert review (must come before detail match)
+			const appRevertReviewMatch = url.pathname.match(
+				/^\/applications\/([^/]+)\/revert-review$/,
+			);
+			if (appRevertReviewMatch?.[1] && req.method === "POST") {
+				return applicationRoutes.handleRevertReview(
+					appRevertReviewMatch[1],
+					volunteer.id,
+				);
+			}
+
 			// Application detail
 			const appIdMatch = url.pathname.match(/^\/applications\/([^/]+)$/);
 			if (appIdMatch?.[1] && req.method === "GET") {

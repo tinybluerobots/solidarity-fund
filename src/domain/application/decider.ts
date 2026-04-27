@@ -5,6 +5,7 @@ import type {
 	ApplicationState,
 	IdentityResolution,
 	RejectFromLottery,
+	RevertReviewApplication,
 	ReviewApplication,
 	SelectApplication,
 	SubmitApplication,
@@ -14,7 +15,8 @@ export type ApplicationCommand =
 	| SubmitApplication
 	| ReviewApplication
 	| SelectApplication
-	| RejectFromLottery;
+	| RejectFromLottery
+	| RevertReviewApplication;
 
 export const initialState = (): ApplicationState => ({ status: "initial" });
 
@@ -44,6 +46,8 @@ export function decide(
 			return decideSelect(command, state);
 		case "RejectFromLottery":
 			return decideRejectFromLottery(command, state);
+		case "RevertReviewApplication":
+			return decideRevertReview(command, state);
 	}
 }
 
@@ -248,6 +252,34 @@ function decideRejectFromLottery(
 	];
 }
 
+function decideRevertReview(
+	command: RevertReviewApplication,
+	state: ApplicationState,
+): ApplicationEvent[] {
+	if (state.status !== "confirmed" && state.status !== "rejected") {
+		throw new IllegalStateError(
+			`Cannot revert review in ${state.status} state`,
+		);
+	}
+
+	const previousDecision =
+		state.status === "confirmed" ? "confirmed" : "rejected";
+
+	return [
+		{
+			type: "ApplicationReviewReverted",
+			data: {
+				applicationId: state.applicationId,
+				applicantId: state.applicantId,
+				volunteerId: command.data.volunteerId,
+				monthCycle: state.monthCycle,
+				reason: `Reverted previous ${previousDecision} decision`,
+				revertedAt: command.data.revertedAt,
+			},
+		},
+	];
+}
+
 export function evolve(
 	state: ApplicationState,
 	event: ApplicationEvent,
@@ -303,6 +335,14 @@ export function evolve(
 				applicationId: event.data.applicationId,
 				applicantId: event.data.applicantId,
 				monthCycle: event.data.monthCycle,
+			};
+		case "ApplicationReviewReverted":
+			return {
+				status: "flagged",
+				applicationId: event.data.applicationId,
+				applicantId: event.data.applicantId,
+				monthCycle: event.data.monthCycle,
+				reason: event.data.reason,
 			};
 		default: {
 			const _exhaustive: never = event;

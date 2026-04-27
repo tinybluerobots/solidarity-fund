@@ -166,6 +166,23 @@ export function viewPanel(
 	);
 }
 
+export function revertablePanel(
+	app: ApplicationRow,
+	applicantId: string | null = null,
+	reviewedByVolunteerName?: string | null,
+): string {
+	return panelWithTabs(
+		app.name ?? "Application",
+		app,
+		applicantId,
+		reviewedByVolunteerName,
+		`<div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded">
+      <p class="text-sm text-amber-700 mb-3">This application has been ${app.status === "confirmed" ? "confirmed" : "rejected"}. You can revert this decision if needed.</p>
+      <button class="btn btn-danger" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/revert-review')">Revert Decision</button>
+    </div>`,
+	);
+}
+
 export function reviewPanel(
 	app: ApplicationRow,
 	applicantId: string | null = null,

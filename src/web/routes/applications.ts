@@ -9,14 +9,21 @@ import type {
 	ApplicationFilters,
 	ApplicationRepository,
 } from "../../domain/application/repository.ts";
-import { reviewApplication } from "../../domain/application/reviewApplication.ts";
+import {
+	revertReviewApplication,
+	reviewApplication,
+} from "../../domain/application/reviewApplication.ts";
 import type { ApplicationEvent } from "../../domain/application/types.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
 import {
 	applicationHistoryPanel,
 	extractReviewHistory,
 } from "../pages/applicationHistoryPanel.ts";
-import { reviewPanel, viewPanel } from "../pages/applicationPanel.ts";
+import {
+	revertablePanel,
+	reviewPanel,
+	viewPanel,
+} from "../pages/applicationPanel.ts";
 import {
 	applicationsPage,
 	applicationsTableBody,
@@ -55,10 +62,15 @@ export function createApplicationRoutes(
 					? await applicantRepo.getByPhoneAndName(app.phone, app.name)
 					: null;
 			const reviewedByName = await resolveReviewedBy(app, volunteerRepo);
-			const panel =
-				app.status === "flagged"
-					? reviewPanel(app, applicant?.id ?? null, reviewedByName)
-					: viewPanel(app, applicant?.id ?? null, reviewedByName);
+
+			let panel: string;
+			if (app.status === "flagged") {
+				panel = reviewPanel(app, applicant?.id ?? null, reviewedByName);
+			} else if (app.status === "confirmed" || app.status === "rejected") {
+				panel = revertablePanel(app, applicant?.id ?? null, reviewedByName);
+			} else {
+				panel = viewPanel(app, applicant?.id ?? null, reviewedByName);
+			}
 			return sseResponse(patchElements(panel));
 		},
 
@@ -103,7 +115,7 @@ export function createApplicationRoutes(
 			const reviewedByName = await resolveReviewedBy(updated, volunteerRepo);
 			const applications = await appRepo.listByMonth(app.monthCycle);
 			return sseResponse(
-				patchElements(viewPanel(updated, undefined, reviewedByName)),
+				patchElements(revertablePanel(updated, undefined, reviewedByName)),
 				patchElements(applicationsTableBody(applications)),
 			);
 		},
@@ -143,6 +155,32 @@ export function createApplicationRoutes(
 
 		closePanel(): Response {
 			return sseResponse(patchElements('<div id="panel"></div>'));
+		},
+
+		async handleRevertReview(
+			applicationId: string,
+			volunteerId: string,
+		): Promise<Response> {
+			const app = await appRepo.getById(applicationId);
+			if (!app) return new Response("Not found", { status: 404 });
+
+			await revertReviewApplication(applicationId, volunteerId, eventStore);
+
+			const updated = await appRepo.getById(applicationId);
+			if (!updated) return new Response("Not found", { status: 404 });
+
+			const applicant =
+				updated.phone && updated.name
+					? await applicantRepo.getByPhoneAndName(updated.phone, updated.name)
+					: null;
+			const reviewedByName = await resolveReviewedBy(updated, volunteerRepo);
+			const applications = await appRepo.listByMonth(app.monthCycle);
+			return sseResponse(
+				patchElements(
+					reviewPanel(updated, applicant?.id ?? null, reviewedByName),
+				),
+				patchElements(applicationsTableBody(applications)),
+			);
 		},
 	};
 }

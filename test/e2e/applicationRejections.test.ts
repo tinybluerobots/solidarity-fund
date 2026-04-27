@@ -348,4 +348,148 @@ test.describe("application rejections & edge cases", () => {
 			page.locator("text=Apply for a grant of up to £40"),
 		).toBeVisible();
 	});
+
+	test("revert confirmed application → flagged, confirm/reject buttons reappear", async ({
+		serverInstance,
+		login,
+		page,
+	}) => {
+		void serverInstance;
+		await login(page);
+
+		// Create a known applicant via admin CRUD
+		await page.goto("/applicants");
+		await page.locator("button", { hasText: "Add Applicant" }).click();
+		await page.locator("#panel h2", { hasText: "New Applicant" }).waitFor();
+		await page.locator("input[data-bind\\:name]").fill("Revertable Admin");
+		await page.locator("input[data-bind\\:phone]").fill("07700900010");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+		await expect(page.locator("#applicant-rows")).toContainText(
+			"Revertable Admin",
+			{ timeout: 5000 },
+		);
+
+		await openLotteryWindow(page);
+
+		// Apply with same phone, different name → flagged
+		const flagged = await submitApplication(page, {
+			name: "Revert Me",
+			phone: "07700900010",
+		});
+		expect(flagged.url).toContain("status=flagged");
+
+		// Navigate to applications, open flagged row, and confirm
+		await page.goto("/applications");
+		const flaggedRow = page.locator("tr", { hasText: "Revert Me" });
+		await expect(flaggedRow).toContainText("Flagged", { timeout: 5000 });
+		await flaggedRow.click();
+
+		await expect(
+			page.locator("#panel button", { hasText: "Confirm" }),
+		).toBeVisible({ timeout: 10000 });
+		await page.locator("#panel button", { hasText: "Confirm" }).click();
+
+		// After confirm: status is Confirmed, no Confirm/Reject buttons
+		await expect(
+			page.locator("#panel button", { hasText: "Confirm" }),
+		).not.toBeVisible({ timeout: 10000 });
+		await expect(page.locator("#panel")).toContainText("Confirmed", {
+			timeout: 5000,
+		});
+
+		// Revert button should be visible in the amber warning block
+		await expect(
+			page.locator("#panel button", { hasText: "Revert Decision" }),
+		).toBeVisible({ timeout: 5000 });
+		await expect(page.locator("#panel")).toContainText(
+			"This application has been confirmed",
+			{ timeout: 5000 },
+		);
+
+		// Click revert
+		await page.locator("#panel button", { hasText: "Revert Decision" }).click();
+
+		// After revert: Confirm/Reject buttons reappear, table row shows Flagged
+		await expect(
+			page.locator("#panel button", { hasText: "Confirm" }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(
+			page.locator("#panel button", { hasText: "Reject" }),
+		).toBeVisible({ timeout: 5000 });
+		const revertedRow = page.locator("tr", { hasText: "Revert Me" });
+		await expect(revertedRow).toContainText("Flagged", { timeout: 5000 });
+
+		// No amber revert block visible
+		await expect(
+			page.locator("#panel button", { hasText: "Revert Decision" }),
+		).not.toBeVisible({ timeout: 5000 });
+	});
+
+	test("revert rejected application → flagged, confirm/reject buttons reappear", async ({
+		serverInstance,
+		login,
+		page,
+	}) => {
+		void serverInstance;
+		await login(page);
+
+		// Create a known applicant via admin CRUD
+		await page.goto("/applicants");
+		await page.locator("button", { hasText: "Add Applicant" }).click();
+		await page.locator("#panel h2", { hasText: "New Applicant" }).waitFor();
+		await page.locator("input[data-bind\\:name]").fill("Reject Admin");
+		await page.locator("input[data-bind\\:phone]").fill("07700900011");
+		await page.locator('button[type="submit"]', { hasText: "Create" }).click();
+		await expect(page.locator("#applicant-rows")).toContainText(
+			"Reject Admin",
+			{ timeout: 5000 },
+		);
+
+		await openLotteryWindow(page);
+
+		// Apply with same phone, different name → flagged
+		const flagged = await submitApplication(page, {
+			name: "Reject Me",
+			phone: "07700900011",
+		});
+		expect(flagged.url).toContain("status=flagged");
+
+		// Navigate to applications, open flagged row, and reject
+		await page.goto("/applications");
+		const flaggedRow = page.locator("tr", { hasText: "Reject Me" });
+		await expect(flaggedRow).toContainText("Flagged", { timeout: 5000 });
+		await flaggedRow.click();
+
+		await expect(
+			page.locator("#panel button", { hasText: "Reject" }),
+		).toBeVisible({ timeout: 10000 });
+		await page.locator("#panel button", { hasText: "Reject" }).click();
+
+		// After reject: status is Rejected, no Confirm/Reject buttons
+		await expect(page.locator("#panel")).toContainText("Rejected", {
+			timeout: 10000,
+		});
+
+		// Revert button should be visible
+		await expect(
+			page.locator("#panel button", { hasText: "Revert Decision" }),
+		).toBeVisible({ timeout: 5000 });
+		await expect(page.locator("#panel")).toContainText(
+			"This application has been rejected",
+			{ timeout: 5000 },
+		);
+
+		// Click revert
+		await page.locator("#panel button", { hasText: "Revert Decision" }).click();
+
+		// After revert: Confirm/Reject buttons reappear, table row shows Flagged
+		await expect(
+			page.locator("#panel button", { hasText: "Confirm" }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(
+			page.locator("#panel button", { hasText: "Reject" }),
+		).toBeVisible({ timeout: 5000 });
+		const revertedRow = page.locator("tr", { hasText: "Reject Me" });
+		await expect(revertedRow).toContainText("Flagged", { timeout: 5000 });
+	});
 });

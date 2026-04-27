@@ -5,6 +5,7 @@ import { decide, evolve, initialState } from "./decider.ts";
 import type {
 	ApplicationEvent,
 	EligibilityResult,
+	RevertReviewApplication,
 	ReviewApplication,
 } from "./types.ts";
 
@@ -60,6 +61,28 @@ export async function reviewApplication(
 			// Applicant already exists (race condition) — safe to ignore
 		}
 	}
+
+	return { events: newEvents };
+}
+
+export async function revertReviewApplication(
+	applicationId: string,
+	volunteerId: string,
+	eventStore: SQLiteEventStore,
+): Promise<{ events: ApplicationEvent[] }> {
+	const command: RevertReviewApplication = {
+		type: "RevertReviewApplication",
+		data: {
+			applicationId,
+			volunteerId,
+			revertedAt: new Date().toISOString(),
+		},
+	};
+
+	const streamId = `application-${applicationId}`;
+	const { newEvents } = await handle(eventStore, streamId, (state) =>
+		decide(command, state),
+	);
 
 	return { events: newEvents };
 }

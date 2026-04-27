@@ -79,6 +79,15 @@ export type RejectFromLottery = Command<
 	}
 >;
 
+export type RevertReviewApplication = Command<
+	"RevertReviewApplication",
+	{
+		applicationId: string;
+		volunteerId: string;
+		revertedAt: string;
+	}
+>;
+
 // Events
 
 export type ApplicationSubmitted = Event<
@@ -161,6 +170,18 @@ export type ApplicationNotSelected = Event<
 	}
 >;
 
+export type ApplicationReviewReverted = Event<
+	"ApplicationReviewReverted",
+	{
+		applicationId: string;
+		applicantId: string;
+		volunteerId: string;
+		monthCycle: string;
+		reason: string;
+		revertedAt: string;
+	}
+>;
+
 export type ApplicationEvent =
 	| ApplicationSubmitted
 	| ApplicationAccepted
@@ -168,7 +189,8 @@ export type ApplicationEvent =
 	| ApplicationRejected
 	| ApplicationFlaggedForReview
 	| ApplicationSelected
-	| ApplicationNotSelected;
+	| ApplicationNotSelected
+	| ApplicationReviewReverted;
 
 export type ApplicationEventType = ApplicationEvent["type"];
 

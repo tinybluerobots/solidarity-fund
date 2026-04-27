@@ -15,6 +15,20 @@ const acceptedState: ApplicationState = {
 	monthCycle: MONTH,
 };
 
+const confirmedState: ApplicationState = {
+	status: "confirmed",
+	applicationId: APP_ID,
+	applicantId: APPLICANT_ID,
+	monthCycle: MONTH,
+};
+
+const rejectedState: ApplicationState = {
+	status: "rejected",
+	applicationId: APP_ID,
+	applicantId: APPLICANT_ID,
+	reason: "identity_mismatch",
+};
+
 const flaggedState: ApplicationState = {
 	status: "flagged",
 	applicationId: APP_ID,
@@ -340,6 +354,94 @@ describe("application decider", () => {
 		});
 	});
 
+	describe("RevertReviewApplication", () => {
+		it("emits ApplicationReviewReverted from confirmed state", () => {
+			const events = decide(
+				{
+					type: "RevertReviewApplication",
+					data: {
+						applicationId: APP_ID,
+						volunteerId: "vol-1",
+						revertedAt: NOW,
+					},
+				},
+				confirmedState,
+			);
+
+			expect(events).toHaveLength(1);
+			expect(events[0]?.type).toBe("ApplicationReviewReverted");
+			expect(events[0]?.data).toMatchObject({
+				applicationId: APP_ID,
+				volunteerId: "vol-1",
+			});
+		});
+
+		it("emits ApplicationReviewReverted from rejected state", () => {
+			const events = decide(
+				{
+					type: "RevertReviewApplication",
+					data: {
+						applicationId: APP_ID,
+						volunteerId: "vol-1",
+						revertedAt: NOW,
+					},
+				},
+				rejectedState,
+			);
+
+			expect(events).toHaveLength(1);
+			expect(events[0]?.type).toBe("ApplicationReviewReverted");
+		});
+
+		it("throws from flagged state", () => {
+			expect(() =>
+				decide(
+					{
+						type: "RevertReviewApplication",
+						data: {
+							applicationId: APP_ID,
+							volunteerId: "vol-1",
+							revertedAt: NOW,
+						},
+					},
+					flaggedState,
+				),
+			).toThrow(IllegalStateError);
+		});
+
+		it("throws from accepted state", () => {
+			expect(() =>
+				decide(
+					{
+						type: "RevertReviewApplication",
+						data: {
+							applicationId: APP_ID,
+							volunteerId: "vol-1",
+							revertedAt: NOW,
+						},
+					},
+					acceptedState,
+				),
+			).toThrow(IllegalStateError);
+		});
+
+		it("throws from initial state", () => {
+			expect(() =>
+				decide(
+					{
+						type: "RevertReviewApplication",
+						data: {
+							applicationId: APP_ID,
+							volunteerId: "vol-1",
+							revertedAt: NOW,
+						},
+					},
+					initialState(),
+				),
+			).toThrow(IllegalStateError);
+		});
+	});
+
 	describe("evolve", () => {
 		it("transitions to submitted after ApplicationSubmitted", () => {
 			const state = evolve(initialState(), {
@@ -410,6 +512,25 @@ describe("application decider", () => {
 			});
 
 			expect(state.status).toBe("not_selected");
+		});
+
+		it("transitions to flagged after ApplicationReviewReverted", () => {
+			const state = evolve(confirmedState, {
+				type: "ApplicationReviewReverted",
+				data: {
+					applicationId: APP_ID,
+					applicantId: APPLICANT_ID,
+					volunteerId: "vol-1",
+					monthCycle: MONTH,
+					reason: "Reverted previous confirmed decision",
+					revertedAt: NOW,
+				},
+			});
+
+			expect(state.status).toBe("flagged");
+			if (state.status === "flagged") {
+				expect(state.reason).toBe("Reverted previous confirmed decision");
+			}
 		});
 	});
 });
