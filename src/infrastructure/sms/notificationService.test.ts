@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { type SmsClient } from "./client.ts";
+import type { SmsClient } from "./client.ts";
 import { createNotificationService } from "./notificationService.ts";
 
 type FakePool = {
