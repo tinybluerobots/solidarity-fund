@@ -161,6 +161,7 @@ export async function startServer(
 	const applicationRoutes = createApplicationRoutes(
 		appRepo,
 		applicantRepo,
+		volunteerRepo,
 		eventStore,
 		pool,
 	);
@@ -632,6 +633,14 @@ export async function startServer(
 			const appIdMatch = url.pathname.match(/^\/applications\/([^/]+)$/);
 			if (appIdMatch?.[1] && req.method === "GET") {
 				return applicationRoutes.detail(appIdMatch[1]);
+			}
+
+			// Application history (lazy-loaded by history tab)
+			const appHistoryMatch = url.pathname.match(
+				/^\/applications\/([^/]+)\/history$/,
+			);
+			if (appHistoryMatch?.[1] && req.method === "GET") {
+				return applicationRoutes.history(appHistoryMatch[1]);
 			}
 
 			if (url.pathname === "/lottery/open" && req.method === "POST") {

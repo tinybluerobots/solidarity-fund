@@ -25,6 +25,7 @@ type DbRow = {
 	sort_code: string | null;
 	account_number: string | null;
 	poa_ref: string | null;
+	reviewed_by_volunteer_id: string | null;
 };
 
 function isNoSuchTable(err: unknown): boolean {
@@ -52,6 +53,7 @@ function rowToApplication(row: DbRow): ApplicationRow {
 		sortCode: row.sort_code,
 		accountNumber: row.account_number,
 		poaRef: row.poa_ref,
+		reviewedByVolunteerId: row.reviewed_by_volunteer_id,
 	};
 }
 

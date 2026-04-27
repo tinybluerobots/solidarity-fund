@@ -34,17 +34,23 @@ function formatPaymentPreference(pref: string): string {
 	return pref;
 }
 
-function formatDate(iso: string | null): string {
+function formatDateTime(iso: string | null): string {
 	if (!iso) return "—";
 	const d = new Date(iso);
-	return d.toLocaleDateString("en-GB", {
+	return `${d.toLocaleDateString("en-GB", {
 		day: "numeric",
 		month: "short",
 		year: "numeric",
-	});
+	})} at ${d.toLocaleTimeString("en-GB", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})}`;
 }
 
-function detailFields(app: ApplicationRow): string {
+function detailFields(
+	app: ApplicationRow,
+	reviewedByVolunteerName?: string | null,
+): string {
 	const fields = [
 		field("Name", app.name ?? "—"),
 		field("Phone", app.phone ?? "—"),
@@ -53,15 +59,34 @@ function detailFields(app: ApplicationRow): string {
 		field("Payment Preference", formatPaymentPreference(app.paymentPreference)),
 		...(app.meetingPlace ? [field("Meeting Place", app.meetingPlace)] : []),
 		field("Month Cycle", app.monthCycle),
-		field("Applied", formatDate(app.appliedAt)),
+		field("Applied", formatDateTime(app.appliedAt)),
 	];
 
-	if (app.acceptedAt)
-		fields.push(field("Accepted", formatDate(app.acceptedAt)));
+	if (app.status === "confirmed" && app.acceptedAt) {
+		const by = reviewedByVolunteerName ? ` by ${reviewedByVolunteerName}` : "";
+		fields.push(
+			field("Confirmed", `Confirmed${by} on ${formatDateTime(app.acceptedAt)}`),
+		);
+	} else if (app.acceptedAt) {
+		fields.push(field("Accepted", formatDateTime(app.acceptedAt)));
+	}
+
 	if (app.selectedAt)
-		fields.push(field("Selected", formatDate(app.selectedAt)));
-	if (app.rejectedAt)
-		fields.push(field("Rejected", formatDate(app.rejectedAt)));
+		fields.push(field("Selected", formatDateTime(app.selectedAt)));
+
+	if (app.rejectedAt) {
+		if (app.rejectReason === "identity_mismatch" && reviewedByVolunteerName) {
+			fields.push(
+				field(
+					"Rejected",
+					`Rejected by ${reviewedByVolunteerName} on ${formatDateTime(app.rejectedAt)}`,
+				),
+			);
+		} else {
+			fields.push(field("Rejected", formatDateTime(app.rejectedAt)));
+		}
+	}
+
 	if (app.rank != null) fields.push(field("Lottery Rank", String(app.rank)));
 	if (app.rejectReason) fields.push(field("Reject Reason", app.rejectReason));
 
@@ -86,42 +111,74 @@ function applicantLink(applicantId: string | null): string {
 	return `<button data-on:click="@get('/applicants/${encodeURIComponent(applicantId)}/edit')" class="text-sm text-blue-600 hover:text-blue-800 underline">View Applicant</button>`;
 }
 
-export function viewPanel(
+function panelWithTabs(
+	title: string,
 	app: ApplicationRow,
-	applicantId: string | null = null,
+	applicantId: string | null,
+	reviewedByVolunteerName: string | null | undefined,
+	extraContent: string,
 ): string {
 	return panelWrapper(`
+    <div data-signals="{activeTab: 'details', historyLoaded: false}">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Application")}</h2>
+        <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(title)}</h2>
         ${applicantLink(applicantId)}
       </div>
       <button class="btn btn-secondary" data-on:click="@get('/applications/close')">Close</button>
     </div>
-    <dl>
-      ${detailFields(app)}
-    </dl>
+    <div class="flex gap-1 mb-4 border-b border-cream-200">
+      <button type="button"
+        class="tab"
+        data-class:border-amber="$activeTab==='details'"
+        data-class:text-amber="$activeTab==='details'"
+        data-on:click="$activeTab='details'">Details</button>
+      <button type="button"
+        class="tab"
+        data-class:border-amber="$activeTab==='history'"
+        data-class:text-amber="$activeTab==='history'"
+        data-on:click="$activeTab='history'; if(!$historyLoaded){$historyLoaded=true; @get('/applications/${encodeURIComponent(app.id)}/history')}">History</button>
+    </div>
+    <div data-show="$activeTab=='details'">
+      <dl>
+        ${detailFields(app, reviewedByVolunteerName)}
+      </dl>
+      ${extraContent}
+    </div>
+    <div data-show="$activeTab=='history'" style="display:none">
+      <div id="history-content" class="py-8 text-center text-bark-muted text-sm">Loading...</div>
+    </div>
+    </div>
   `);
+}
+
+export function viewPanel(
+	app: ApplicationRow,
+	applicantId: string | null = null,
+	reviewedByVolunteerName?: string | null,
+): string {
+	return panelWithTabs(
+		app.name ?? "Application",
+		app,
+		applicantId,
+		reviewedByVolunteerName,
+		"",
+	);
 }
 
 export function reviewPanel(
 	app: ApplicationRow,
 	applicantId: string | null = null,
+	reviewedByVolunteerName?: string | null,
 ): string {
-	return panelWrapper(`
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <h2 class="font-heading font-bold text-xl text-bark">${escapeHtml(app.name ?? "Review Application")}</h2>
-        ${applicantLink(applicantId)}
-      </div>
-      <button class="btn btn-secondary" data-on:click="@get('/applications/close')">Close</button>
-    </div>
-    <dl>
-      ${detailFields(app)}
-    </dl>
-    <div class="flex gap-3 mt-6">
+	return panelWithTabs(
+		app.name ?? "Review Application",
+		app,
+		applicantId,
+		reviewedByVolunteerName,
+		`<div class="flex gap-3 mt-6">
       <button class="btn btn-primary" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
       <button class="btn btn-danger" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
-    </div>
-  `);
+    </div>`,
+	);
 }

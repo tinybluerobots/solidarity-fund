@@ -29,6 +29,7 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 				accepted_at TEXT,
 				selected_at TEXT,
 				rejected_at TEXT,
+				reviewed_by_volunteer_id TEXT,
 				email TEXT,
 				meeting_place TEXT,
 				sort_code TEXT,
@@ -69,14 +70,24 @@ export const applicationsProjection = sqliteProjection<ApplicationEvent>({
 					break;
 				case "ApplicationConfirmed":
 					await connection.command(
-						"UPDATE applications SET status = 'confirmed', accepted_at = ?, applicant_id = ? WHERE id = ?",
-						[data.confirmedAt, data.applicantId, data.applicationId],
+						"UPDATE applications SET status = 'confirmed', accepted_at = ?, applicant_id = ?, reviewed_by_volunteer_id = ? WHERE id = ?",
+						[
+							data.confirmedAt,
+							data.applicantId,
+							data.volunteerId,
+							data.applicationId,
+						],
 					);
 					break;
 				case "ApplicationRejected":
 					await connection.command(
-						"UPDATE applications SET status = 'rejected', reject_reason = ?, rejected_at = ? WHERE id = ?",
-						[data.reason, data.rejectedAt, data.applicationId],
+						"UPDATE applications SET status = 'rejected', reject_reason = ?, rejected_at = ?, reviewed_by_volunteer_id = ? WHERE id = ?",
+						[
+							data.reason,
+							data.rejectedAt,
+							data.volunteerId ?? null,
+							data.applicationId,
+						],
 					);
 					break;
 				case "ApplicationFlaggedForReview":

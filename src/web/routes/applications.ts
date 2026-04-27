@@ -10,6 +10,12 @@ import type {
 	ApplicationRepository,
 } from "../../domain/application/repository.ts";
 import { reviewApplication } from "../../domain/application/reviewApplication.ts";
+import type { ApplicationEvent } from "../../domain/application/types.ts";
+import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
+import {
+	applicationHistoryPanel,
+	extractReviewHistory,
+} from "../pages/applicationHistoryPanel.ts";
 import { reviewPanel, viewPanel } from "../pages/applicationPanel.ts";
 import {
 	applicationsPage,
@@ -21,6 +27,7 @@ import { currentMonthCycle } from "./utils.ts";
 export function createApplicationRoutes(
 	appRepo: ApplicationRepository,
 	applicantRepo: ApplicantRepository,
+	volunteerRepo: VolunteerRepository,
 	eventStore: SQLiteEventStore,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 ) {
@@ -47,10 +54,11 @@ export function createApplicationRoutes(
 				app.phone && app.name
 					? await applicantRepo.getByPhoneAndName(app.phone, app.name)
 					: null;
+			const reviewedByName = await resolveReviewedBy(app, volunteerRepo);
 			const panel =
 				app.status === "flagged"
-					? reviewPanel(app, applicant?.id ?? null)
-					: viewPanel(app, applicant?.id ?? null);
+					? reviewPanel(app, applicant?.id ?? null, reviewedByName)
+					: viewPanel(app, applicant?.id ?? null, reviewedByName);
 			return sseResponse(patchElements(panel));
 		},
 
@@ -92,15 +100,62 @@ export function createApplicationRoutes(
 			const updated = await appRepo.getById(applicationId);
 			if (!updated) return new Response("Not found", { status: 404 });
 
+			const reviewedByName = await resolveReviewedBy(
+				updated,
+				eventStore,
+				volunteerRepo,
+			);
 			const applications = await appRepo.listByMonth(app.monthCycle);
 			return sseResponse(
-				patchElements(viewPanel(updated)),
+				patchElements(viewPanel(updated, undefined, reviewedByName)),
 				patchElements(applicationsTableBody(applications)),
 			);
+		},
+
+		async history(id: string): Promise<Response> {
+			const { events } = await eventStore.readStream<ApplicationEvent>(
+				`application-${id}`,
+			);
+			if (events.length === 0)
+				return sseResponse(patchElements(applicationHistoryPanel([])));
+
+			const volunteerIds = new Set(
+				events
+					.filter(
+						(
+							e,
+						): e is Extract<
+							ApplicationEvent,
+							{ type: "ApplicationConfirmed" | "ApplicationRejected" }
+						> =>
+							e.type === "ApplicationConfirmed" ||
+							e.type === "ApplicationRejected",
+					)
+					.map((e) => e.data.volunteerId)
+					.filter((vid): vid is string => !!vid),
+			);
+
+			const volunteerNames = new Map<string, string>();
+			for (const vid of volunteerIds) {
+				const vol = await volunteerRepo.getById(vid);
+				if (vol) volunteerNames.set(vid, vol.name);
+			}
+
+			const entries = extractReviewHistory(events, volunteerNames);
+			return sseResponse(patchElements(applicationHistoryPanel(entries)));
 		},
 
 		closePanel(): Response {
 			return sseResponse(patchElements('<div id="panel"></div>'));
 		},
 	};
+}
+
+async function resolveReviewedBy(
+	app: { status: string; reviewedByVolunteerId: string | null },
+	volunteerRepo: VolunteerRepository,
+): Promise<string | null> {
+	if (!app.reviewedByVolunteerId) return null;
+	const vol = await volunteerRepo.getById(app.reviewedByVolunteerId);
+	return vol?.name ?? null;
 }

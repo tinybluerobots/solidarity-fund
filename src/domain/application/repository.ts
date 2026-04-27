@@ -18,6 +18,7 @@ export type ApplicationRow = {
 	sortCode: string | null;
 	accountNumber: string | null;
 	poaRef: string | null;
+	reviewedByVolunteerId: string | null;
 };
 
 export type ApplicationFilters = {
