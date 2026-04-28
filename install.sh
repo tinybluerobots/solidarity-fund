@@ -12,7 +12,7 @@ PORT="${PORT:-443}"
 HTTP_PORT="${HTTP_PORT:-80}"
 
 # Optional config
-FUND_NAME="${FUND_NAME:-Community Solidarity Fund}"
+FUND_NAME="${FUND_NAME:-Cambridge Solidarity Fund}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$DATA_DIR/.env"
 IMAGE="ghcr.io/tinybluerobots/solidarity-fund:latest"
