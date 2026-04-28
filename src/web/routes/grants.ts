@@ -1,4 +1,7 @@
-import type { SQLiteEventStore } from "@event-driven-io/emmett-sqlite";
+import type {
+	SQLiteConnectionPool,
+	SQLiteEventStore,
+} from "@event-driven-io/emmett-sqlite";
 import {
 	acceptCashAlternative,
 	approveProofOfAddress,
@@ -10,6 +13,7 @@ import {
 	releaseSlot,
 	updateBankDetails,
 } from "../../domain/grant/commandHandlers.ts";
+import { processSlotReleased } from "../../domain/grant/processManager.ts";
 import type { GrantRepository } from "../../domain/grant/repository.ts";
 import type { VolunteerRepository } from "../../domain/volunteer/repository.ts";
 import type { DocumentStore } from "../../infrastructure/projections/documents.ts";
@@ -27,6 +31,7 @@ export function createGrantRoutes(
 	volunteerRepo: VolunteerRepository,
 	docStore: ReturnType<typeof DocumentStore>,
 	eventStore: SQLiteEventStore,
+	pool: ReturnType<typeof SQLiteConnectionPool>,
 ) {
 	async function refreshBoard(monthCycle: string) {
 		const grants = await grantRepo.listByMonth(monthCycle);
@@ -118,6 +123,25 @@ export function createGrantRoutes(
 
 		async handleDeclineCash(grantId: string): Promise<Response> {
 			await declineCashAlternative(grantId, eventStore);
+			const grant = await grantRepo.getById(grantId);
+			if (grant) {
+				processSlotReleased(
+					{
+						type: "SlotReleased",
+						data: {
+							grantId,
+							applicationId: grantId,
+							applicantId: grant.applicantId,
+							monthCycle: grant.monthCycle,
+							reason: "Cash alternative declined",
+							releasedBy: "system",
+							releasedAt: new Date().toISOString(),
+						},
+					},
+					eventStore,
+					pool,
+				).catch(() => {});
+			}
 			return refreshGrantResponse(grantId);
 		},
 
@@ -154,6 +178,25 @@ export function createGrantRoutes(
 			volunteerId: string,
 		): Promise<Response> {
 			await releaseSlot(grantId, reason, volunteerId, eventStore);
+			const grant = await grantRepo.getById(grantId);
+			if (grant) {
+				processSlotReleased(
+					{
+						type: "SlotReleased",
+						data: {
+							grantId,
+							applicationId: grantId,
+							applicantId: grant.applicantId,
+							monthCycle: grant.monthCycle,
+							reason,
+							releasedBy: volunteerId,
+							releasedAt: new Date().toISOString(),
+						},
+					},
+					eventStore,
+					pool,
+				).catch(() => {});
+			}
 			return refreshGrantResponse(grantId);
 		},
 

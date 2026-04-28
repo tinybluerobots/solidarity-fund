@@ -211,7 +211,11 @@ function decideSelect(
 	command: SelectApplication,
 	state: ApplicationState,
 ): ApplicationEvent[] {
-	if (state.status !== "accepted" && state.status !== "confirmed") {
+	if (
+		state.status !== "accepted" &&
+		state.status !== "confirmed" &&
+		state.status !== "not_selected"
+	) {
 		throw new IllegalStateError(
 			`Cannot select application in ${state.status} state`,
 		);

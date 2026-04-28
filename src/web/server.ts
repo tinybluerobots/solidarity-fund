@@ -173,6 +173,7 @@ export async function startServer(
 		volunteerRepo,
 		docStore,
 		eventStore,
+		pool,
 	);
 	const altchaRoutes = createAltchaRoutes(hmacKey);
 	const changePasswordHandler = handleChangePassword(
