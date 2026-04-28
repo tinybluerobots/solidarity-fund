@@ -137,13 +137,13 @@ flowchart TD
 - Grant creation from lottery selection (process manager)
 - Cash alternative offered after 3 failed POA attempts
 - Slot release on cash alternative decline
+- Waitlist promotion (automated when slot is released)
+- SMS notifications for all application lifecycle events (submitted, accepted, rejected, selected, not selected, paid)
 
 ### Automated (not yet implemented)
 - Auto-reply to SMS/email with form link
-- Winner/non-winner notifications
-- Bank details + POA form delivery
+- Bank details + POA form delivery to winners
 - Reminders for unresponsive winners
-- Waitlist promotion
 
 ### Volunteer Actions (implemented)
 - Resolve identity mismatches (review flagged applications)
@@ -183,6 +183,8 @@ flowchart TD
 | `ApplicationConfirmed` | Volunteer confirms flagged applicant | Re-check eligibility → Accept or reject |
 | `ApplicationAccepted` | Eligibility passed | Add to lottery pool |
 | `ApplicationRejected` | Cooldown/duplicate/identity_mismatch/window_closed | Notify applicant with reason |
+| `ApplicationReviewReverted` | Volunteer reverts review decision | Restore application to `flagged` status for re-review |
+| `ApplicationNotSelected` | Process manager (post-draw) | Applicant not selected this month |
 
 ### Applicant Aggregate (implemented)
 
@@ -199,7 +201,10 @@ Applicant holds identity only (phone, name, email). Per-application choices (pay
 | Event | Trigger | What Happens |
 |-------|---------|--------------|
 | `VolunteerCreated` | Admin creates volunteer account | Store name, contact details, password hash |
-| `VolunteerUpdated` | Volunteer updates their profile | Update profile fields |
+| `VolunteerUpdated` | Admin/volunteer updates profile | Update profile fields |
+| `VolunteerDisabled` | Admin disables volunteer | Volunteer cannot log in until re-enabled |
+| `VolunteerEnabled` | Admin re-enables volunteer | Volunteer can log in again |
+| `PasswordChanged` | Volunteer changes password | Update password hash; invalidate other sessions |
 | `VolunteerDeleted` | Admin removes volunteer | Soft-delete from read model |
 
 ### Lottery Aggregate (implemented)

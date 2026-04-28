@@ -15,7 +15,8 @@ This guide covers everything volunteers need to operate the grant lottery system
 7. [Grant Workflow — Cash Handover](#7-grant-workflow--cash-handover)
 8. [Handling Unresponsive Winners](#8-handling-unresponsive-winners)
 9. [Managing Applicants](#9-managing-applicants)
-10. [Key Rules Reference](#10-key-rules-reference)
+10. [Admin Tools](#10-admin-tools)
+11. [Key Rules Reference](#11-key-rules-reference)
 
 ---
 
@@ -27,8 +28,9 @@ This guide covers everything volunteers need to operate the grant lottery system
 2. You will be redirected to `/login`
 3. Enter your **name** and **password** (provided by an admin)
 4. If your account requires a password reset, you will be redirected to `/change-password` automatically
-5. Set a new password (minimum 4 characters) and submit
-6. You are now logged in and redirected to the dashboard
+5. Set a new password (minimum 12 characters) and submit
+6. All other active sessions for your account are invalidated — you stay logged in, but any other devices are logged out
+7. You are now logged in and redirected to the dashboard
 
 ### Subsequent Logins
 
@@ -36,11 +38,13 @@ This guide covers everything volunteers need to operate the grant lottery system
 2. Enter your name and password
 3. You are redirected to the dashboard
 
+> **Rate limiting:** Login is limited to 10 attempts per 15 minutes per IP address. After exceeding this limit, you'll see a "Too Many Requests" error — wait 15 minutes before trying again.
+
+> **Disabled accounts:** If your account has been disabled by an admin, login returns "This account has been disabled" and you cannot proceed. Contact another admin to re-enable your account.
+
 ### Logout
 
 Click **Logout** in the navigation. Your session is cleared immediately.
-
-> **Note:** If your account has been disabled by an admin, you will not be able to log in. Contact another admin to re-enable your account.
 
 ---
 
@@ -96,7 +100,7 @@ Once the window is open, applicants submit via the public form at `/apply`. The 
 - **Email** (optional)
 - **Meeting place or address** (required — used to arrange cash handovers)
 - **Payment preference** — bank transfer or cash
-  - If bank: **sort code** (6 digits) and **account number** (8 digits) are required, and applicants can optionally upload a **proof of address** document at this stage to speed up verification later
+  - If bank: **bank name**, **sort code** (6 digits, format `XX-XX-XX`), and **account number** (8 digits) are required, and applicants can optionally upload a **proof of address** document (JPEG, PNG, GIF, WebP, or PDF, max 5MB) at this stage to speed up verification later
 
 After submitting, applicants see a confirmation page with their application reference number and outcome (accepted, flagged for review, or rejected with reason).
 
@@ -104,7 +108,9 @@ If the window is closed, the form displays a _window closed_ message and no appl
 
 ### Checking Application Status
 
-Applicants can check their own progress at `/status` using the reference number shown on their confirmation page. The status page shows a timeline of their application, and if they were selected, the current state of their grant (e.g. awaiting POA review, payment pending). No login is required — the reference number is the only credential needed.
+Applicants can check their own progress at `/status` using the 8-character reference number shown on their confirmation page. The reference is the first 8 characters of the application UUID (hexadecimal). The status page shows a timeline of their application, and if they were selected, the current state of their grant (e.g. awaiting POA review, payment pending). No login is required — the reference number is the only credential needed.
+
+> **Rate limit:** Status lookups are limited to 30 requests per minute per IP address.
 
 ---
 
@@ -138,6 +144,15 @@ A flagged application means the phone number is already known but the name submi
 5. **Reject** — the application is rejected with reason _identity mismatch_
 
 > The applicant is automatically notified that a volunteer will contact them when their application is flagged.
+
+### Reverting a Review Decision
+
+If you confirmed or rejected a flagged application in error, you can revert your decision:
+
+1. Open the application
+2. Click **Revert Decision**
+3. Confirm the revert in the dialog
+4. The application returns to `flagged` status for re-review
 
 ### Rejection Reasons
 
@@ -222,6 +237,10 @@ Once POA is approved, the grant panel shows the sort code and account number to 
 3. Click **Record Payment**
 4. The grant is now **complete** (`paid`)
 
+### Grant Notes
+
+Each grant detail panel includes a **Notes** textarea. Use this to record context about the applicant, payment issues, or any other information. Notes auto-save when you click away from the field.
+
 ### Cash Alternative
 
 If an applicant's POA is rejected 3 times, they are offered cash instead:
@@ -288,7 +307,7 @@ If a winner does not respond after being notified:
 2. Click **Release Slot**
 3. The slot is released and can be offered to the next person on the waitlist (ranked by lottery order)
 
-> **Waitlist promotion** is not yet automated — releasing a slot requires contacting the next ranked applicant manually for now.
+> **Waitlist promotion is automated.** When a slot is released, the system automatically promotes the next ranked `not_selected` applicant and creates a grant for them. No manual contact needed.
 
 ---
 
@@ -310,7 +329,8 @@ If you need to add someone who cannot use the online form:
 
 1. Go to **Applicants** → click the applicant
 2. Update their phone, name, or email
-3. Save
+3. Add **notes** (e.g. context about their situation) — notes auto-save when you click away from the textarea
+4. Save
 
 ### Viewing Applicant History
 
@@ -325,7 +345,44 @@ Deleting an applicant soft-deletes them from the system. Their event history is 
 
 ---
 
-## 10. Key Rules Reference
+## 10. Admin Tools
+
+> **Admin only.** The following tools are only visible and accessible to volunteers with admin status.
+
+### Event Log
+
+The Event Log (`/logs`) provides a paginated audit trail of all domain events in the system — applications submitted, grants created, payments recorded, volunteers managed, etc.
+
+1. Go to **Event Log** in the navigation
+2. Events are listed newest-first, 25 per page
+3. Each entry shows: event sequence number, relative time ("3 hours ago"), event type (color-coded badge), and a human-readable description
+
+Use this for debugging, auditing, or understanding the system's activity history.
+
+### Database Download
+
+Admins can download a snapshot of the SQLite database for backup or offline analysis:
+
+1. Go to **Download DB** in the navigation
+2. A `.sqlite` file is downloaded with the filename `solidarity-fund-YYYY-MM-DD.sqlite`
+3. This is a read-only snapshot — the download does not lock or interrupt the live database
+
+### ALTCHA Captcha
+
+The public application form at `/apply` is protected by an ALTCHA captcha widget to prevent bot submissions. No volunteer action is needed — the captcha challenge is served automatically and verified on form submission. The `ALTCHA_HMAC_KEY` environment variable must be set for this to work (configured automatically during installation).
+
+### Security Features
+
+The system includes several security measures that operate transparently:
+
+- **Login rate limiting**: 10 attempts per 15 minutes per IP address
+- **Security headers**: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Content-Security-Policy` are set on all responses
+- **Session cookies**: HttpOnly, SameSite=Strict, and Secure (when HTTPS is enabled via the `SECURE_COOKIES` variable)
+- **HTTPS/TLS**: The server supports native TLS when `TLS_CERT` and `TLS_KEY` environment variables are set, with automatic HTTP→HTTPS redirect on port 80
+
+---
+
+## 11. Key Rules Reference
 
 | Rule | Detail |
 |------|--------|
