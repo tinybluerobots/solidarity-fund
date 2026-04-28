@@ -64,7 +64,7 @@ export function createApplicationRoutes(
 			const reviewedByName = await resolveReviewedBy(app, volunteerRepo);
 
 			let panel: string;
-			if (app.status === "flagged") {
+			if (app.status === "flagged" || app.status === "accepted") {
 				panel = reviewPanel(app, applicant?.id ?? null, reviewedByName);
 			} else if (app.status === "confirmed" || app.status === "rejected") {
 				panel = revertablePanel(app, applicant?.id ?? null, reviewedByName);
@@ -98,7 +98,7 @@ export function createApplicationRoutes(
 							app.email ?? undefined,
 							app.monthCycle,
 							pool,
-							{ skipWindowCheck: true },
+							{ skipWindowCheck: true, excludeApplicationId: applicationId },
 						)
 					: ({ status: "eligible" } as const);
 

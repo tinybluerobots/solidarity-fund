@@ -188,14 +188,22 @@ export function reviewPanel(
 	applicantId: string | null = null,
 	reviewedByVolunteerName?: string | null,
 ): string {
+	const context =
+		app.status === "flagged"
+			? "This application was flagged for manual review."
+			: "This application passed automated eligibility checks. No action needed, but you can confirm or reject if something looks wrong.";
+
 	return panelWithTabs(
 		app.name ?? "Review Application",
 		app,
 		applicantId,
 		reviewedByVolunteerName,
-		`<div class="flex gap-3 mt-6">
-      <button class="btn btn-primary" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
-      <button class="btn btn-danger" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
+		`<div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded">
+      <p class="text-sm text-amber-700 mb-3">${context}</p>
+      <div class="flex gap-3">
+        <button class="btn btn-primary" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=confirm')">Confirm</button>
+        <button class="btn btn-danger" data-on:click="@post('/applications/${encodeURIComponent(app.id)}/review?decision=reject')">Reject</button>
+      </div>
     </div>`,
 	);
 }

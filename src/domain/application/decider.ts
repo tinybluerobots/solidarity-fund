@@ -143,7 +143,7 @@ function decideReview(
 	command: ReviewApplication,
 	state: ApplicationState,
 ): ApplicationEvent[] {
-	if (state.status !== "flagged") {
+	if (state.status !== "flagged" && state.status !== "accepted") {
 		throw new IllegalStateError(
 			`Cannot review application in ${state.status} state`,
 		);

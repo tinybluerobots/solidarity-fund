@@ -230,7 +230,46 @@ describe("application decider", () => {
 			expect(events[0]?.data).toMatchObject({ reason: "cooldown" });
 		});
 
-		it("throws when application is not in flagged state", () => {
+		it("emits ApplicationConfirmed when confirming from accepted state", () => {
+			const events = decide(
+				{
+					type: "ReviewApplication",
+					data: {
+						applicationId: APP_ID,
+						volunteerId: "vol-1",
+						decision: "confirm",
+						eligibility: { status: "eligible" },
+						reviewedAt: NOW,
+					},
+				},
+				acceptedState,
+			);
+
+			expect(events).toHaveLength(1);
+			expect(events[0]?.type).toBe("ApplicationConfirmed");
+		});
+
+		it("emits ApplicationRejected when rejecting from accepted state", () => {
+			const events = decide(
+				{
+					type: "ReviewApplication",
+					data: {
+						applicationId: APP_ID,
+						volunteerId: "vol-1",
+						decision: "reject",
+						eligibility: { status: "eligible" },
+						reviewedAt: NOW,
+					},
+				},
+				acceptedState,
+			);
+
+			expect(events).toHaveLength(1);
+			expect(events[0]?.type).toBe("ApplicationRejected");
+			expect(events[0]?.data).toMatchObject({ reason: "identity_mismatch" });
+		});
+
+		it("throws when application is in submitted state", () => {
 			expect(() =>
 				decide(
 					{
@@ -243,7 +282,12 @@ describe("application decider", () => {
 							reviewedAt: NOW,
 						},
 					},
-					acceptedState,
+					{
+						status: "submitted",
+						applicationId: APP_ID,
+						applicantId: APPLICANT_ID,
+						monthCycle: MONTH,
+					},
 				),
 			).toThrow(IllegalStateError);
 		});

@@ -420,22 +420,48 @@ describe("application workflow", () => {
 			});
 		});
 
-		test("cannot review non-flagged application", async () => {
+		test("cannot review an already-confirmed application", async () => {
 			await submitAcceptedApplication(env, {
-				applicationId: "app-1",
-				phone: "07700900001",
+				applicationId: "app-double-confirm",
+				phone: "07700900100",
 				name: "Alice",
 			});
+			await reviewApplication(
+				"app-double-confirm",
+				"vol-1",
+				"confirm",
+				{ status: "eligible" },
+				env.eventStore,
+			);
 
 			await expect(
 				reviewApplication(
-					"app-1",
-					"vol-1",
+					"app-double-confirm",
+					"vol-2",
 					"confirm",
 					{ status: "eligible" },
 					env.eventStore,
 				),
 			).rejects.toThrow(/cannot review/i);
+		});
+
+		test("can review accepted application", async () => {
+			await submitAcceptedApplication(env, {
+				applicationId: "app-review-accepted",
+				phone: "07700900101",
+				name: "Bob",
+			});
+
+			const result = await reviewApplication(
+				"app-review-accepted",
+				"vol-1",
+				"confirm",
+				{ status: "eligible" },
+				env.eventStore,
+			);
+
+			expect(result.events).toHaveLength(1);
+			expect(result.events[0]?.type).toBe("ApplicationConfirmed");
 		});
 	});
 

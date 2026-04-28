@@ -18,7 +18,10 @@ export async function checkEligibility(
 	email: string | undefined,
 	monthCycle: string,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
-	options?: { skipWindowCheck?: boolean },
+	options?: {
+		skipWindowCheck?: boolean;
+		excludeApplicationId?: string;
+	},
 ): Promise<EligibilityResult> {
 	return pool.withConnection(async (conn) => {
 		if (!options?.skipWindowCheck) {
@@ -47,19 +50,27 @@ export async function checkEligibility(
 			return { status: "eligible" } as const;
 		}
 
+		const excludeId = options?.excludeApplicationId;
+
 		// Check for duplicate: any application this month that isn't rejected or flagged
+		const duplicateQuery = excludeId
+			? `SELECT id, applied_at, ref FROM applications
+			   WHERE applicant_id = ?
+			     AND month_cycle = ?
+			     AND status NOT IN ('rejected', 'flagged')
+			     AND id != ?
+			   LIMIT 1`
+			: `SELECT id, applied_at, ref FROM applications
+			   WHERE applicant_id = ?
+			     AND month_cycle = ?
+			     AND status NOT IN ('rejected', 'flagged')
+			   LIMIT 1`;
+
 		const dupes = await conn.query<{
 			id: string;
 			applied_at: string;
 			ref: string;
-		}>(
-			`SELECT id, applied_at, ref FROM applications
-			 WHERE applicant_id = ?
-			   AND month_cycle = ?
-			   AND status NOT IN ('rejected', 'flagged')
-			 LIMIT 1`,
-			[applicantId, monthCycle],
-		);
+		}>(duplicateQuery, excludeId ? [applicantId, monthCycle, excludeId] : [applicantId, monthCycle]);
 		if (dupes.length > 0 && dupes[0]) {
 			return {
 				status: "duplicate",
