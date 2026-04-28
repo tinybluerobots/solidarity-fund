@@ -9,7 +9,7 @@ import { startEventSubscriptions } from "../subscriptions.ts";
 import { startServer } from "./server.ts";
 
 const dbPath = process.env.DB_PATH ?? "csf.db";
-const fundName = process.env.FUND_NAME ?? "Community Solidarity Fund";
+const fundName = process.env.FUND_NAME ?? "Cambridge Solidarity Fund";
 setFundName(fundName);
 
 const { store: eventStore, pool } = createEventStore(dbPath);
