@@ -10,7 +10,7 @@ services:
       - ${DATA_DIR:-/var/lib/csf}:/var/lib/csf
     environment:
       - DB_PATH=/var/lib/csf/csf.db
-      - FUND_NAME=${FUND_NAME:-Community Solidarity Fund}
+      - FUND_NAME=${FUND_NAME:-Cambridge Solidarity Fund}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       - ALTCHA_HMAC_KEY=${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
       - SMS_ENABLED=${SMS_ENABLED:-false}
