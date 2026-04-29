@@ -12,6 +12,7 @@ export function logsPage(
 	page: number,
 	totalPages: number,
 	totalCount: number,
+	volunteerNames: Map<string, string> = new Map(),
 ): string {
 	return layout(
 		"Event Log",
@@ -38,7 +39,7 @@ export function logsPage(
         </tr>
       </thead>
       <tbody>
-        ${rows.length === 0 ? emptyRow() : rows.map(renderRow).join("")}
+        ${rows.length === 0 ? emptyRow() : rows.map((r) => renderRow(r, volunteerNames)).join("")}
       </tbody>
     </table>
   </div>
@@ -53,7 +54,7 @@ function emptyRow(): string {
 	return `<tr><td colspan="4" class="px-3 py-8 text-center text-bark-muted text-sm">No events yet.</td></tr>`;
 }
 
-function renderRow(row: LogRow): string {
+function renderRow(row: LogRow, volunteerNames: Map<string, string>): string {
 	let data: Record<string, unknown> = {};
 	try {
 		data = JSON.parse(row.message_data) as Record<string, unknown>;
@@ -61,7 +62,7 @@ function renderRow(row: LogRow): string {
 		// leave data empty — describeEvent handles missing fields
 	}
 
-	const description = describeEvent(row.message_type, data);
+	const description = describeEvent(row.message_type, data, volunteerNames);
 
 	return `<tr class="border-b border-cream-200 hover:bg-cream-50 transition-colors">
     <td class="px-3 py-2 font-mono text-xs text-bark-muted">${row.global_position}</td>
@@ -105,8 +106,23 @@ function badgeClass(type: string): string {
 export function describeEvent(
 	type: string,
 	data: Record<string, unknown>,
+	volunteerNames: Map<string, string> = new Map(),
 ): string {
 	const appRef = () => escapeHtml(String(data.applicationId ?? "").slice(0, 8));
+	const volName = (idField: string): string => {
+		const id = data[idField];
+		if (typeof id !== "string" || id.length === 0) return "";
+		const name = volunteerNames.get(id);
+		if (!name) return "";
+		return ` by <strong>${escapeHtml(name)}</strong>`;
+	};
+	const volTarget = (idField: string): string => {
+		const id = data[idField];
+		if (typeof id !== "string" || id.length === 0) return "";
+		const name = volunteerNames.get(id);
+		if (!name) return "";
+		return ` <strong>${escapeHtml(name)}</strong>`;
+	};
 
 	switch (type) {
 		case "ApplicationSubmitted":
@@ -114,7 +130,7 @@ export function describeEvent(
 		case "ApplicationAccepted":
 			return `Application <strong>${appRef()}</strong> accepted`;
 		case "ApplicationRejected":
-			return `Application <strong>${appRef()}</strong> rejected · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>`;
+			return `Application <strong>${appRef()}</strong> rejected · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>${volName("volunteerId")}`;
 		case "ApplicationFlaggedForReview":
 			return `Application <strong>${appRef()}</strong> flagged · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>`;
 		case "ApplicationSelected":
@@ -122,7 +138,9 @@ export function describeEvent(
 		case "ApplicationNotSelected":
 			return `Application <strong>${appRef()}</strong> not selected`;
 		case "ApplicationConfirmed":
-			return `Application <strong>${appRef()}</strong> confirmed`;
+			return `Application <strong>${appRef()}</strong> confirmed${volName("volunteerId")}`;
+		case "ApplicationReviewReverted":
+			return `Review reverted for <strong>${appRef()}</strong>${volName("volunteerId")}`;
 		case "ApplicationWindowOpened":
 			return `Application window opened · ${escapeHtml(String(data.monthCycle ?? ""))}`;
 		case "ApplicationWindowClosed":
@@ -146,17 +164,17 @@ export function describeEvent(
 		case "GrantCreated":
 			return `Grant created · ${escapeHtml(String(data.paymentPreference ?? ""))}`;
 		case "GrantPaid":
-			return `<strong>£${escapeHtml(String(data.amount ?? ""))}</strong> paid via ${escapeHtml(String(data.method ?? ""))}`;
+			return `<strong>£${escapeHtml(String(data.amount ?? ""))}</strong> paid via ${escapeHtml(String(data.method ?? ""))}${volName("paidBy")}`;
 		case "SlotReleased":
-			return `Grant slot released · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>`;
+			return `Grant slot released · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>${volName("releasedBy")}`;
 		case "VolunteerAssigned":
-			return `Volunteer assigned to grant`;
+			return `Volunteer${volTarget("volunteerId")} assigned to grant`;
 		case "BankDetailsUpdated":
 			return `Bank details updated`;
 		case "ProofOfAddressApproved":
-			return `Proof of address approved`;
+			return `Proof of address approved${volName("verifiedBy")}`;
 		case "ProofOfAddressRejected":
-			return `Proof of address rejected · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>`;
+			return `Proof of address rejected · <em class="text-bark-muted">${escapeHtml(String(data.reason ?? ""))}</em>${volName("rejectedBy")}`;
 		case "CashAlternativeOffered":
 			return `Cash alternative offered`;
 		case "CashAlternativeAccepted":
@@ -164,7 +182,7 @@ export function describeEvent(
 		case "CashAlternativeDeclined":
 			return `Cash alternative declined`;
 		case "VolunteerReimbursed":
-			return `Volunteer reimbursed · ref ${escapeHtml(String(data.expenseReference ?? ""))}`;
+			return `Volunteer${volTarget("volunteerId")} reimbursed · ref ${escapeHtml(String(data.expenseReference ?? ""))}`;
 		case "LotteryDrawn": {
 			const selected = Array.isArray(data.selected) ? data.selected.length : 0;
 			return `<strong>${selected}</strong> selected · <strong>£${escapeHtml(String(data.grantAmount ?? ""))}</strong> each · cycle ${escapeHtml(String(data.monthCycle ?? ""))}`;

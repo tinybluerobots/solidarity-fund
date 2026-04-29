@@ -19,6 +19,52 @@ export function calcTotalPages(total: number): number {
 	return Math.max(1, Math.ceil(total / PAGE_SIZE));
 }
 
+function collectVolunteerIds(rows: LogRow[]): Set<string> {
+	const ids = new Set<string>();
+	const volunteerFields = [
+		"volunteerId",
+		"verifiedBy",
+		"rejectedBy",
+		"paidBy",
+		"releasedBy",
+	];
+	for (const row of rows) {
+		try {
+			const data = JSON.parse(row.message_data) as Record<string, unknown>;
+			for (const field of volunteerFields) {
+				const v = data[field];
+				if (typeof v === "string" && v.length > 0) {
+					ids.add(v);
+				}
+			}
+		} catch {
+			// skip unparseable messages
+		}
+	}
+	return ids;
+}
+
+async function lookupVolunteerNames(
+	pool: ReturnType<typeof SQLiteConnectionPool>,
+	ids: Set<string>,
+): Promise<Map<string, string>> {
+	const map = new Map<string, string>();
+	if (ids.size === 0) return map;
+
+	const idList = [...ids];
+	const placeholders = idList.map(() => "?");
+	const rows = await pool.withConnection(async (conn) =>
+		conn.query<{ id: string; name: string }>(
+			`SELECT id, name FROM volunteers WHERE id IN (${placeholders.join(",")})`,
+			idList,
+		),
+	);
+	for (const row of rows) {
+		map.set(row.id, row.name);
+	}
+	return map;
+}
+
 export function createLogsRoutes(
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 ) {
@@ -51,7 +97,13 @@ export function createLogsRoutes(
 					},
 				);
 
-				const html = logsPage(rows, page, pages, total);
+				const volunteerIds = collectVolunteerIds(rows);
+				const volunteerNames = await lookupVolunteerNames(
+					pool,
+					volunteerIds,
+				);
+
+				const html = logsPage(rows, page, pages, total, volunteerNames);
 				return new Response(html, {
 					headers: { "Content-Type": "text/html; charset=utf-8" },
 				});

@@ -65,6 +65,97 @@ describe("describeEvent", () => {
 		expect(result).toContain("confirmed");
 	});
 
+	it("ApplicationConfirmed includes volunteer name when available", () => {
+		const names = new Map([["vol-1", "Jane Smith"]]);
+		const result = describeEvent(
+			"ApplicationConfirmed",
+			{ applicationId: "aabbccdd11223344", volunteerId: "vol-1" },
+			names,
+		);
+		expect(result).toContain("confirmed by");
+		expect(result).toContain("Jane Smith");
+	});
+
+	it("ApplicationConfirmed with unknown volunteerId shows no name", () => {
+		const names = new Map([["vol-1", "Jane Smith"]]);
+		const result = describeEvent(
+			"ApplicationConfirmed",
+			{ applicationId: "aabbccdd11223344", volunteerId: "vol-unknown" },
+			names,
+		);
+		expect(result).not.toContain("by");
+	});
+
+	it("ApplicationConfirmed with empty volunteerId shows no name", () => {
+		const names = new Map([["vol-1", "Jane Smith"]]);
+		const result = describeEvent(
+			"ApplicationConfirmed",
+			{ applicationId: "aabbccdd11223344", volunteerId: "" },
+			names,
+		);
+		expect(result).not.toContain("by");
+	});
+
+	it("ApplicationReviewReverted includes volunteer name", () => {
+		const names = new Map([["vol-2", "Alex Kim"]]);
+		const result = describeEvent(
+			"ApplicationReviewReverted",
+			{ applicationId: "abc12345", volunteerId: "vol-2" },
+			names,
+		);
+		expect(result).toContain("reverted");
+		expect(result).toContain("Alex Kim");
+	});
+
+	it("ApplicationRejected includes volunteer name when provided", () => {
+		const names = new Map([["vol-3", "Sam Jones"]]);
+		const result = describeEvent(
+			"ApplicationRejected",
+			{
+				applicationId: "abcdef1234567890",
+				reason: "cooldown",
+				volunteerId: "vol-3",
+			},
+			names,
+		);
+		expect(result).toContain("rejected");
+		expect(result).toContain("Sam Jones");
+	});
+
+	it("GrantPaid includes volunteer name", () => {
+		const names = new Map([["vol-4", "Maria Garcia"]]);
+		const result = describeEvent(
+			"GrantPaid",
+			{ amount: 375, method: "bank", paidBy: "vol-4" },
+			names,
+		);
+		expect(result).toContain("375");
+		expect(result).toContain("bank");
+		expect(result).toContain("Maria Garcia");
+	});
+
+	it("VolunteerAssigned includes volunteer name", () => {
+		const names = new Map([["vol-5", "Priya Patel"]]);
+		const result = describeEvent(
+			"VolunteerAssigned",
+			{ volunteerId: "vol-5" },
+			names,
+		);
+		expect(result).toContain("Priya Patel");
+		expect(result).toContain("assigned");
+	});
+
+	it("ProofOfAddressApproved includes verifier name", () => {
+		const names = new Map([["vol-6", "Bob Wilson"]]);
+		const result = describeEvent(
+			"ProofOfAddressApproved",
+			{ verifiedBy: "vol-6" },
+			names,
+		);
+		expect(result).toContain("approved");
+		expect(result).toContain("Bob Wilson");
+	});
+
 	it("ApplicantCreated includes name", () => {
 		const result = describeEvent("ApplicantCreated", { name: "Maria Santos" });
 		expect(result).toContain("Maria Santos");
