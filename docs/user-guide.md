@@ -100,7 +100,7 @@ Once the window is open, applicants submit via the public form at `/apply`. The 
 - **Email** (optional)
 - **Meeting place or address** (required — used to arrange cash handovers)
 - **Payment preference** — bank transfer or cash
-  - If bank: **bank name**, **sort code** (6 digits, format `XX-XX-XX`), and **account number** (8 digits) are required, and applicants can optionally upload a **proof of address** document (JPEG, PNG, GIF, WebP, or PDF, max 5MB) at this stage to speed up verification later
+  - If bank: **sort code** (6 digits, format `XX-XX-XX`) and **account number** (8 digits) are required, and applicants can optionally upload a **proof of address** document (JPEG, PNG, GIF, WebP, or PDF, max 5MB) at this stage to speed up verification later
 
 After submitting, applicants see a confirmation page with their application reference number and outcome (accepted, flagged for review, or rejected with reason).
 

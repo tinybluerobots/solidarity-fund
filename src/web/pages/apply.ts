@@ -81,10 +81,6 @@ export function applyPage(): string {
 			</div>
 			<div id="bankFields" class="space-y-4" data-show="$paymentPref === 'bank'" style="display:none;">
 				<div>
-					<label for="bankName" class="block text-sm font-body text-bark mb-1">Bank Name</label>
-					<input type="text" id="bankName" name="bankName" class="input" />
-				</div>
-				<div>
 					<label for="sortCode" class="block text-sm font-body text-bark mb-1">Sort Code</label>
 					<input type="text" id="sortCode" name="sortCode" class="input" placeholder="12-34-56" pattern="\\d{2}-?\\d{2}-?\\d{2}" title="Sort code must be 6 digits, e.g. 12-34-56 or 123456" data-attr:required="$paymentPref === 'bank' ? '' : null" />
 				</div>
