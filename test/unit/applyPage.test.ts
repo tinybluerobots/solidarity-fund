@@ -7,7 +7,7 @@ import {
 
 describe("applyPage", () => {
 	test("renders form with required fields", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain('name="name"');
 		expect(html).toContain('name="phone"');
 		expect(html).toContain('name="email"');
@@ -18,31 +18,31 @@ describe("applyPage", () => {
 	});
 
 	test("form uses multipart/form-data encoding", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain('enctype="multipart/form-data"');
 	});
 
 	test("bank fields include optional POA file input with helper text", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain('name="poa"');
 		expect(html).toContain('type="file"');
 		expect(html).toContain('accept="image/*,.pdf"');
-		expect(html).toContain("speed up");
+		expect(html).toContain("photo of a paper document");
 	});
 
 	test("includes Datastar for payment preference toggle", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain("datastar");
 	});
 
 	test("includes altcha widget", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain("altcha-widget");
 		expect(html).toContain("/api/altcha/challenge");
 	});
 
 	test("includes data retention notice", () => {
-		const html = applyPage();
+		const html = applyPage("2026-12-31T23:59:59.000Z");
 		expect(html).toContain("6 months");
 		expect(html).toContain("/privacy");
 	});
@@ -110,6 +110,6 @@ describe("applyResultPage — reference number", () => {
 
 	test("omits reference number block when not provided", () => {
 		const html = applyResultPage("accepted");
-		expect(html).not.toContain("reference number");
+		expect(html).not.toContain("Save the following link");
 	});
 });
