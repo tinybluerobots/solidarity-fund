@@ -8,11 +8,7 @@ shift || true
 # Defaults (override via env)
 APP_NAME="${APP_NAME:-csf}"
 DATA_DIR="${DATA_DIR:-/var/lib/$APP_NAME}"
-PORT="${PORT:-443}"
 HTTP_PORT="${HTTP_PORT:-80}"
-
-# Optional config
-FUND_NAME="${FUND_NAME:-Community Solidarity Fund}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$DATA_DIR/.env"
 IMAGE="ghcr.io/tinybluerobots/solidarity-fund:latest"
@@ -30,6 +26,10 @@ EXISTING_ENV=$(ssh "$SSH_TARGET" "cat '$ENV_FILE' 2>/dev/null" || true)
 		CLICKSEND_USERNAME="${CLICKSEND_USERNAME:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_USERNAME=' | sed 's/^CLICKSEND_USERNAME=//' | tr -d "'" || true)}"
 		CLICKSEND_API_KEY="${CLICKSEND_API_KEY:-$(echo "$EXISTING_ENV" | grep '^CLICKSEND_API_KEY=' | sed 's/^CLICKSEND_API_KEY=//' | tr -d "'" || true)}"
 	fi
+
+# Defaults for vars that can be overridden by remote .env
+PORT="${PORT:-443}"
+FUND_NAME="${FUND_NAME:-Community Solidarity Fund}"
 
 # Auto-generate secrets if still not set (first install)
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(openssl rand -base64 32)}"
