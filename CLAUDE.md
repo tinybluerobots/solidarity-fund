@@ -27,7 +27,7 @@ Default to using Bun instead of Node.js.
 
 ## Testing
 
-Use `bun test` to run tests.
+Use `bun test` to run unit and integration tests.
 
 ```ts#index.test.ts
 import { test, expect } from "bun:test";
@@ -36,6 +36,13 @@ test("hello world", () => {
   expect(1).toBe(1);
 });
 ```
+
+### E2E Tests (Playwright)
+
+Run with `bunx playwright test` (requires Bun). The test fixtures auto-spawn a test server
+on port 3001 via `test/e2e/testServer.ts` — no manual server setup needed.
+
+Config: `playwright.config.ts` — 1 worker, chromium, baseURL `http://localhost:3001`.
 
 ## Frontend
 
