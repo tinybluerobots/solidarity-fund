@@ -31,6 +31,12 @@ function drawDate(monthCycle: string): string {
 	return `${d}/${m}/${lastDay.getFullYear()}`;
 }
 
+function closingTimestamp(monthCycle: string): string {
+	const [year, month] = monthCycle.split("-").map(Number) as [number, number];
+	const lastDay = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+	return lastDay.toISOString();
+}
+
 async function isWindowOpen(
 	monthCycle: string,
 	pool: ReturnType<typeof SQLiteConnectionPool>,
@@ -60,7 +66,7 @@ export function createApplyRoutes(
 		async showForm(): Promise<Response> {
 			const monthCycle = currentMonthCycle();
 			const open = await isWindowOpen(monthCycle, pool);
-			const html = open ? applyPage() : applyClosedPage();
+			const html = open ? applyPage(closingTimestamp(monthCycle)) : applyClosedPage();
 			return new Response(html, {
 				headers: { "Content-Type": "text/html" },
 			});
@@ -233,8 +239,9 @@ export function createApplyRoutes(
 			const existingAppliedAt =
 				url.searchParams.get("existingAppliedAt") || undefined;
 			const drawDate = url.searchParams.get("drawDate") || undefined;
+			const baseUrl = `${url.protocol}//${url.host}`;
 			return new Response(
-				applyResultPage(status, reason, ref, existingAppliedAt, drawDate),
+				applyResultPage(status, reason, ref, existingAppliedAt, drawDate, baseUrl),
 				{
 					headers: { "Content-Type": "text/html" },
 				},

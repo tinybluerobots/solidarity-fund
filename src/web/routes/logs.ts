@@ -98,10 +98,7 @@ export function createLogsRoutes(
 				);
 
 				const volunteerIds = collectVolunteerIds(rows);
-				const volunteerNames = await lookupVolunteerNames(
-					pool,
-					volunteerIds,
-				);
+				const volunteerNames = await lookupVolunteerNames(pool, volunteerIds);
 
 				const html = logsPage(rows, page, pages, total, volunteerNames);
 				return new Response(html, {

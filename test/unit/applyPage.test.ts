@@ -104,7 +104,7 @@ describe("applyResultPage — reference number", () => {
 	test("shows reference number when provided", () => {
 		const html = applyResultPage("accepted", undefined, "abc-123");
 		expect(html).toContain("abc-123");
-		expect(html).toContain("reference");
+		expect(html).toContain("check the status of your application");
 		expect(html).toContain("/status?ref=abc-123");
 	});
 

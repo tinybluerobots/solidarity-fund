@@ -8,7 +8,9 @@ import {
 
 async function setupAccepted(
 	page: ReturnType<typeof test> extends { page: infer P } ? P : never,
-	login: (p: ReturnType<typeof test> extends { page: infer P } ? P : never) => Promise<void>,
+	login: (
+		p: ReturnType<typeof test> extends { page: infer P } ? P : never,
+	) => Promise<void>,
 	name: string,
 	phone: string,
 ) {
@@ -25,7 +27,10 @@ async function setupAccepted(
 	await closeLotteryWindow(page);
 }
 
-async function openApplicationPanel(page: ReturnType<typeof test> extends { page: infer P } ? P : never, name: string) {
+async function openApplicationPanel(
+	page: ReturnType<typeof test> extends { page: infer P } ? P : never,
+	name: string,
+) {
 	await page.goto("/applications");
 	await expect(page.locator("tr", { hasText: name })).toBeVisible({
 		timeout: 10000,
@@ -111,7 +116,9 @@ test.describe("application review", () => {
 		await expect(
 			page.locator("#panel button", { hasText: "Confirm" }),
 		).toBeVisible({ timeout: 10000 });
-		await expect(page.locator("#panel")).toContainText("flagged for manual review");
+		await expect(page.locator("#panel")).toContainText(
+			"flagged for manual review",
+		);
 	});
 
 	test("cannot review a confirmed application twice", async ({
@@ -133,6 +140,8 @@ test.describe("application review", () => {
 		await expect(page.locator("#panel")).toContainText("Eve", {
 			timeout: 10000,
 		});
-		await expect(page.locator("#panel button", { hasText: "Confirm" })).not.toBeVisible();
+		await expect(
+			page.locator("#panel button", { hasText: "Confirm" }),
+		).not.toBeVisible();
 	});
 });

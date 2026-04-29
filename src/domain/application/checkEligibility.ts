@@ -70,7 +70,12 @@ export async function checkEligibility(
 			id: string;
 			applied_at: string;
 			ref: string;
-		}>(duplicateQuery, excludeId ? [applicantId, monthCycle, excludeId] : [applicantId, monthCycle]);
+		}>(
+			duplicateQuery,
+			excludeId
+				? [applicantId, monthCycle, excludeId]
+				: [applicantId, monthCycle],
+		);
 		if (dupes.length > 0 && dupes[0]) {
 			return {
 				status: "duplicate",

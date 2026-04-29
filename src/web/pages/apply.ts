@@ -41,12 +41,37 @@ function formatAppliedAt(iso: string): string {
 	return `${hh}:${mm} on ${day}/${month}/${year}`;
 }
 
-export function applyPage(): string {
+export function applyPage(closesAt: string): string {
 	return publicLayout(
 		"Apply",
 		`<div class="w-full max-w-md">
 	<div class="card p-8">
-		<h1 class="font-heading text-2xl font-bold text-bark mb-6 text-center">Apply for a grant of up to £40</h1>
+		<h1 class="font-heading text-2xl font-bold text-bark mb-2 text-center">Apply for a grant of up to £40</h1>
+		<div id="countdown" class="text-center mb-4 py-2 px-4 bg-bark/5 rounded-lg border border-bark/10">
+			<span class="text-xs text-bark-muted uppercase tracking-wider">Form closes in</span>
+			<div class="font-mono text-lg font-bold text-bark tabular-nums" id="countdown-timer">--h --m --s</div>
+		</div>
+		<script>
+		(function() {
+			var end = new Date("${closesAt}").getTime();
+			var el = document.getElementById("countdown-timer");
+			var wrap = document.getElementById("countdown");
+			function tick() {
+				var now = Date.now();
+				var diff = end - now;
+				if (diff <= 0) {
+					wrap.style.display = "none";
+					return;
+				}
+				var h = Math.floor(diff / 3600000);
+				var m = Math.floor((diff % 3600000) / 60000);
+				var s = Math.floor((diff % 60000) / 1000);
+				el.textContent = h + "h " + m + "m " + s + "s";
+			}
+			tick();
+			setInterval(tick, 1000);
+		})();
+		</script>
 		<form action="/apply" method="POST" enctype="multipart/form-data" class="space-y-4" data-signals='{"paymentPref": "cash"}'>
 			<div>
 				<label for="name" class="block text-sm font-body text-bark mb-1">Name</label>
@@ -90,7 +115,7 @@ export function applyPage(): string {
 				</div>
 				<div>
 					<label for="poa" class="block text-sm font-body text-bark mb-1">Proof of Address</label>
-					<p class="text-xs text-bark-muted mb-1">Optional — uploading now will speed up your payment.</p>
+					<p class="text-xs text-bark-muted mb-1">Please attach a photo of a paper document showing your name, address and a date within the last three months, not a screenshot or PDF.</p>
 					<input type="file" id="poa" name="poa" accept="image/*,.pdf" class="input text-sm" />
 				</div>
 			</div>
@@ -128,6 +153,7 @@ export function applyResultPage(
 	ref?: string,
 	existingAppliedAt?: string,
 	drawDate?: string,
+	baseUrl?: string,
 ): string {
 	let heading: string;
 	let message: string;
@@ -175,11 +201,15 @@ export function applyResultPage(
 		<p class="text-bark-muted font-body">${escapeHtml(message)}</p>
 ${
 	ref
-		? `		<div class="mt-6 pt-4 border-t border-bark-muted/20 text-left">
-			<p class="text-xs text-bark-muted font-body mb-1">Your reference number</p>
-			<p class="font-mono text-sm text-bark break-all">${escapeHtml(ref)}</p>
-			<p class="text-xs text-bark-muted font-body mt-2">Save this to check your application status at <a href="/status?ref=${encodeURIComponent(ref)}" class="underline">/status</a></p>
-		</div>`
+		? (() => {
+				const statusUrl = baseUrl
+					? `${baseUrl}/status?ref=${encodeURIComponent(ref)}`
+					: `/status?ref=${encodeURIComponent(ref)}`;
+				return `		<div class="mt-6 pt-4 border-t border-bark-muted/20 text-left">
+			<p class="text-xs text-bark-muted font-body mb-2">Save the following link to check the status of your application. Please check this page before contacting us with questions about your application.</p>
+			<a href="${escapeHtml(statusUrl)}" class="block font-mono text-sm text-bark break-all underline">${escapeHtml(statusUrl)}</a>
+		</div>`;
+			})()
 		: ""
 }
 	</div>
