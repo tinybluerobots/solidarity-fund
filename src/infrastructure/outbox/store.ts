@@ -111,6 +111,24 @@ export function createOutboxStore(pool: SQLiteConnectionPool) {
 			);
 		},
 
+		async deleteById(conn: SQLiteConnection, id: number): Promise<boolean> {
+			const result = await conn.command(
+				`DELETE FROM outbox_messages WHERE id = ?`,
+				[id],
+			);
+			return (result as sqlite3.RunResult).changes > 0;
+		},
+
+		async deleteByIds(conn: SQLiteConnection, ids: number[]): Promise<number> {
+			if (ids.length === 0) return 0;
+			const placeholders = ids.map(() => "?");
+			const result = await conn.command(
+				`DELETE FROM outbox_messages WHERE id IN (${placeholders.join(",")})`,
+				ids,
+			);
+			return (result as sqlite3.RunResult).changes;
+		},
+
 		withConnection<T>(fn: (conn: SQLiteConnection) => Promise<T>): Promise<T> {
 			return pool.withConnection(fn);
 		},

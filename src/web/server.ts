@@ -305,6 +305,17 @@ export async function startServer(
 					return outboxRoutes.list(req);
 				},
 			},
+			"/outbox/delete": {
+				POST: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return outboxRoutes.deleteMessages(req);
+				},
+			},
 			"/download-db": {
 				GET: async (req) => {
 					const volunteer = await requireAuth(req);

@@ -1,4 +1,5 @@
 import type { SQLiteConnectionPool } from "@event-driven-io/emmett-sqlite";
+import { createOutboxStore } from "../../infrastructure/outbox/store.ts";
 import { type OutboxRow, outboxPage } from "../pages/outbox.ts";
 
 const PAGE_SIZE = 25;
@@ -24,6 +25,8 @@ export function calcTotalPages(total: number): number {
 export function createOutboxRoutes(
 	pool: ReturnType<typeof SQLiteConnectionPool>,
 ) {
+	const store = createOutboxStore(pool);
+
 	return {
 		async list(req: Request): Promise<Response> {
 			try {
@@ -79,5 +82,53 @@ export function createOutboxRoutes(
 				return new Response("Internal error", { status: 500 });
 			}
 		},
+
+		async deleteMessages(req: Request): Promise<Response> {
+			const url = new URL(req.url);
+			try {
+				const formData = await req.formData();
+				const rawIds = formData.getAll("ids");
+				const ids = rawIds
+					.map(Number)
+					.filter((n) => Number.isInteger(n) && n > 0);
+				const statusFilter = formData.get("status") as string | null;
+				const page = formData.get("page") as string | null;
+
+				if (ids.length === 0) {
+					const redirect = buildRedirect(url, page, statusFilter);
+					return new Response(null, {
+						status: 303,
+						headers: { Location: redirect },
+					});
+				}
+
+				await pool.withConnection((conn) => store.deleteByIds(conn, ids));
+
+				const redirect = buildRedirect(url, page, statusFilter);
+				return new Response(null, {
+					status: 303,
+					headers: { Location: redirect },
+				});
+			} catch (err) {
+				console.error("outbox delete route error:", err);
+				return new Response("Internal error", { status: 500 });
+			}
+		},
 	};
+}
+
+function buildRedirect(
+	url: URL,
+	page: string | null,
+	statusFilter: string | null,
+): string {
+	const params = new URLSearchParams();
+	if (page) params.set("page", page);
+	if (statusFilter && VALID_STATUSES.includes(statusFilter)) {
+		params.set("status", statusFilter);
+	}
+	const qs = params.toString();
+	return qs
+		? `${url.origin}${url.pathname}?${qs}`
+		: `${url.origin}${url.pathname}`;
 }
