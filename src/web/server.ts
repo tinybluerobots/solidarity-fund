@@ -30,6 +30,7 @@ import { dbDownloadResponse } from "./routes/download-db.ts";
 import { createGrantRoutes } from "./routes/grants.ts";
 import { createLogsRoutes } from "./routes/logs.ts";
 import { createLotteryRoutes } from "./routes/lottery.ts";
+import { createOutboxRoutes } from "./routes/outbox.ts";
 import { createStatusRoutes } from "./routes/status.ts";
 import { createVolunteerRoutes } from "./routes/volunteers.ts";
 
@@ -158,6 +159,7 @@ export async function startServer(
 		credentialsStore,
 	);
 	const logsRoutes = createLogsRoutes(pool);
+	const outboxRoutes = createOutboxRoutes(pool);
 	const applicationRoutes = createApplicationRoutes(
 		appRepo,
 		applicantRepo,
@@ -290,6 +292,17 @@ export async function startServer(
 					if (!volunteer.isAdmin)
 						return new Response("Forbidden", { status: 403 });
 					return logsRoutes.list(req);
+				},
+			},
+			"/outbox": {
+				GET: async (req) => {
+					const volunteer = await requireAuth(req);
+					if (!volunteer) return Response.redirect("/login", 302);
+					const redirect = requirePasswordChange(volunteer);
+					if (redirect) return redirect;
+					if (!volunteer.isAdmin)
+						return new Response("Forbidden", { status: 403 });
+					return outboxRoutes.list(req);
 				},
 			},
 			"/download-db": {
