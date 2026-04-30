@@ -109,12 +109,15 @@ function renderRow(row: OutboxRow, page: number, statusVal: string): string {
     <td class="px-3 py-2"><span class="${statusBadge} inline-block text-xs px-2 py-1 rounded font-medium">${row.status}</span></td>
     <td class="px-3 py-2 text-red-600 text-xs">${errorPreview}</td>
     <td class="px-2 py-2">
-      <form method="POST" action="/outbox/delete" class="inline">
-        <input type="hidden" name="ids" value="${row.id}">
-        <input type="hidden" name="page" value="${page}">
-        <input type="hidden" name="status" value="${statusVal}">
-        <button type="submit" class="text-bark-muted hover:text-red-600 transition-colors text-lg leading-none" title="Delete">&times;</button>
-      </form>
+      <button
+        type="button"
+        class="text-bark-muted hover:text-red-600 transition-colors text-lg leading-none"
+        title="Delete this message"
+        data-delete-id="${row.id}"
+        data-delete-page="${page}"
+        data-delete-status="${statusVal}"
+        onclick="const b=this;b.disabled=true;fetch('/outbox/delete',{method:'POST',body:new URLSearchParams({ids:b.dataset.deleteId,page:b.dataset.deletePage,status:b.dataset.deleteStatus})}).then(r=>{if(r.redirected)location.href=r.url})"
+      >&times;</button>
     </td>
   </tr>`;
 }

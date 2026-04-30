@@ -118,7 +118,7 @@ export function createOutboxRoutes(
 }
 
 function buildRedirect(
-	url: URL,
+	_url: URL,
 	page: string | null,
 	statusFilter: string | null,
 ): string {
@@ -128,7 +128,5 @@ function buildRedirect(
 		params.set("status", statusFilter);
 	}
 	const qs = params.toString();
-	return qs
-		? `${url.origin}${url.pathname}?${qs}`
-		: `${url.origin}${url.pathname}`;
+	return qs ? `/outbox?${qs}` : "/outbox";
 }
