@@ -2,7 +2,11 @@ import { setFundName } from "../config.ts";
 import { createVolunteer } from "../domain/volunteer/commandHandlers.ts";
 import { SQLiteApplicantRepository } from "../infrastructure/applicant/sqliteApplicantRepository.ts";
 import { createEventStore } from "../infrastructure/eventStore.ts";
+import { buildChannelSenders } from "../infrastructure/outbox/channelSenders.ts";
+import { startOutboxSenderLoop } from "../infrastructure/outbox/sender.ts";
+import { createOutboxStore } from "../infrastructure/outbox/store.ts";
 import { SQLiteSessionStore } from "../infrastructure/session/sqliteSessionStore.ts";
+import { createSmsClient } from "../infrastructure/sms/client.ts";
 import { SQLiteVolunteerCredentialsStore } from "../infrastructure/volunteer/sqliteVolunteerCredentialsStore.ts";
 import { SQLiteVolunteerRepository } from "../infrastructure/volunteer/sqliteVolunteerRepository.ts";
 import { startEventSubscriptions } from "../subscriptions.ts";
@@ -19,6 +23,12 @@ const applicantRepo = await SQLiteApplicantRepository(pool);
 const credentialsStore = await SQLiteVolunteerCredentialsStore(pool);
 
 startEventSubscriptions(eventStore, pool).catch(console.error);
+
+// Start the outbox sender loop (drains outbox_messages and delivers SMS)
+const outboxStore = createOutboxStore(pool);
+const smsClient = createSmsClient();
+const senders = buildChannelSenders(smsClient);
+const senderLoop = startOutboxSenderLoop({ store: outboxStore, pool, senders });
 
 const admins = await volunteerRepo.getAdmins();
 if (admins.length === 0) {
@@ -69,3 +79,6 @@ const scheme = tlsCert && tlsKey ? "https" : "http";
 console.log(
 	`${fundName} server running at ${scheme}://localhost:${server.port}`,
 );
+
+// Clean shutdown signals are handled by the Docker platform (SIGTERM → container restart)
+// The sender loop auto-recovers on restart since outbox is idempotent

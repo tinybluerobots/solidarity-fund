@@ -9,6 +9,7 @@ import type {
 } from "../../../src/domain/volunteer/repository.ts";
 import { SQLiteApplicantRepository } from "../../../src/infrastructure/applicant/sqliteApplicantRepository.ts";
 import { createEventStore } from "../../../src/infrastructure/eventStore.ts";
+import { initOutboxSchema } from "../../../src/infrastructure/outbox/schema.ts";
 import { SQLiteVolunteerCredentialsStore } from "../../../src/infrastructure/volunteer/sqliteVolunteerCredentialsStore.ts";
 import { SQLiteVolunteerRepository } from "../../../src/infrastructure/volunteer/sqliteVolunteerRepository.ts";
 
@@ -26,6 +27,11 @@ export async function createTestEnv(): Promise<TestEnv> {
 	const applicantRepo = await SQLiteApplicantRepository(es.pool);
 	const volunteerRepo = await SQLiteVolunteerRepository(es.pool);
 	const credentialsStore = await SQLiteVolunteerCredentialsStore(es.pool);
+
+	await es.pool.withConnection(async (conn) => {
+		await initOutboxSchema(conn);
+	});
+
 	return {
 		eventStore: es.store,
 		pool: es.pool,
