@@ -46,7 +46,7 @@ export function applyPage(closesAt: string): string {
 		"Apply",
 		`<div class="w-full max-w-md">
 	<div class="card p-8">
-		<h1 class="font-heading text-2xl font-bold text-bark mb-2 text-center">Apply for a grant of up to £40</h1>
+		<h1 class="font-heading text-2xl font-bold text-bark mb-2 text-center">Apply for a grant of £40</h1>
 		<div id="countdown" class="text-center mb-4 py-2 px-4 bg-bark/5 rounded-lg border border-bark/10">
 			<span class="text-xs text-bark-muted uppercase tracking-wider">Form closes in</span>
 			<div class="font-mono text-lg font-bold text-bark tabular-nums" id="countdown-timer">--h --m --s</div>
